@@ -1,0 +1,83 @@
+import { invoke } from "@tauri-apps/api/core";
+import { confirm, open } from "@tauri-apps/plugin-dialog";
+
+export type TextFileDocument = {
+  path: string;
+  name: string;
+  contents: string;
+  size: number;
+  modified_ms: number | null;
+  fingerprint: string;
+  large_file_warning: boolean;
+};
+
+export type SavedFileState = {
+  path: string;
+  size: number;
+  modified_ms: number | null;
+  fingerprint: string;
+};
+
+export type FileMetadataState = {
+  path: string;
+  size: number;
+  modified_ms: number | null;
+  fingerprint: string;
+  large_file_warning: boolean;
+};
+
+export async function pickMarkdownFile(): Promise<string | null> {
+  const selected = await open({
+    multiple: false,
+    directory: false,
+    filters: [
+      {
+        name: "Text",
+        extensions: [
+          "md",
+          "markdown",
+          "mdown",
+          "txt",
+          "json",
+          "yaml",
+          "yml",
+          "toml",
+          "css",
+          "html",
+        ],
+      },
+    ],
+  });
+
+  return typeof selected === "string" ? selected : null;
+}
+
+export async function confirmDiscardUnsavedChanges(): Promise<boolean> {
+  return confirm(
+    "The current file has unsaved changes. Discard them and open another file?",
+    {
+      title: "Unsaved changes",
+      kind: "warning",
+    },
+  );
+}
+
+export async function openTextFile(path: string): Promise<TextFileDocument> {
+  return invoke<TextFileDocument>("open_text_file", { path });
+}
+
+export async function getFileMetadata(path: string): Promise<FileMetadataState> {
+  return invoke<FileMetadataState>("get_file_metadata", { path });
+}
+
+export async function saveTextFile(
+  path: string,
+  contents: string,
+  expectedFingerprint: string,
+): Promise<SavedFileState> {
+  return invoke<SavedFileState>("save_text_file", {
+    path,
+    contents,
+    expectedFingerprint,
+  });
+}

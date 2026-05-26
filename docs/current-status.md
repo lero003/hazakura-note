@@ -12,6 +12,7 @@ Last reviewed: 2026-05-27
 - Recent workspace, open tabs, active tab, and theme preference are restored after restart.
 - Save conflicts now present explicit recovery choices: Reopen from disk, Close without saving, and Keep editing.
 - Window close requests now stop when any open tab is unsaved and offer Save All, Discard All, or Cancel.
+- Cmd+O opens a file, Cmd+Shift+O opens a folder, and Cmd+W closes the active tab through the same dirty-tab confirmation path as the tab close button.
 - The built macOS app bundle is generated at `src-tauri/target/release/bundle/macos/hazakura-note.app`.
 
 ## Implemented
@@ -33,6 +34,7 @@ Last reviewed: 2026-05-27
 - Recent workspace restoration through `localStorage`
 - Open tab and active tab restoration through `localStorage`
 - Active-file search with match count and previous/next controls
+- Keyboard shortcuts for Open, Open Folder, Save, Find, and active-tab close
 - Conflict recovery actions for reloading, closing, or continuing with local edits
 - App/window close confirmation for dirty tabs
 - Binary-looking file rejection
@@ -72,7 +74,7 @@ Runtime smoke:
 Known verification note:
 
 - Vite reports a production chunk-size warning because CodeMirror and preview libraries are bundled together. This is acceptable for the prototype; revisit before distribution readiness.
-- App/window dirty-tab close confirmation has build/test coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
+- App/window dirty-tab close confirmation and the newer keyboard shortcuts have build/test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 
 ## Risks / Unknowns
 
@@ -85,7 +87,7 @@ Known verification note:
 ## Next Actions
 
 1. Run recurring automation from `docs/development-automation.md` to harden one small slice at a time.
-2. Manually smoke app/window close confirmation in the built app, then continue file safety and close/quit polish before adding new Markdown features.
+2. Manually smoke app/window close confirmation and keyboard shortcuts in the built app, then continue file safety and close/quit polish before adding new Markdown features.
 3. Decide whether unsaved draft restoration belongs in the product or should remain intentionally out of scope.
 4. Keep signing, notarization, and installer packaging separate from editor/workspace hardening.
 

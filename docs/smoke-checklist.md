@@ -48,6 +48,16 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 4. Use Prev and Next and confirm the editor selection moves.
 5. Search for a missing word and confirm the UI reports no matches without changing the file.
 
+## Keyboard Shortcuts
+
+1. Press Cmd+O and confirm the native file picker opens.
+2. Press Cmd+Shift+O and confirm the native folder picker opens.
+3. Open a throwaway Markdown file, edit it without saving, then press Cmd+W.
+4. Confirm the app offers Save, Discard, and Cancel through the same dirty-tab confirmation used by the tab close button.
+5. Cancel once and confirm the tab stays open with its unsaved text.
+6. Repeat Cmd+W and confirm Discard closes the tab without writing the unsaved text.
+7. Press Cmd+W with no active tab and confirm the window stays open.
+
 ## Unsaved Tab Close Confirmation
 
 1. Open a throwaway Markdown file.

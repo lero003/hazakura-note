@@ -76,6 +76,7 @@ Status: Completed on 2026-05-26
 - 外部変更衝突後の Reopen from disk / Close without saving / Keep editing
 - dirty tab close時の Save / Discard / Cancel 再確認
 - app/window close時の dirty tab 向け Save All / Discard All / Cancel 再確認
+- Cmd+O / Cmd+Shift+O / Cmd+W の基本ショートカット
 - CodeMirror本文とpreview/statusの再読み込み同期
 - System / Light / Dark の復元と可読性確認
 - Rust側 file I/O / workspace listing / 除外 / バイナリ拒否 / 大容量境界テストの拡充
@@ -87,7 +88,7 @@ Status: Completed on 2026-05-26
 
 目的: Markdownを書く体験を軽くする。
 
-Before starting broad Markdown helpers, let the recurring automation close small reliability gaps from `docs/development-automation.md`, especially file safety, close/quit behavior, keyboard operation, IME smoke, and layout rough edges.
+Before starting broad Markdown helpers, let the recurring automation close small reliability gaps from `docs/development-automation.md`, especially line-ending behavior, save-failure wording, IME smoke, search highlight visibility, keyboard-only operation, and layout rough edges.
 
 - Markdownプレビュー
 - 見出しアウトライン

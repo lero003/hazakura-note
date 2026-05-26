@@ -26,6 +26,7 @@ Last reviewed: 2026-05-27
 - File-tree, Open, and restored files unified into the same tab model
 - Multiple tabs with active-tab editor, preview, size, and save status
 - Tab-level unsaved state and Save / Discard / Cancel before closing dirty tabs
+- Keyboard shortcuts for Open, Open Folder, Save, Find, and tab close
 - External-change save conflict detection with Reopen from disk / Close without saving / Keep editing actions
 - In-file search for the active tab
 - System / Light / Dark theme switching with persisted selection

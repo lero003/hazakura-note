@@ -22,7 +22,7 @@ const WELCOME_MARKDOWN = `# hazakura-note
 
 - Markdownを編集できます
 - 右側でプレビューできます
-- Cmd+S または Save で保存できます
+- Cmd+Oで開き、Cmd+Wでタブを閉じ、Cmd+Sで保存できます
 `;
 
 const THEME_STORAGE_KEY = "hazakura-note-theme";
@@ -101,6 +101,7 @@ export default function App() {
   );
   const activeFindMatch = findMatches[activeMatchIndex] ?? null;
   const allowWindowCloseRef = useRef(false);
+  const modalOpen = pendingCloseTab !== null || pendingAppClose;
 
   const openFilePath = useCallback(
     async (path: string) => {
@@ -554,15 +555,45 @@ export default function App() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (modalOpen) {
+        return;
+      }
+
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
         void saveActiveTab();
+        return;
       }
 
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {
         event.preventDefault();
         findInputRef.current?.focus();
         findInputRef.current?.select();
+        return;
+      }
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "o") {
+        event.preventDefault();
+
+        if (event.shiftKey) {
+          void openWorkspace();
+        } else {
+          void openFile();
+        }
+
+        return;
+      }
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "w") {
+        event.preventDefault();
+
+        if (activeTabId) {
+          requestCloseTab(activeTabId);
+        } else {
+          setStatus("No active tab to close");
+        }
+
+        return;
       }
 
       if (event.key === "Escape" && document.activeElement === findInputRef.current) {
@@ -575,7 +606,14 @@ export default function App() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [saveActiveTab]);
+  }, [
+    activeTabId,
+    modalOpen,
+    openFile,
+    openWorkspace,
+    requestCloseTab,
+    saveActiveTab,
+  ]);
 
   return (
     <main className="app-shell">
@@ -694,7 +732,9 @@ export default function App() {
               : "No search"}
           </span>
         </div>
-        <span className="shortcut-hint">Cmd+F find · Cmd+S save</span>
+        <span className="shortcut-hint">
+          Cmd+O open · Cmd+Shift+O folder · Cmd+W close · Cmd+F find · Cmd+S save
+        </span>
       </section>
 
       <div className="message-row">

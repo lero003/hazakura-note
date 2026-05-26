@@ -9,6 +9,8 @@ Last reviewed: 2026-05-26
 
 - A touchable Tauri desktop prototype exists.
 - The prototype opens a user-selected folder, shows a bounded file tree, opens multiple text/Markdown files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, and renders a sanitized Markdown preview.
+- Recent workspace, open tabs, active tab, and theme preference are restored after restart.
+- Save conflicts now present explicit recovery choices: Reopen from disk, Close without saving, and Keep editing.
 - The built macOS app bundle is generated at `src-tauri/target/release/bundle/macos/hazakura-note.app`.
 
 ## Implemented
@@ -27,6 +29,10 @@ Last reviewed: 2026-05-26
 - Save / Discard / Cancel confirmation before closing an unsaved tab
 - System / Light / Dark theme switching
 - Theme selection persistence through `localStorage`
+- Recent workspace restoration through `localStorage`
+- Open tab and active tab restoration through `localStorage`
+- Active-file search with match count and previous/next controls
+- Conflict recovery actions for reloading, closing, or continuing with local edits
 - Binary-looking file rejection
 - 5 MB large-file warning flag
 - 10 MB prototype editing limit
@@ -48,16 +54,17 @@ git diff --check
 Runtime smoke:
 
 - The bundled `.app` opened and displayed the editor and preview panes.
-- A throwaway folder at `/tmp/hazakura-note-workspace-smoke` opened in the left file tree.
-- The file tree showed `alpha.md`, `notes`, and `notes/beta.md`, and did not show `.git` or `node_modules`.
-- `alpha.md` and `notes/beta.md` opened in separate tabs; switching tabs updated the editor and preview together.
-- Editing and saving `notes/beta.md` wrote `Saved from tab.` to disk.
-- Closing dirty `alpha.md` showed Save / Discard / Cancel; Cancel kept the tab open and Discard closed it without saving.
-- Light and Dark themes were manually selected, and the Dark theme persisted after app restart.
-- Open -> edit -> Save was manually exercised against `/tmp/hazakura-note-smoke.md`; the saved file contained the edited Markdown text.
-- A save conflict was manually exercised against `/tmp/hazakura-note-conflict.md`; the app stopped the save, kept the conflict banner to one normal message row, and left the external disk change intact.
-- Markdown preview sanitize was manually exercised against `/tmp/hazakura-note-sanitize.md`; `script`, `iframe`, and `alert` content did not appear in the preview tree, while ordinary headings and list items remained visible.
-- Open -> edit -> Save was manually exercised against `/tmp/hazakura-note-sanitize.md` after the latest build; the saved file contained the edited Markdown text.
+- A throwaway folder at `/tmp/hazakura-note-polish-smoke` opened in the left file tree.
+- The file tree showed `alpha.md`, `notes`, `notes/beta.md`, and `notes/sanitize.md`, and did not show `.git`, `node_modules`, `target`, or `dist`.
+- `alpha.md`, `notes/beta.md`, and `notes/sanitize.md` opened in tabs; switching tabs updated the editor, preview, status, and active tree item together.
+- Active-file search found `target` in `notes/beta.md`, showed `1 / 1`, and kept previous/next controls disabled when no match remained after reload.
+- Editing and saving `notes/beta.md` wrote `Saved from polish smoke.` to disk before the conflict test.
+- Closing dirty `alpha.md` showed Save / Discard / Cancel; Cancel kept the tab open and Discard closed it without saving. Disk still contained the original `alpha.md`.
+- A save conflict was manually exercised against `notes/beta.md`; the app stopped the save, left the external disk change intact, and displayed Reopen from disk / Close without saving / Keep editing actions.
+- Keep editing cleared the conflict banner while preserving local edits. Reopen from disk restored the external file content in both CodeMirror and preview.
+- System, Light, and Dark theme selections were manually exercised. System remained readable and the theme choice was restored after restart.
+- Restart restored the recent workspace, open tabs, active tab, and selected theme.
+- Markdown preview sanitize was manually exercised against `notes/sanitize.md`; `script`, `iframe`, and `alert` content did not appear in the preview tree, while ordinary headings and list items remained visible.
 - Reusable manual smoke steps are documented in `docs/smoke-checklist.md`.
 
 Known verification note:
@@ -66,16 +73,17 @@ Known verification note:
 
 ## Risks / Unknowns
 
-- No undo/redo, search, recent workspace, restore-open-tabs, or diff workflow has been hardened beyond CodeMirror defaults.
-- After a save conflict, the user must currently reopen the file manually; there is no merge or diff-assisted recovery flow yet.
+- Unsaved text is not restored after restart; only workspace path, tab paths, active tab, and theme preference are restored.
+- Save-conflict recovery is explicit but still simple. There is no merge editor or diff-assisted recovery flow yet.
+- Undo/redo remain CodeMirror defaults and have not received dedicated product-level polish.
 - The app is not signed or notarized.
 - The GitHub remote is configured over HTTPS. SSH access previously failed with `Permission denied (publickey)`.
 
 ## Next Actions
 
-1. Polish workspace persistence: recent folder and restore-open-tabs.
-2. Add search or lightweight Markdown writing aids before diff work.
-3. Keep distribution work separate from the prototype and safety-hardening phases.
+1. Decide whether unsaved draft restoration belongs in the product or should remain intentionally out of scope.
+2. Add lightweight Markdown writing aids before diff work.
+3. Keep signing, notarization, and installer packaging separate from editor/workspace hardening.
 
 ## Avoid
 

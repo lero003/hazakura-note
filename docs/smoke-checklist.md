@@ -5,7 +5,7 @@ Scope: Manual prototype checks
 Authority: Medium
 Last reviewed: 2026-05-26
 
-Use this checklist after changes to file opening, workspace listing, tabs, saving, preview rendering, theme handling, or save-conflict handling.
+Use this checklist after changes to file opening, workspace listing, tabs, saving, preview rendering, theme handling, workspace restoration, search, or save-conflict handling.
 
 ## Build First
 
@@ -28,16 +28,25 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 5. Save.
 6. Confirm the Save button disables and the status returns to clean.
 7. Read the file from disk and confirm the edited text was written.
+8. Open the same file again from the Open button or file tree and confirm the existing tab is focused instead of duplicated.
 
 ## Workspace Tree And Tabs
 
 1. Create a throwaway folder outside the repo with nested Markdown files.
-2. Add excluded folders such as `.git` and `node_modules`.
+2. Add excluded folders such as `.git`, `node_modules`, `target`, and `dist`.
 3. Open the folder with Open Folder.
 4. Confirm the file tree shows normal folders and files, and does not show excluded folders.
 5. Open at least two files from the tree.
 6. Confirm each file opens in its own tab.
 7. Switch tabs and confirm the editor, preview, status, and active tree item match the selected tab.
+
+## Active File Search
+
+1. Open a file containing a repeated test word.
+2. Type the word into the Find field or use Cmd+F and type it.
+3. Confirm the match count appears.
+4. Use Prev and Next and confirm the editor selection moves.
+5. Search for a missing word and confirm the UI reports no matches without changing the file.
 
 ## Unsaved Tab Close Confirmation
 
@@ -53,6 +62,16 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 1. Switch between System, Light, and Dark.
 2. Confirm the editor, preview, tabs, file tree, and status bar remain readable.
 3. Restart the app and confirm the selected theme is restored.
+4. With System selected, confirm the app follows the OS-resolved light/dark mode.
+
+## Workspace Restoration
+
+1. Open a throwaway folder outside the repo.
+2. Open at least two files as tabs.
+3. Select a non-first active tab.
+4. Restart the app.
+5. Confirm the workspace tree, open tabs, active tab, and theme preference are restored.
+6. Confirm unsaved text is not expected to restore; save or discard dirty tabs before relying on restart behavior.
 
 ## External Change Conflict
 
@@ -62,6 +81,10 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 4. Click Save in the app.
 5. Confirm the app shows a save-conflict message.
 6. Confirm the file on disk still contains the external change, not the app's unsaved text.
+7. Click Keep editing and confirm the local editor text remains.
+8. Trigger the conflict again and click Reopen from disk.
+9. Confirm the editor, preview, and status all show the external disk content.
+10. Trigger the conflict once more if needed and confirm Close without saving closes the tab without overwriting disk.
 
 ## Markdown Preview Sanitize
 
@@ -75,4 +98,16 @@ Binary-looking files and files above the prototype editing limit are covered by 
 
 ```bash
 cargo test --manifest-path src-tauri/Cargo.toml
+```
+
+## Final Local Gates
+
+Before committing a release-readiness or quality-hardening slice, run:
+
+```bash
+npm run build:vite
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+cargo test --manifest-path src-tauri/Cargo.toml
+npm run build
+git diff --check
 ```

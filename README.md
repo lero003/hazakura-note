@@ -19,6 +19,19 @@ Last reviewed: 2026-05-26
 - Repository remote: `https://github.com/lero003/hazakura-note.git`
 - Current prototype: Tauri + React + CodeMirror 6で、Markdownを開く・編集する・保存する・プレビューする・複数タブで扱う最小体験を実装済み
 
+## Current Features
+
+- Markdown/text file open, edit, save, and sanitized preview
+- Folder picker with a bounded file tree
+- File-tree, Open, and restored files unified into the same tab model
+- Multiple tabs with active-tab editor, preview, size, and save status
+- Tab-level unsaved state and Save / Discard / Cancel before closing dirty tabs
+- External-change save conflict detection with Reopen from disk / Close without saving / Keep editing actions
+- In-file search for the active tab
+- System / Light / Dark theme switching with persisted selection
+- Recent workspace, open tabs, and active tab restoration after restart
+- Rust-side binary-looking file rejection, large-file warning, editing size limit, and atomic save helper
+
 ## Canonical Docs
 
 - [Product Brief](docs/product-brief.md): 何を作るか、何を作らないか
@@ -48,6 +61,24 @@ The built app is generated at:
 ```txt
 src-tauri/target/release/bundle/macos/hazakura-note.app
 ```
+
+Quality gates used for local release-readiness checks:
+
+```bash
+npm run build:vite
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+cargo test --manifest-path src-tauri/Cargo.toml
+npm run build
+git diff --check
+```
+
+## Known Limits
+
+- Unsaved text is not restored after restart; only workspace, tab paths, active tab, and theme are restored.
+- Save conflicts are recoverable by reopening, closing, or keeping local edits, but there is no merge editor or advanced diff.
+- The app is not signed or notarized with an Apple Developer ID.
+- There is no Git integration, LSP, terminal, AI assistance, plugin system, arbitrary command execution, or project-wide analysis.
+- The production bundle currently carries a Vite chunk-size warning from editor/preview dependencies.
 
 ## Draft Source
 

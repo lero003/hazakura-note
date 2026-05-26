@@ -6,16 +6,19 @@ type EditorPaneProps = {
   documentKey: string;
   value: string;
   theme: "light" | "dark";
+  searchMatch: { from: number; to: number } | null;
   onChange: (nextValue: string) => void;
 };
 
 export default function EditorPane({
   documentKey,
+  searchMatch,
   theme,
   value,
   onChange,
 }: EditorPaneProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
+  const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
 
   useEffect(() => {
@@ -78,11 +81,52 @@ export default function EditorPane({
         }),
       ],
     });
+    viewRef.current = view;
 
     return () => {
+      viewRef.current = null;
       view.destroy();
     };
   }, [documentKey, theme]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+
+    if (!view) {
+      return;
+    }
+
+    const currentValue = view.state.doc.toString();
+    if (currentValue === value) {
+      return;
+    }
+
+    view.dispatch({
+      changes: {
+        from: 0,
+        to: currentValue.length,
+        insert: value,
+      },
+    });
+  }, [value]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+
+    if (!view || !searchMatch) {
+      return;
+    }
+
+    view.dispatch({
+      selection: {
+        anchor: searchMatch.from,
+        head: searchMatch.to,
+      },
+      effects: EditorView.scrollIntoView(searchMatch.from, {
+        y: "center",
+      }),
+    });
+  }, [searchMatch]);
 
   return <div className="editor-host" ref={hostRef} />;
 }

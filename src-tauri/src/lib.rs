@@ -348,6 +348,21 @@ mod tests {
     }
 
     #[test]
+    fn open_text_file_rejects_binary_looking_file() {
+        let dir = unique_test_dir("open_binary");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let path = dir.join("sample.md");
+        fs::write(&path, b"# Title\n\0binary tail").expect("write binary fixture");
+
+        let err = open_text_file(path.to_string_lossy().to_string())
+            .expect_err("binary-looking markdown should fail");
+
+        assert!(err.contains("Binary-looking"));
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn atomic_write_replaces_text_file() {
         let dir = unique_test_dir("atomic_write");
         fs::create_dir_all(&dir).expect("create test dir");
@@ -416,6 +431,8 @@ mod tests {
         fs::create_dir_all(dir.join("notes")).expect("create notes dir");
         fs::create_dir_all(dir.join("node_modules/pkg")).expect("create node_modules dir");
         fs::create_dir_all(dir.join(".git/objects")).expect("create git dir");
+        fs::create_dir_all(dir.join("target/debug")).expect("create target dir");
+        fs::create_dir_all(dir.join("dist/assets")).expect("create dist dir");
         fs::write(dir.join("notes/today.md"), "# Today\n").expect("write note");
         fs::write(dir.join("README.md"), "# Readme\n").expect("write readme");
 
@@ -430,6 +447,8 @@ mod tests {
         assert!(names.contains(&"README.md"));
         assert!(!names.contains(&"node_modules"));
         assert!(!names.contains(&".git"));
+        assert!(!names.contains(&"target"));
+        assert!(!names.contains(&"dist"));
 
         let notes = tree
             .children
@@ -437,6 +456,21 @@ mod tests {
             .find(|entry| entry.name == "notes")
             .expect("notes dir");
         assert_eq!(notes.children[0].name, "today.md");
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn workspace_tree_rejects_file_root() {
+        let dir = unique_test_dir("workspace_file_root");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let path = dir.join("note.md");
+        fs::write(&path, "# Not a folder\n").expect("write file");
+
+        let err = list_workspace_tree(path.to_string_lossy().to_string())
+            .expect_err("file root should fail");
+
+        assert!(err.contains("not a folder"));
 
         let _ = fs::remove_dir_all(dir);
     }

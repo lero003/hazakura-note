@@ -26,6 +26,13 @@ export type FileMetadataState = {
   large_file_warning: boolean;
 };
 
+export type WorkspaceTreeEntry = {
+  name: string;
+  path: string;
+  kind: "directory" | "file";
+  children: WorkspaceTreeEntry[];
+};
+
 export async function pickMarkdownFile(): Promise<string | null> {
   const selected = await open({
     multiple: false,
@@ -52,6 +59,15 @@ export async function pickMarkdownFile(): Promise<string | null> {
   return typeof selected === "string" ? selected : null;
 }
 
+export async function pickWorkspaceFolder(): Promise<string | null> {
+  const selected = await open({
+    multiple: false,
+    directory: true,
+  });
+
+  return typeof selected === "string" ? selected : null;
+}
+
 export async function confirmDiscardUnsavedChanges(): Promise<boolean> {
   return confirm(
     "The current file has unsaved changes. Discard them and open another file?",
@@ -68,6 +84,12 @@ export async function openTextFile(path: string): Promise<TextFileDocument> {
 
 export async function getFileMetadata(path: string): Promise<FileMetadataState> {
   return invoke<FileMetadataState>("get_file_metadata", { path });
+}
+
+export async function listWorkspaceTree(
+  root: string,
+): Promise<WorkspaceTreeEntry> {
+  return invoke<WorkspaceTreeEntry>("list_workspace_tree", { root });
 }
 
 export async function saveTextFile(

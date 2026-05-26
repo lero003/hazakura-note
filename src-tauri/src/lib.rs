@@ -7,6 +7,20 @@ use std::time::UNIX_EPOCH;
 const LARGE_FILE_WARNING_BYTES: u64 = 5 * 1024 * 1024;
 const MAX_EDITABLE_BYTES: u64 = 10 * 1024 * 1024;
 const BINARY_SNIFF_BYTES: u64 = 8192;
+const MAX_WORKSPACE_DEPTH: usize = 6;
+const MAX_WORKSPACE_ENTRIES: usize = 2000;
+const EXCLUDED_WORKSPACE_DIRS: &[&str] = &[
+    ".git",
+    ".hg",
+    ".svn",
+    ".next",
+    ".turbo",
+    "node_modules",
+    "target",
+    "dist",
+    "build",
+    ".cache",
+];
 
 #[derive(Debug, Serialize)]
 struct TextFileDocument {
@@ -34,6 +48,21 @@ struct FileMetadataState {
     modified_ms: Option<u64>,
     fingerprint: String,
     large_file_warning: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct WorkspaceTreeEntry {
+    name: String,
+    path: String,
+    kind: WorkspaceEntryKind,
+    children: Vec<WorkspaceTreeEntry>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "lowercase")]
+enum WorkspaceEntryKind {
+    Directory,
+    File,
 }
 
 #[tauri::command]
@@ -115,6 +144,20 @@ fn save_text_file(
     })
 }
 
+#[tauri::command]
+fn list_workspace_tree(root: String) -> Result<WorkspaceTreeEntry, String> {
+    let root_path = PathBuf::from(&root);
+    let metadata =
+        fs::metadata(&root_path).map_err(|err| format!("Cannot read workspace folder: {err}"))?;
+
+    if !metadata.is_dir() {
+        return Err("Selected workspace path is not a folder.".to_string());
+    }
+
+    let mut entry_count = 0;
+    build_workspace_tree(&root_path, 0, &mut entry_count)
+}
+
 fn readable_text_metadata(path: &Path) -> Result<fs::Metadata, String> {
     let metadata = fs::metadata(path).map_err(|err| format!("Cannot read file: {err}"))?;
 
@@ -131,6 +174,86 @@ fn readable_text_metadata(path: &Path) -> Result<fs::Metadata, String> {
     }
 
     Ok(metadata)
+}
+
+fn build_workspace_tree(
+    path: &Path,
+    depth: usize,
+    entry_count: &mut usize,
+) -> Result<WorkspaceTreeEntry, String> {
+    if *entry_count >= MAX_WORKSPACE_ENTRIES {
+        return Err(format!(
+            "Workspace listing stopped after {MAX_WORKSPACE_ENTRIES} entries."
+        ));
+    }
+
+    *entry_count += 1;
+
+    let name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or_else(|| path.to_str().unwrap_or("workspace"))
+        .to_string();
+    let mut children = Vec::new();
+
+    if depth < MAX_WORKSPACE_DEPTH {
+        let mut entries = fs::read_dir(path)
+            .map_err(|err| format!("Cannot list workspace folder contents: {err}"))?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|err| format!("Cannot list workspace folder contents: {err}"))?;
+
+        entries.sort_by(|left, right| {
+            let left_path = left.path();
+            let right_path = right.path();
+            let left_is_dir = left_path.is_dir();
+            let right_is_dir = right_path.is_dir();
+
+            right_is_dir
+                .cmp(&left_is_dir)
+                .then_with(|| left.file_name().cmp(&right.file_name()))
+        });
+
+        for entry in entries {
+            let child_path = entry.path();
+            let file_type = entry
+                .file_type()
+                .map_err(|err| format!("Cannot inspect workspace entry: {err}"))?;
+            let child_name = entry.file_name().to_string_lossy().to_string();
+
+            if file_type.is_dir() {
+                if should_skip_workspace_dir(&child_name) {
+                    continue;
+                }
+
+                children.push(build_workspace_tree(&child_path, depth + 1, entry_count)?);
+            } else if file_type.is_file() {
+                if *entry_count >= MAX_WORKSPACE_ENTRIES {
+                    return Err(format!(
+                        "Workspace listing stopped after {MAX_WORKSPACE_ENTRIES} entries."
+                    ));
+                }
+
+                *entry_count += 1;
+                children.push(WorkspaceTreeEntry {
+                    name: child_name,
+                    path: child_path.to_string_lossy().to_string(),
+                    kind: WorkspaceEntryKind::File,
+                    children: Vec::new(),
+                });
+            }
+        }
+    }
+
+    Ok(WorkspaceTreeEntry {
+        name,
+        path: path.to_string_lossy().to_string(),
+        kind: WorkspaceEntryKind::Directory,
+        children,
+    })
+}
+
+fn should_skip_workspace_dir(name: &str) -> bool {
+    name.starts_with('.') || EXCLUDED_WORKSPACE_DIRS.contains(&name)
 }
 
 fn has_external_change(metadata: &fs::Metadata, expected_fingerprint: &str) -> bool {
@@ -200,6 +323,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             open_text_file,
             get_file_metadata,
+            list_workspace_tree,
             save_text_file
         ])
         .run(tauri::generate_context!())
@@ -282,6 +406,37 @@ mod tests {
         let err = readable_text_metadata(&path).expect_err("large file should fail");
 
         assert!(err.contains("10 MB"));
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn workspace_tree_skips_heavy_and_hidden_directories() {
+        let dir = unique_test_dir("workspace_tree");
+        fs::create_dir_all(dir.join("notes")).expect("create notes dir");
+        fs::create_dir_all(dir.join("node_modules/pkg")).expect("create node_modules dir");
+        fs::create_dir_all(dir.join(".git/objects")).expect("create git dir");
+        fs::write(dir.join("notes/today.md"), "# Today\n").expect("write note");
+        fs::write(dir.join("README.md"), "# Readme\n").expect("write readme");
+
+        let tree = list_workspace_tree(dir.to_string_lossy().to_string()).expect("list workspace");
+        let names = tree
+            .children
+            .iter()
+            .map(|entry| entry.name.as_str())
+            .collect::<Vec<_>>();
+
+        assert!(names.contains(&"notes"));
+        assert!(names.contains(&"README.md"));
+        assert!(!names.contains(&"node_modules"));
+        assert!(!names.contains(&".git"));
+
+        let notes = tree
+            .children
+            .iter()
+            .find(|entry| entry.name == "notes")
+            .expect("notes dir");
+        assert_eq!(notes.children[0].name, "today.md");
 
         let _ = fs::remove_dir_all(dir);
     }

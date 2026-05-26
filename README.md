@@ -16,8 +16,8 @@ Last reviewed: 2026-05-26
 - Product direction: Markdown-first safe text editor
 - Primary platform direction: Desktop app
 - Preferred initial stack: Tauri + CodeMirror 6 + React
-- Repository remote: `git@github.com:lero003/hazakura-note.git`
-- Current prototype: Tauri + React + CodeMirror 6で、Markdownを開く・編集する・保存する・プレビューする最小体験を実装済み
+- Repository remote: `https://github.com/lero003/hazakura-note.git`
+- Current prototype: Tauri + React + CodeMirror 6で、Markdownを開く・編集する・保存する・プレビューする・複数タブで扱う最小体験を実装済み
 
 ## Canonical Docs
 

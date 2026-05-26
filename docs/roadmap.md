@@ -46,7 +46,7 @@ Status: Completed on 2026-05-26
 
 ## v0.3: Workspace Basics
 
-Status: Next
+Status: Completed on 2026-05-26
 
 目的: 複数ファイルを扱える作業場にする。
 
@@ -57,9 +57,10 @@ Status: Next
 - タブごとの外部変更検知
 - System / Light / Dark テーマ切り替え
 - テーマ選択の保持
-- 最近開いたファイルまたはフォルダ
 - 未保存タブを閉じる前の確認
 - `.git` / `node_modules` / `target` / `dist` などの重いディレクトリ除外
+
+v0.3では、最近開いたファイルまたはフォルダの復元は未実装のまま残す。これはworkspace persistenceとして次の小さな改善候補に分ける。
 
 ## v0.4: Markdown Workspace
 

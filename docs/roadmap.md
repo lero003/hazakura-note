@@ -86,6 +86,8 @@ Status: Completed on 2026-05-26
 
 目的: Markdownを書く体験を軽くする。
 
+Before starting broad Markdown helpers, let the recurring automation close small reliability gaps from `docs/development-automation.md`, especially file safety, close/quit behavior, keyboard operation, IME smoke, and layout rough edges.
+
 - Markdownプレビュー
 - 見出しアウトライン
 - リスト継続

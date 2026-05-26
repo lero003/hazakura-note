@@ -10,12 +10,12 @@ Last reviewed: 2026-05-26
 GitHub remote:
 
 ```txt
-git@github.com:lero003/hazakura-note.git
+https://github.com/lero003/hazakura-note.git
 ```
 
 このディレクトリは、2026-05-26時点で `main` ブランチのGitリポジトリとして初期化済み。
 
-`origin` は設定済みだが、SSH権限の問題でリモート内容は未確認。初回commitまたはpushの前に、GitHub側の既存履歴を確認する。
+`origin` はHTTPSで設定済み。SSH権限の問題を避けるため、このrepoではHTTPS remoteを使う。
 
 ## Suggested Stack
 
@@ -80,6 +80,7 @@ get_file_metadata
 3. Goal 2: Safety Hardening を実行する
 4. Goal 3: Workspace Basics でタブとファイルツリーを実装する
 5. 保存失敗時の表示と復旧方針を継続的に固める
+6. `docs/development-automation.md` の自動改善ループで、保存・終了・ショートカット・IME・UI崩れを小さく固める
 
 ## Do Not Start With
 

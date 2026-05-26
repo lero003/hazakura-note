@@ -39,6 +39,7 @@ Last reviewed: 2026-05-26
 - [Security Boundary](docs/security-boundary.md): 安全性のために守る制約
 - [Roadmap](docs/roadmap.md): 段階的な開発順序
 - [Development Prep](docs/development-prep.md): 開発開始前の準備と最初の一手
+- [Development Automation](docs/development-automation.md): 自動改善ループの優先順位と検証ルール
 - [Current Status](docs/current-status.md): 現在動く範囲、確認結果、次の一手
 - [Next Goals](docs/next-goals.md): 次フェーズのgoal指示文
 - [Smoke Checklist](docs/smoke-checklist.md): 手動スモーク確認手順

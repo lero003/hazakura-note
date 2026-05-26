@@ -81,9 +81,10 @@ Known verification note:
 
 ## Next Actions
 
-1. Decide whether unsaved draft restoration belongs in the product or should remain intentionally out of scope.
-2. Add lightweight Markdown writing aids before diff work.
-3. Keep signing, notarization, and installer packaging separate from editor/workspace hardening.
+1. Run recurring automation from `docs/development-automation.md` to harden one small slice at a time.
+2. Prioritize file safety and close/quit behavior before adding new Markdown features.
+3. Decide whether unsaved draft restoration belongs in the product or should remain intentionally out of scope.
+4. Keep signing, notarization, and installer packaging separate from editor/workspace hardening.
 
 ## Avoid
 

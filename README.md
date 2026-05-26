@@ -32,6 +32,7 @@ Last reviewed: 2026-05-27
 - System / Light / Dark theme switching with persisted selection
 - Recent workspace, open tabs, and active tab restoration after restart
 - Rust-side binary-looking file rejection, large-file warning, editing size limit, and atomic save helper
+- Existing LF / CRLF line endings are preserved on save
 - Window close requests are stopped when open tabs have unsaved changes, with Save All / Discard All / Cancel choices
 
 ## Canonical Docs

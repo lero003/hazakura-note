@@ -266,6 +266,7 @@ export default function App() {
           tab.path,
           tab.contents,
           tab.fingerprint,
+          tab.line_ending,
         );
 
         setTabs((currentTabs) =>
@@ -273,6 +274,7 @@ export default function App() {
             candidate.id === tabId
               ? {
                   ...candidate,
+                  line_ending: saved.line_ending,
                   size: saved.size,
                   modified_ms: saved.modified_ms,
                   fingerprint: saved.fingerprint,

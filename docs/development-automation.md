@@ -34,7 +34,7 @@ Choose the first useful slice that is both small and verifiable.
 1. File safety and close/quit behavior:
    - app/window close confirmation manual-smoke follow-up if the new flow regresses
    - save failure recovery wording
-   - line ending and trailing newline preservation research or implementation
+   - trailing newline preservation research or implementation
 2. Editor reliability:
    - Undo/redo smoke and explicit docs
    - Japanese IME smoke

@@ -9,6 +9,7 @@ export type TextFileDocument = {
   path: string;
   name: string;
   contents: string;
+  line_ending: "lf" | "crlf";
   size: number;
   modified_ms: number | null;
   fingerprint: string;
@@ -17,6 +18,7 @@ export type TextFileDocument = {
 
 export type SavedFileState = {
   path: string;
+  line_ending: "lf" | "crlf";
   size: number;
   modified_ms: number | null;
   fingerprint: string;
@@ -134,10 +136,12 @@ export async function saveTextFile(
   path: string,
   contents: string,
   expectedFingerprint: string,
+  lineEnding: "lf" | "crlf",
 ): Promise<SavedFileState> {
   return invoke<SavedFileState>("save_text_file", {
     path,
     contents,
     expectedFingerprint,
+    lineEnding,
   });
 }

@@ -27,6 +27,7 @@ struct TextFileDocument {
     path: String,
     name: String,
     contents: String,
+    line_ending: String,
     size: u64,
     modified_ms: Option<u64>,
     fingerprint: String,
@@ -36,6 +37,7 @@ struct TextFileDocument {
 #[derive(Debug, Serialize)]
 struct SavedFileState {
     path: String,
+    line_ending: String,
     size: u64,
     modified_ms: Option<u64>,
     fingerprint: String,
@@ -82,7 +84,9 @@ fn open_text_file(path: String) -> Result<TextFileDocument, String> {
         return Err("Binary-looking files are not opened by this editor.".to_string());
     }
 
-    let contents = fs::read_to_string(&path_buf)
+    let bytes = fs::read(&path_buf).map_err(|err| format!("Cannot read file: {err}"))?;
+    let line_ending = detect_line_ending(&bytes);
+    let contents = String::from_utf8(bytes)
         .map_err(|err| format!("File is not readable as UTF-8 text: {err}"))?;
     let name = path_buf
         .file_name()
@@ -94,6 +98,7 @@ fn open_text_file(path: String) -> Result<TextFileDocument, String> {
         path,
         name,
         contents,
+        line_ending,
         size: metadata.len(),
         modified_ms: modified_ms(&metadata),
         fingerprint: metadata_fingerprint(&metadata),
@@ -152,6 +157,7 @@ fn save_text_file(
     path: String,
     contents: String,
     expected_fingerprint: String,
+    line_ending: String,
 ) -> Result<SavedFileState, String> {
     let path_buf = PathBuf::from(&path);
     let metadata = readable_text_metadata(&path_buf)?;
@@ -163,13 +169,15 @@ fn save_text_file(
         );
     }
 
-    atomic_write(&path_buf, contents.as_bytes())?;
+    let normalized_contents = normalize_line_endings(&contents, &line_ending);
+    atomic_write(&path_buf, normalized_contents.as_bytes())?;
 
     let metadata =
         fs::metadata(&path_buf).map_err(|err| format!("Cannot verify saved file: {err}"))?;
 
     Ok(SavedFileState {
         path,
+        line_ending: line_ending_for_save(&line_ending).to_string(),
         size: metadata.len(),
         modified_ms: modified_ms(&metadata),
         fingerprint: metadata_fingerprint(&metadata),
@@ -303,6 +311,51 @@ fn looks_binary(path: &Path) -> Result<bool, String> {
     Ok(buffer.contains(&0))
 }
 
+fn detect_line_ending(bytes: &[u8]) -> String {
+    let mut crlf_count = 0;
+    let mut lf_count = 0;
+    let mut previous = None;
+
+    for byte in bytes {
+        if *byte == b'\n' {
+            lf_count += 1;
+
+            if previous == Some(b'\r') {
+                crlf_count += 1;
+            }
+        }
+
+        previous = Some(*byte);
+    }
+
+    let lone_lf_count = lf_count - crlf_count;
+
+    if crlf_count > lone_lf_count {
+        "crlf".to_string()
+    } else {
+        "lf".to_string()
+    }
+}
+
+fn normalize_line_endings(contents: &str, requested_line_ending: &str) -> String {
+    let line_ending = line_ending_for_save(requested_line_ending);
+
+    if line_ending == "lf" {
+        return contents.replace("\r\n", "\n");
+    }
+
+    let lf_contents = contents.replace("\r\n", "\n");
+    lf_contents.replace('\n', "\r\n")
+}
+
+fn line_ending_for_save(requested_line_ending: &str) -> &'static str {
+    if requested_line_ending == "crlf" {
+        "crlf"
+    } else {
+        "lf"
+    }
+}
+
 fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), String> {
     let parent = path
         .parent()
@@ -406,6 +459,7 @@ mod tests {
 
         assert_eq!(document.name, "fresh.md");
         assert_eq!(document.contents, "");
+        assert_eq!(document.line_ending, "lf");
         assert_eq!(document.size, 0);
         assert!(path.exists());
 
@@ -465,6 +519,7 @@ mod tests {
             path.to_string_lossy().to_string(),
             "# Editor change\n".to_string(),
             opened_fingerprint,
+            "lf".to_string(),
         );
 
         assert!(result
@@ -473,6 +528,34 @@ mod tests {
         assert_eq!(
             fs::read_to_string(&path).expect("read protected file"),
             "# External change\n\nDo not overwrite.\n"
+        );
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn save_preserves_crlf_line_endings() {
+        let dir = unique_test_dir("save_crlf");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let path = dir.join("note.md");
+        fs::write(&path, b"# Title\r\n\r\nBody\r\n").expect("write crlf fixture");
+
+        let document =
+            open_text_file(path.to_string_lossy().to_string()).expect("open crlf fixture");
+
+        assert_eq!(document.line_ending, "crlf");
+
+        save_text_file(
+            path.to_string_lossy().to_string(),
+            "# Changed\n\nBody\n".to_string(),
+            document.fingerprint,
+            document.line_ending,
+        )
+        .expect("save crlf document");
+
+        assert_eq!(
+            fs::read(&path).expect("read saved file"),
+            b"# Changed\r\n\r\nBody\r\n"
         );
 
         let _ = fs::remove_dir_all(dir);

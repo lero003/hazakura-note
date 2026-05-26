@@ -29,6 +29,7 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 6. Confirm the Save button disables and the status returns to clean.
 7. Read the file from disk and confirm the edited text was written.
 8. Open the same file again from the Open button or file tree and confirm the existing tab is focused instead of duplicated.
+9. Repeat with a CRLF fixture and confirm saving preserves CRLF line endings on disk.
 
 ## New File
 

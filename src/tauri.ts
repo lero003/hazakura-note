@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { confirm, open } from "@tauri-apps/plugin-dialog";
+import { confirm, open, save as saveDialog } from "@tauri-apps/plugin-dialog";
 import {
   getCurrentWindow,
   type CloseRequestedEvent,
@@ -63,6 +63,26 @@ export async function pickMarkdownFile(): Promise<string | null> {
   return typeof selected === "string" ? selected : null;
 }
 
+export async function pickNewMarkdownFilePath(
+  defaultPath: string | null,
+): Promise<string | null> {
+  const selected = await saveDialog({
+    defaultPath: defaultPath ?? "untitled.md",
+    filters: [
+      {
+        name: "Markdown",
+        extensions: ["md", "markdown"],
+      },
+      {
+        name: "Text",
+        extensions: ["txt", "json", "yaml", "yml", "toml", "css", "html"],
+      },
+    ],
+  });
+
+  return typeof selected === "string" ? selected : null;
+}
+
 export async function pickWorkspaceFolder(): Promise<string | null> {
   const selected = await open({
     multiple: false,
@@ -94,6 +114,10 @@ export async function onCurrentWindowCloseRequested(
 
 export async function openTextFile(path: string): Promise<TextFileDocument> {
   return invoke<TextFileDocument>("open_text_file", { path });
+}
+
+export async function createTextFile(path: string): Promise<TextFileDocument> {
+  return invoke<TextFileDocument>("create_text_file", { path });
 }
 
 export async function getFileMetadata(path: string): Promise<FileMetadataState> {

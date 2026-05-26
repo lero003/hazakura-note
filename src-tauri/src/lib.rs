@@ -1,5 +1,5 @@
 use serde::Serialize;
-use std::fs::{self, File};
+use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
@@ -99,6 +99,38 @@ fn open_text_file(path: String) -> Result<TextFileDocument, String> {
         fingerprint: metadata_fingerprint(&metadata),
         large_file_warning: metadata.len() >= LARGE_FILE_WARNING_BYTES,
     })
+}
+
+#[tauri::command]
+fn create_text_file(path: String) -> Result<TextFileDocument, String> {
+    let path_buf = PathBuf::from(&path);
+
+    if path_buf.exists() {
+        return Err("A file already exists at the selected path.".to_string());
+    }
+
+    let parent = path_buf
+        .parent()
+        .ok_or_else(|| "Cannot create a file without a parent directory.".to_string())?;
+
+    if !parent.is_dir() {
+        return Err("Selected folder does not exist.".to_string());
+    }
+
+    path_buf
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| "Cannot create a file with an invalid name.".to_string())?;
+
+    let file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path_buf)
+        .map_err(|err| format!("Cannot create file: {err}"))?;
+    file.sync_all()
+        .map_err(|err| format!("Cannot sync created file: {err}"))?;
+
+    open_text_file(path)
 }
 
 #[tauri::command]
@@ -322,6 +354,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             open_text_file,
+            create_text_file,
             get_file_metadata,
             list_workspace_tree,
             save_text_file
@@ -358,6 +391,42 @@ mod tests {
             .expect_err("binary-looking markdown should fail");
 
         assert!(err.contains("Binary-looking"));
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn create_text_file_creates_empty_markdown_file() {
+        let dir = unique_test_dir("create_text_file");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let path = dir.join("fresh.md");
+
+        let document =
+            create_text_file(path.to_string_lossy().to_string()).expect("create markdown file");
+
+        assert_eq!(document.name, "fresh.md");
+        assert_eq!(document.contents, "");
+        assert_eq!(document.size, 0);
+        assert!(path.exists());
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn create_text_file_rejects_existing_file() {
+        let dir = unique_test_dir("create_existing_text_file");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let path = dir.join("existing.md");
+        fs::write(&path, "# Existing\n").expect("write fixture");
+
+        let err = create_text_file(path.to_string_lossy().to_string())
+            .expect_err("existing file should not be overwritten");
+
+        assert!(err.contains("already exists"));
+        assert_eq!(
+            fs::read_to_string(&path).expect("read protected file"),
+            "# Existing\n"
+        );
 
         let _ = fs::remove_dir_all(dir);
     }

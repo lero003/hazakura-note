@@ -5,7 +5,7 @@ Scope: Manual prototype checks
 Authority: Medium
 Last reviewed: 2026-05-27
 
-Use this checklist after changes to file opening, workspace listing, tabs, saving, preview rendering, theme handling, workspace restoration, search, or save-conflict handling.
+Use this checklist after changes to file creation, file opening, workspace listing, tabs, saving, preview rendering, theme handling, workspace restoration, search, or save-conflict handling.
 
 ## Build First
 
@@ -30,6 +30,15 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 7. Read the file from disk and confirm the edited text was written.
 8. Open the same file again from the Open button or file tree and confirm the existing tab is focused instead of duplicated.
 
+## New File
+
+1. Open a throwaway folder outside the repo with Open Folder.
+2. Click New File or press Cmd+N.
+3. Choose a new Markdown filename inside the throwaway folder.
+4. Confirm the new file opens as a clean tab and appears in the file tree.
+5. Type text, save it, and confirm the file on disk contains the saved text.
+6. Try choosing an existing file path and confirm the app does not overwrite it.
+
 ## Workspace Tree And Tabs
 
 1. Create a throwaway folder outside the repo with nested Markdown files.
@@ -50,13 +59,14 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 
 ## Keyboard Shortcuts
 
-1. Press Cmd+O and confirm the native file picker opens.
-2. Press Cmd+Shift+O and confirm the native folder picker opens.
-3. Open a throwaway Markdown file, edit it without saving, then press Cmd+W.
-4. Confirm the app offers Save, Discard, and Cancel through the same dirty-tab confirmation used by the tab close button.
-5. Cancel once and confirm the tab stays open with its unsaved text.
-6. Repeat Cmd+W and confirm Discard closes the tab without writing the unsaved text.
-7. Press Cmd+W with no active tab and confirm the window stays open.
+1. Press Cmd+N and confirm the native new-file path picker opens.
+2. Press Cmd+O and confirm the native file picker opens.
+3. Press Cmd+Shift+O and confirm the native folder picker opens.
+4. Open a throwaway Markdown file, edit it without saving, then press Cmd+W.
+5. Confirm the app offers Save, Discard, and Cancel through the same dirty-tab confirmation used by the tab close button.
+6. Cancel once and confirm the tab stays open with its unsaved text.
+7. Repeat Cmd+W and confirm Discard closes the tab without writing the unsaved text.
+8. Press Cmd+W with no active tab and confirm the window stays open.
 
 ## Unsaved Tab Close Confirmation
 

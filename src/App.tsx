@@ -3,10 +3,12 @@ import EditorPane from "./components/EditorPane";
 import PreviewPane from "./components/PreviewPane";
 import {
   closeCurrentWindow,
+  createTextFile,
   listWorkspaceTree,
   onCurrentWindowCloseRequested,
   openTextFile,
   pickMarkdownFile,
+  pickNewMarkdownFilePath,
   pickWorkspaceFolder,
   saveTextFile,
   type SavedFileState,
@@ -18,8 +20,9 @@ const WELCOME_MARKDOWN = `# hazakura-note
 
 安全に開く。静かに書く。差分で確かめる。
 
-左上の Open からMarkdownファイルを選んでください。
+左上の New File で作成するか、Open からMarkdownファイルを選んでください。
 
+- 新しいMarkdownファイルを作れます
 - Markdownを編集できます
 - 右側でプレビューできます
 - Cmd+Oで開き、Cmd+Wでタブを閉じ、Cmd+Sで保存できます
@@ -103,6 +106,15 @@ export default function App() {
   const allowWindowCloseRef = useRef(false);
   const modalOpen = pendingCloseTab !== null || pendingAppClose;
 
+  const refreshWorkspaceTree = useCallback(async () => {
+    if (!workspaceRootPath) {
+      return;
+    }
+
+    const tree = await listWorkspaceTree(workspaceRootPath);
+    setWorkspaceTree(tree);
+  }, [workspaceRootPath]);
+
   const openFilePath = useCallback(
     async (path: string) => {
       setGlobalError(null);
@@ -138,6 +150,57 @@ export default function App() {
     },
     [tabs],
   );
+
+  const createNewFile = useCallback(async () => {
+    setGlobalError(null);
+    setStatus("Choosing new file path...");
+
+    try {
+      const path = await pickNewMarkdownFilePath(
+        suggestedNewFilePath(workspaceRootPath),
+      );
+
+      if (!path) {
+        setStatus("New file cancelled");
+        return;
+      }
+
+      const existingTab = tabs.find((tab) => tab.path === path);
+
+      if (existingTab) {
+        setActiveTabId(existingTab.id);
+        setStatus("Tab focused");
+        return;
+      }
+
+      setStatus("Creating file...");
+
+      const file = await createTextFile(path);
+      const nextTab = createEditorTab(file);
+
+      setTabs((currentTabs) =>
+        currentTabs.some((tab) => tab.path === path)
+          ? currentTabs
+          : [...currentTabs, nextTab],
+      );
+      setActiveTabId(path);
+
+      if (workspaceRootPath) {
+        try {
+          await refreshWorkspaceTree();
+        } catch (err) {
+          setGlobalError(String(err));
+          setStatus("New file created; folder refresh failed");
+          return;
+        }
+      }
+
+      setStatus("New file created");
+    } catch (err) {
+      setGlobalError(String(err));
+      setStatus("New file failed");
+    }
+  }, [refreshWorkspaceTree, tabs, workspaceRootPath]);
 
   const openFile = useCallback(async () => {
     setGlobalError(null);
@@ -565,6 +628,12 @@ export default function App() {
         return;
       }
 
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n") {
+        event.preventDefault();
+        void createNewFile();
+        return;
+      }
+
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {
         event.preventDefault();
         findInputRef.current?.focus();
@@ -608,6 +677,7 @@ export default function App() {
     };
   }, [
     activeTabId,
+    createNewFile,
     modalOpen,
     openFile,
     openWorkspace,
@@ -623,6 +693,9 @@ export default function App() {
           <span className="app-subtitle">Markdown-safe editor prototype</span>
         </div>
         <div className="toolbar" role="toolbar" aria-label="Workspace actions">
+          <button type="button" onClick={createNewFile}>
+            New File
+          </button>
           <button type="button" onClick={openWorkspace}>
             Open Folder
           </button>
@@ -733,7 +806,7 @@ export default function App() {
           </span>
         </div>
         <span className="shortcut-hint">
-          Cmd+O open · Cmd+Shift+O folder · Cmd+W close · Cmd+F find · Cmd+S save
+          Cmd+N new · Cmd+O open · Cmd+Shift+O folder · Cmd+W close · Cmd+F find · Cmd+S save
         </span>
       </section>
 
@@ -1034,6 +1107,10 @@ function formatBytes(bytes: number): string {
 
 function formatDirtyTabCount(count: number): string {
   return count === 1 ? "1 unsaved tab" : `${count} unsaved tabs`;
+}
+
+function suggestedNewFilePath(workspaceRootPath: string | null): string | null {
+  return workspaceRootPath ? `${workspaceRootPath}/untitled.md` : "untitled.md";
 }
 
 function saveStatusLabel(tab: EditorTab | null, dirty: boolean): string {

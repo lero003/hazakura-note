@@ -8,11 +8,11 @@ Last reviewed: 2026-05-27
 ## Current State
 
 - A touchable Tauri desktop prototype exists.
-- The prototype opens a user-selected folder, shows a bounded file tree, opens multiple text/Markdown files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, and renders a sanitized Markdown preview.
+- The prototype creates user-selected text/Markdown files, opens a user-selected folder, shows a bounded file tree, opens multiple files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, and renders a sanitized Markdown preview.
 - Recent workspace, open tabs, active tab, and theme preference are restored after restart.
 - Save conflicts now present explicit recovery choices: Reopen from disk, Close without saving, and Keep editing.
 - Window close requests now stop when any open tab is unsaved and offer Save All, Discard All, or Cancel.
-- Cmd+O opens a file, Cmd+Shift+O opens a folder, and Cmd+W closes the active tab through the same dirty-tab confirmation path as the tab close button.
+- Cmd+N creates a new file, Cmd+O opens a file, Cmd+Shift+O opens a folder, and Cmd+W closes the active tab through the same dirty-tab confirmation path as the tab close button.
 - The built macOS app bundle is generated at `src-tauri/target/release/bundle/macos/hazakura-note.app`.
 
 ## Implemented
@@ -23,7 +23,8 @@ Last reviewed: 2026-05-27
 - Markdown preview with `marked` and `DOMPurify`
 - Native open-file dialog through `@tauri-apps/plugin-dialog`
 - Native open-folder dialog through `@tauri-apps/plugin-dialog`
-- Rust commands for opening and saving UTF-8 text files
+- Native save-path dialog through `@tauri-apps/plugin-dialog`
+- Rust commands for creating, opening, and saving UTF-8 text files
 - Rust command for bounded workspace tree listing
 - Save-conflict detection using a Rust-generated file fingerprint
 - Multiple open file tabs
@@ -34,7 +35,7 @@ Last reviewed: 2026-05-27
 - Recent workspace restoration through `localStorage`
 - Open tab and active tab restoration through `localStorage`
 - Active-file search with match count and previous/next controls
-- Keyboard shortcuts for Open, Open Folder, Save, Find, and active-tab close
+- Keyboard shortcuts for New File, Open, Open Folder, Save, Find, and active-tab close
 - Conflict recovery actions for reloading, closing, or continuing with local edits
 - App/window close confirmation for dirty tabs
 - Binary-looking file rejection
@@ -74,6 +75,7 @@ Runtime smoke:
 Known verification note:
 
 - Vite reports a production chunk-size warning because CodeMirror and preview libraries are bundled together. This is acceptable for the prototype; revisit before distribution readiness.
+- New File creation and existing-file overwrite rejection have Rust test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 - App/window dirty-tab close confirmation and the newer keyboard shortcuts have build/test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 
 ## Risks / Unknowns

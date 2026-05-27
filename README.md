@@ -38,6 +38,7 @@ Last reviewed: 2026-05-27
 - Existing LF / CRLF line endings are preserved on save
 - Existing final-newline presence is preserved on save; the app does not add or remove a trailing newline by policy
 - Window and dirty-tab close requests are stopped when open tabs have unsaved changes, with safe keyboard cancellation, Save / Discard choices, and editor focus restored after cancellation
+- Failed or conflicted saves from the dirty-tab close dialog stop the close and return to the editor with the normal recovery actions visible
 - Long file names are clipped or wrapped in tabs, the file tree, status/error rows, and close dialogs so core controls stay reachable
 
 ## Canonical Docs

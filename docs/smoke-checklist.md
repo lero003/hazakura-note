@@ -94,6 +94,7 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 6. Press Escape once and confirm the current tab stays open with its unsaved text and keyboard focus returns to the editor.
 7. Repeat, choose Cancel, and confirm the current tab stays open with keyboard focus returned to the editor.
 8. Repeat and confirm Discard closes the tab without writing the unsaved text.
+9. Repeat with a save failure or external save conflict, choose Save, and confirm the close dialog disappears, the tab stays open, keyboard focus returns to the editor, and the save-failure or conflict recovery actions are visible.
 
 ## App / Window Close Confirmation
 

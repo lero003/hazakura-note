@@ -77,6 +77,7 @@ Status: Completed on 2026-05-26
 - dirty tab close時の Save / Discard / Cancel 再確認
 - app/window close時の dirty tab 向け Save All / Discard All / Cancel 再確認
 - dirty tab / app close確認をCancelまたはEscapeで閉じた後のeditor focus復帰
+- dirty tab close確認からのSaveが失敗または衝突した場合、closeを止めて通常の回復導線へ戻す
 - 長いファイル名と狭い表示幅で tabs / file tree / status / error / close dialog が主要操作を押し出さない表示ガード
 - Cmd+O / Cmd+Shift+O / Cmd+W の基本ショートカット
 - Workspace treeのlazy loading: Open Folder時はroot直下だけを読み、directory展開時に直下childrenを読む。除外directoryは維持し、directory単位の上限超過はpartial listingとして表示する。

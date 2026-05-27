@@ -431,8 +431,13 @@ export default function App() {
 
     if (saved) {
       closeTabNow(pendingCloseTabId);
+      return;
     }
-  }, [closeTabNow, pendingCloseTabId, saveTabById]);
+
+    setPendingCloseTabId(null);
+    setStatus("Close stopped");
+    focusEditorSoon();
+  }, [closeTabNow, focusEditorSoon, pendingCloseTabId, saveTabById]);
 
   const saveAllAndCloseWindow = useCallback(async () => {
     if (dirtyTabs.length === 0) {

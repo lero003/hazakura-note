@@ -1,14 +1,27 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { markdown } from "@codemirror/lang-markdown";
 import {
+  selectCharLeft,
+  selectCharRight,
+  selectLineDown,
+  selectLineUp,
+} from "@codemirror/commands";
+import {
   Compartment,
+  EditorSelection,
   EditorState,
+  Prec,
   type Range,
   StateEffect,
   StateField,
   type Text,
 } from "@codemirror/state";
-import { Decoration, type DecorationSet, EditorView } from "@codemirror/view";
+import {
+  Decoration,
+  type DecorationSet,
+  EditorView,
+  keymap,
+} from "@codemirror/view";
 import { basicSetup } from "codemirror";
 
 type SearchMatch = { from: number; to: number };
@@ -41,6 +54,38 @@ export type EditorPaneHandle = {
 
 const setSearchMatchesEffect =
   StateEffect.define<readonly DecoratedSearchMatch[]>();
+
+const editorKeyboardShortcuts = Prec.highest(keymap.of([
+  { key: "Shift-ArrowLeft", run: selectCharLeft },
+  { key: "Shift-ArrowRight", run: selectCharRight },
+  { key: "Shift-ArrowUp", run: selectLineUp },
+  { key: "Shift-ArrowDown", run: selectLineDown },
+]));
+
+const editorTabIndentation = Prec.highest(
+  EditorView.domEventHandlers({
+    keydown(event, view) {
+      if (
+        event.key !== "Tab" ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      ) {
+        return false;
+      }
+
+      event.preventDefault();
+
+      if (event.shiftKey) {
+        outdentSelectedLines(view);
+      } else {
+        indentSelection(view);
+      }
+
+      return true;
+    },
+  }),
+);
 
 const invisibleCharactersField = StateField.define<DecorationSet>({
   create(state) {
@@ -149,6 +194,8 @@ const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
       parent: hostRef.current,
       extensions: [
         basicSetup,
+        editorKeyboardShortcuts,
+        editorTabIndentation,
         markdown(),
         searchHighlightField,
         wrappingCompartmentRef.current.of(
@@ -297,6 +344,74 @@ const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
 );
 
 export default EditorPane;
+
+function indentSelection(view: EditorView) {
+  const indent = " ".repeat(view.state.tabSize);
+
+  if (view.state.selection.ranges.every((range) => range.empty)) {
+    view.dispatch(
+      view.state.changeByRange((range) => ({
+        changes: { from: range.from, insert: indent },
+        range: EditorSelection.cursor(range.from + indent.length),
+      })),
+    );
+    return;
+  }
+
+  const changes = selectedLineNumbers(view.state).map((lineNumber) => ({
+    from: view.state.doc.line(lineNumber).from,
+    insert: indent,
+  }));
+
+  if (changes.length > 0) {
+    view.dispatch({ changes });
+  }
+}
+
+function outdentSelectedLines(view: EditorView) {
+  const changes = selectedLineNumbers(view.state)
+    .map((lineNumber) => {
+      const line = view.state.doc.line(lineNumber);
+
+      if (line.text.startsWith("\t")) {
+        return { from: line.from, to: line.from + 1 };
+      }
+
+      const leadingSpaces = line.text.match(/^ +/)?.[0].length ?? 0;
+      const removableSpaces = Math.min(leadingSpaces, view.state.tabSize);
+
+      return removableSpaces > 0
+        ? { from: line.from, to: line.from + removableSpaces }
+        : null;
+    })
+    .filter((change): change is { from: number; to: number } => change !== null);
+
+  if (changes.length > 0) {
+    view.dispatch({ changes });
+  }
+}
+
+function selectedLineNumbers(state: EditorState) {
+  const lineNumbers = new Set<number>();
+
+  for (const range of state.selection.ranges) {
+    const inclusiveTo = range.empty
+      ? range.to
+      : Math.max(range.from, range.to - 1);
+    const startLine = state.doc.lineAt(range.from);
+    const endLine = state.doc.lineAt(inclusiveTo);
+
+    for (
+      let lineNumber = startLine.number;
+      lineNumber <= endLine.number;
+      lineNumber += 1
+    ) {
+      lineNumbers.add(lineNumber);
+    }
+  }
+
+  return Array.from(lineNumbers).sort((a, b) => a - b);
+}
 
 function editorTheme(theme: "light" | "dark", fontSize: number) {
   const safeFontSize = Math.min(Math.max(fontSize, 12), 22);

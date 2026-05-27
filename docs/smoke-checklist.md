@@ -19,6 +19,8 @@ Latest Dirty Tab Close Failure Focus Polish checks: 2026-05-28 automated gates p
 
 Latest Discard All Draft Cleanup Polish checks: 2026-05-28 automated gates passed after clearing discarded app/window close drafts before close. No fresh built-app manual smoke was claimed.
 
+Latest Editor Keyboard Editing Polish checks: 2026-05-28 with Vite browser smoke at `http://127.0.0.1:1421/`. Confirmed Tab inserts indentation in the editor, selected lines indent/outdent with Tab / Shift+Tab, and Shift+Arrow selects text without moving focus away from the editor. No fresh built-app manual smoke was claimed.
+
 ## Build First
 
 ```bash
@@ -148,6 +150,16 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 6. Cancel once and confirm the tab stays open with its unsaved text and keyboard focus returns to the editor.
 7. Repeat Cmd+W and confirm Discard closes the tab without writing the unsaved text.
 8. Press Cmd+W with no active tab and confirm the window stays open.
+
+## Editor Keyboard Editing
+
+1. Focus the editor body.
+2. Press Tab with a collapsed cursor and confirm indentation is inserted into the document instead of moving focus to another control.
+3. Select multiple lines and press Tab, then confirm all selected lines are indented.
+4. Press Shift+Tab on the indented selection and confirm the selected lines are outdented without changing unrelated lines.
+5. Press Shift+ArrowLeft and Shift+ArrowRight and confirm the selection expands or shrinks by character.
+6. Press Shift+ArrowUp and Shift+ArrowDown and confirm the selection expands by line.
+7. Confirm the status bar reports the selected character and line counts.
 
 ## Unsaved Tab Close Confirmation
 

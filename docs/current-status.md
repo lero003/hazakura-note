@@ -25,6 +25,7 @@ Last reviewed: 2026-05-28
 - Go to Line jumps the active editor to a requested line.
 - The active tab is rechecked for external on-disk changes when it gains focus through tab switching or app focus/visibility changes.
 - Find-field Enter / Escape handling and global shortcuts now ignore active IME composition events, so Japanese conversion is not mistaken for search movement, find close, save, open, or tab-close commands.
+- Editor-local keyboard editing keeps Tab inside the editor for indentation, supports Shift+Tab outdent, and preserves Shift+Arrow text selection.
 - Save conflicts now present explicit recovery choices: Reopen from disk, Close without saving, and Keep editing.
 - Non-conflict save failures now state that local edits remain in the editor and offer Try save again / Keep editing actions.
 - Window close requests now stop when any open tab is unsaved and offer Save All, Discard All, or Cancel.
@@ -75,6 +76,7 @@ Last reviewed: 2026-05-28
 - Unsaved draft recovery prompt after restart
 - External-change metadata recheck on app focus / visibility return and active tab switch
 - IME-safe keyboard handling for find-field Enter / Escape and global shortcuts during active composition
+- Editor-local Tab / Shift+Tab indentation and Shift+Arrow selection key handling
 - Keyboard shortcuts for New File, Open, Open Folder, Save, Find, and active-tab close
 - Conflict recovery actions for reloading, closing, or continuing with local edits
 - Save-failure recovery wording and retry / keep-editing actions for non-conflict save errors
@@ -199,6 +201,15 @@ Discard All Draft Cleanup Polish checks on 2026-05-28:
 - `docs/smoke-checklist.md` now includes a restart check that discarded dirty tabs are not offered as recoverable drafts.
 - Automated local gates passed after this change; no fresh built-app manual smoke was claimed.
 
+Editor Keyboard Editing Polish checks on 2026-05-28:
+
+- Editor-local Tab now inserts indentation instead of moving focus away from the editor.
+- Shift+Tab outdents selected or current lines.
+- Shift+Arrow selection is explicitly bound for character and line selection.
+- `npm run build:vite` passed.
+- Vite browser smoke at `http://127.0.0.1:1421/` confirmed collapsed-cursor Tab indentation, selected-line Tab / Shift+Tab indent and outdent, and Shift+Arrow character selection status.
+- No fresh built-app manual smoke was claimed.
+
 Known verification note:
 
 - Vite reports a production chunk-size warning because CodeMirror and preview libraries are bundled together. This is acceptable for the prototype; revisit before distribution readiness.
@@ -206,6 +217,7 @@ Known verification note:
 - The App Close Save All Failure Focus Polish did not include a fresh built-app manual failure/conflict smoke pass; use the updated smoke checklist before treating this path as distribution-grade.
 - The Dirty Tab Close Failure Focus Polish did not include a fresh built-app manual failure/conflict smoke pass; use the updated smoke checklist before treating this path as distribution-grade.
 - The Discard All Draft Cleanup Polish did not include a fresh built-app manual restart smoke pass; use the updated smoke checklist before treating this path as distribution-grade.
+- The Editor Keyboard Editing Polish used Vite browser smoke only; repeat the new editor keyboard checklist in the built app before treating this path as distribution-grade.
 - Long file name clipping was re-smoked in the workspace tree during Source Preview Quality Polish. A narrower-window pass is still useful before binary distribution readiness.
 
 ## Risks / Unknowns

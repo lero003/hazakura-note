@@ -168,11 +168,12 @@ Known verification note:
 
 ## Next Actions
 
-1. Run recurring automation from `docs/development-automation.md` to harden one small slice at a time.
-2. Re-smoke long file name / constrained-width layout before binary distribution readiness.
-3. Use `docs/source-release-checklist.md` as the source-only release boundary and do not tag or publish without explicit approval.
-4. Add focused UI/E2E coverage for draft restore and external-change focus recheck before treating them as distribution-grade behavior.
-5. Keep signing, notarization, and installer packaging separate from source-release and workspace hardening.
+1. Run recurring automation from `docs/development-automation.md` in the Source Preview Quality Polish lane.
+2. Start each automation run from one narrow built-app smoke section in `docs/smoke-checklist.md`, then fix only the smallest actionable issue found.
+3. Re-smoke long file name / constrained-width layout before binary distribution readiness.
+4. Use `docs/source-release-checklist.md` as the source-only release boundary and do not tag or publish without explicit approval.
+5. Add focused UI/E2E coverage for draft restore and external-change focus recheck before treating them as distribution-grade behavior.
+6. Keep signing, notarization, and installer packaging separate from source-release and workspace hardening.
 
 ## Avoid
 

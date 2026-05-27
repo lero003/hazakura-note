@@ -17,7 +17,11 @@ Name: `hazakura-note quality loop`
 
 Cadence: recurring local development loop, intended for small quality slices.
 
-Primary outcome: one coherent improvement per run, verified, documented, committed, and pushed when checks pass.
+Current phase: Source Preview Quality Polish (`docs/roadmap.md` v0.3.5).
+
+Primary outcome: one coherent smoke-driven improvement per run, verified, documented, committed, and pushed when checks pass.
+
+The automation should begin from built-app smoke whenever practical. If the smoke finds no actionable issue, a verified no-op is acceptable.
 
 ## Start Every Run
 
@@ -31,33 +35,37 @@ Primary outcome: one coherent improvement per run, verified, documented, committ
 
 Choose the first useful slice that is both small and verifiable.
 
-1. File safety and close/quit behavior:
+1. Smoke-driven source preview polish:
+   - rerun one narrow section of `docs/smoke-checklist.md` in the built app
+   - prefer checks that previously carried risk: save failure recovery, external-change recheck, dirty close, draft restore, Save As, line endings, preview sanitize, workspace tree, theme switching, search, long file names, and constrained-width layout
+   - fix only the smallest issue found by that smoke
+2. File safety and close/quit behavior:
    - app/window close confirmation manual-smoke follow-up if the new flow regresses
    - save failure recovery manual-smoke follow-up if the retry / keep-editing flow regresses
    - trailing newline preservation manual-smoke follow-up if the Rust-covered behavior regresses
-2. Editor reliability:
+3. Editor reliability:
    - Undo/redo smoke and explicit docs
    - Japanese IME smoke
    - search highlight visibility manual-smoke follow-up if the new highlights regress
    - focus movement and keyboard-only operation
    - long file name and narrow window layout
-3. Workspace scalability:
+4. Workspace scalability:
    - lazy workspace tree manual-smoke follow-up if root open, directory expansion, exclusions, or partial-listing state regresses
    - keep `.git`, `node_modules`, `target`, `dist`, and hidden-directory exclusions
    - use a per-directory entry cap with a visible partial-listing state instead of failing the whole folder open
    - verify large folders without adding project-wide indexing, Git status inspection, or background analysis
-4. Markdown writing comfort:
+5. Markdown writing comfort:
    - heading outline
    - light Markdown insertion aids
    - checkbox or link helpers
    - preview scroll behavior
-5. Local release readiness:
+6. Local release readiness:
    - GitHub Actions for existing quality gates
    - app version/about metadata
    - source-only release readiness from `docs/source-release-checklist.md`
    - release candidate checklist and source release notes
    - packaging docs, without signing or notarization claims
-6. Verified no-op:
+7. Verified no-op:
    - If no small useful slice is safe, run the relevant checks, update docs only if facts changed, and report no-op clearly.
 
 ## Boundaries
@@ -125,17 +133,17 @@ If checks fail:
 ## Reusable Automation Prompt
 
 ```txt
-Advance hazakura-note by one small, verifiable quality-hardening slice.
+Advance hazakura-note by one small, verifiable source-preview quality slice.
 
 Start by reading AGENTS.md, README.md, docs/current-status.md, docs/roadmap.md, docs/smoke-checklist.md, docs/development-automation.md, and checking git status --short --branch. Treat existing uncommitted changes as user or previous-run work and do not revert them.
 
-Use docs/development-automation.md as the source of truth. Prefer file safety and close/quit behavior first, then editor reliability, workspace scalability, Markdown writing comfort, local release readiness, and verified no-op if no useful small slice is safe.
+Use docs/development-automation.md as the source of truth. The current lane is Source Preview Quality Polish. Prefer built-app smoke first, then file safety and close/quit behavior, editor reliability, workspace scalability, Markdown writing comfort, local release readiness, and verified no-op if no useful small slice is safe.
 
 Do not implement Git integration, LSP, terminal, AI assistance, arbitrary command execution, plugin systems, project-wide analysis/indexing, signing/notarization completion, merge editor, advanced Git diff, or dependency/lockfile changes without explicit user approval.
 
 For substantial implementation, automation changes, Git/GitHub mutation, release work, or command-selection uncertainty, run Hazakura Habitat first and read agent_context.md before continuing. Consult command_policy.md before risky or mutating commands.
 
-Choose exactly one coherent slice. Implement it, update the relevant docs, and verify it. For code changes run npm run build:vite, cargo fmt --manifest-path src-tauri/Cargo.toml -- --check, cargo test --manifest-path src-tauri/Cargo.toml, npm run build, and git diff --check. For docs-only changes run git diff --check. For UI behavior changes, update or exercise docs/smoke-checklist.md and do not claim manual smoke passed unless it was actually exercised.
+Choose exactly one coherent slice. Prefer one narrow built-app smoke section from docs/smoke-checklist.md, fix only the smallest actionable issue found, update the relevant docs, and verify it. For code changes run npm run build:vite, cargo fmt --manifest-path src-tauri/Cargo.toml -- --check, cargo test --manifest-path src-tauri/Cargo.toml, npm run build, and git diff --check. For docs-only changes run git diff --check. For UI behavior changes, update or exercise docs/smoke-checklist.md and do not claim manual smoke passed unless it was actually exercised.
 
 If checks pass, stage only related files, commit with a concise message, and push to the configured HTTPS tracking branch. If checks fail, do not commit or push; report the failing command and next fix.
 

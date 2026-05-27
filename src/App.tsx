@@ -176,6 +176,11 @@ export default function App() {
     () => analyzeTextDocument(activeContents, activeTab?.line_ending),
     [activeContents, activeTab?.line_ending],
   );
+  const activeDocumentMeta = activeTab
+    ? formatActiveDocumentMeta(activeDocumentStats, activeTab, activeDirty)
+    : previewVisible
+      ? "Preview only"
+      : "No file open";
   const documentKey = activeTab?.path ?? "welcome";
   const findMatches = useMemo(
     () => findTextMatches(activeContents, findQuery, searchOptions),
@@ -1397,13 +1402,7 @@ export default function App() {
           )}
         </div>
         <div className="document-meta">
-          {activeTab
-            ? formatDocumentMeta(activeDocumentStats, activeTab.name)
-            : previewVisible
-              ? "Preview only"
-              : "No file open"}
-          {activeTab?.large_file_warning ? " · large file" : ""}
-          {activeTab ? (activeDirty ? " · unsaved" : " · clean") : ""}
+          {activeDocumentMeta}
         </div>
       </section>
 
@@ -1485,10 +1484,11 @@ export default function App() {
             <span>Regex</span>
           </label>
         </div>
-        <label className="goto-control">
-          <span>Line</span>
+        <div className="goto-control">
+          <label htmlFor="go-to-line-input">Line</label>
           <input
             aria-label="Go to line"
+            id="go-to-line-input"
             type="number"
             min="1"
             value={goToLineValue}
@@ -1504,10 +1504,10 @@ export default function App() {
               }
             }}
           />
-          <button type="button" onClick={goToLine}>
+          <button aria-label="Go to line" type="button" onClick={goToLine}>
             Go
           </button>
-        </label>
+        </div>
         <span className="shortcut-hint">
           Cmd+N new · Cmd+O open · Cmd+Shift+O folder · Cmd+W close · Cmd+F find · Cmd+S save
           · Cmd+Shift+S save as
@@ -1632,8 +1632,10 @@ export default function App() {
       <footer className="status-bar">
         <span>{status}</span>
         <span>
-          {formatSelectionInfo(selectionInfo)} ·{" "}
-          {saveStatusLabel(activeTab, activeDirty)}
+          {`${formatSelectionInfo(selectionInfo)} · ${saveStatusLabel(
+            activeTab,
+            activeDirty,
+          )}`}
         </span>
       </footer>
 
@@ -2186,14 +2188,31 @@ function normalizeTextLineEndings(
   return lfContents.replace(/\n/g, "\r\n");
 }
 
-function formatDocumentMeta(stats: TextDocumentStats, fileName: string): string {
+function formatActiveDocumentMeta(
+  stats: TextDocumentStats,
+  tab: EditorTab,
+  dirty: boolean,
+): string {
+  return [
+    ...formatDocumentMetaParts(stats, tab.name),
+    tab.large_file_warning ? "large file" : null,
+    dirty ? "unsaved" : "clean",
+  ]
+    .filter((part): part is string => Boolean(part))
+    .join(" · ");
+}
+
+function formatDocumentMetaParts(
+  stats: TextDocumentStats,
+  fileName: string,
+): string[] {
   return [
     formatFileType(fileName),
     formatBytes(stats.bytes),
     `${stats.characters.toLocaleString()} chars`,
     formatLineEndingKind(stats.lineEnding),
     stats.hasFinalNewline ? "final newline" : "no final newline",
-  ].join(" · ");
+  ];
 }
 
 function formatFileType(fileName: string): string {

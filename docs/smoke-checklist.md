@@ -13,6 +13,8 @@ Latest Text Editor Usability Pack pass: 2026-05-27 with `/tmp/hazakura-note-usab
 
 Latest Editor Reliability / Navigation Pack pass: 2026-05-27 with Vite browser smoke at `http://127.0.0.1:1420/`. Confirmed case/regex UI wiring, invalid regex reporting, Go to Line movement/status, cursor line/column status, and editor display setting restoration after reload.
 
+Latest Source Preview Quality Polish pass: 2026-05-27 with `/Users/keisetsu/Projects/hazakura-note-smoke-paid-quality`. Confirmed built-app workspace switching, hidden/heavy directory exclusion, long filename clipping in the tree, Markdown and CRLF metadata, search highlights, external-change recheck on tab return, and Go to Line accessibility naming.
+
 ## Build First
 
 ```bash
@@ -107,9 +109,11 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 2. Select text spanning one line and multiple lines, then confirm approximate selected character and line counts appear.
 3. Enter a valid line number in the Line control and click Go.
 4. Confirm the cursor moves to that line and the status bar updates.
-5. Toggle Wrap and confirm long lines wrap or stop wrapping without changing file contents.
-6. Toggle Invisibles and confirm spaces/tabs/trailing whitespace receive visible markers without changing file contents.
-7. Change Font and Tab size, restart or reload the app, and confirm the selected display settings are restored.
+5. Confirm the Go button is exposed to accessibility as Go to line, not as the Line label.
+6. Confirm metadata and status separators render as single ` · ` separators without doubled spacing.
+7. Toggle Wrap and confirm long lines wrap or stop wrapping without changing file contents.
+8. Toggle Invisibles and confirm spaces/tabs/trailing whitespace receive visible markers without changing file contents.
+9. Change Font and Tab size, restart or reload the app, and confirm the selected display settings are restored.
 
 ## Preview Toggle And Images
 

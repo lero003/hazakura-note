@@ -318,7 +318,7 @@ button:disabled {
   gap: 8px;
 }
 
-.goto-control span,
+.goto-control label,
 .find-options span {
   color: var(--text-muted);
   font-size: 12px;

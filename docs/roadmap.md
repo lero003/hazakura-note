@@ -145,6 +145,17 @@ Status: Completed on 2026-05-27
 
 このフェーズでは、autosave、merge editor、diff UI、Git連携、LSP、terminal、AI支援、project indexingは扱わない。
 
+## v0.3.5: Source Preview Quality Polish
+
+Status: In progress from 2026-05-27
+
+目的: 新機能を広げず、built app smokeを繰り返してsource-only developer previewとしての粗を削る。
+
+- 保存、外部変更衝突、dirty close、draft restore、Save As、改行コード、preview sanitize、workspace tree、検索、テーマ、長いファイル名を優先smoke対象にする
+- 見つかった問題は小さな修正単位に分け、再smokeしてからdocs/current-status.mdへ証跡を残す
+- 2026-05-27の初回polishでは、Go to Lineのアクセシビリティ名とmetadata/status separatorの余分な空白を修正済み
+- このフェーズでは、Git連携、LSP、terminal、AI支援、project indexing、署名済みbinary配布、課金導線は扱わない
+
 ## v0.4: Markdown Workspace
 
 目的: Markdownを書く体験を軽くする。

@@ -143,10 +143,19 @@ Editor Reliability / Navigation Pack smoke on 2026-05-27:
 - `npm run build:vite`, `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`, `cargo test --manifest-path src-tauri/Cargo.toml`, `npm run build`, and `git diff --check` passed after adding cursor/selection status, search options, Go to Line, display settings, draft restore, and focus/tab external-change recheck.
 - Vite browser smoke at `http://127.0.0.1:1420/` confirmed search match count, invalid regex reporting, Go to Line status/cursor movement, and persisted editor settings for Invisibles, Font 16, and Tab 4 after reload.
 
+Source Preview Quality Polish smoke on 2026-05-27:
+
+- Built-app smoke used `/Users/keisetsu/Projects/hazakura-note-smoke-paid-quality`.
+- Opening the throwaway folder replaced the workspace tree with direct children only and continued to hide `.git`, `node_modules`, `target`, and `dist`.
+- Opening `alpha.md` from the tree showed Markdown metadata, preview, active tree state, and search highlights for two `target` matches.
+- Opening `crlf.txt` showed `Text`, `CRLF`, byte/character counts, and clean state without marking the tab dirty.
+- Modifying `alpha.md` outside the app, switching away, then switching back to the tab detected the external change and showed Reopen from disk / Close without saving / Keep editing before Save.
+- A small polish fix corrected the Go to Line button's accessible name and removed extra separator whitespace in metadata/status text.
+
 Known verification note:
 
 - Vite reports a production chunk-size warning because CodeMirror and preview libraries are bundled together. This is acceptable for the prototype; revisit before distribution readiness.
-- Long file name and constrained-width layout guardrails have build coverage and smoke-checklist coverage, but still need a focused manual built-app smoke pass before binary distribution readiness.
+- Long file name clipping was re-smoked in the workspace tree during Source Preview Quality Polish. A narrower-window pass is still useful before binary distribution readiness.
 
 ## Risks / Unknowns
 

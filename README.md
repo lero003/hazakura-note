@@ -29,7 +29,7 @@ Last reviewed: 2026-05-27
 - Keyboard shortcuts for New File, Open, Open Folder, Save, Find, and tab close
 - External-change save conflict detection with Reopen from disk / Close without saving / Keep editing actions
 - Non-conflict save failures keep local edits and show Try save again / Keep editing recovery actions
-- In-file search for the active tab, with visible match highlights and active-match selection
+- In-file search for the active tab, with visible match highlights, active-match selection, and keyboard next / previous / return-to-editor flow
 - System / Light / Dark theme switching with persisted selection
 - Recent workspace, open tabs, and active tab restoration after restart
 - Rust-side binary-looking file rejection, large-file warning, editing size limit, and atomic save helper

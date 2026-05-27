@@ -1,5 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import EditorPane from "./components/EditorPane";
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import EditorPane, { type EditorPaneHandle } from "./components/EditorPane";
 import PreviewPane from "./components/PreviewPane";
 import {
   closeCurrentWindow,
@@ -80,6 +87,7 @@ export default function App() {
     readSystemTheme(),
   );
   const findInputRef = useRef<HTMLInputElement | null>(null);
+  const editorPaneRef = useRef<EditorPaneHandle | null>(null);
   const closeTabCancelButtonRef = useRef<HTMLButtonElement | null>(null);
   const appCloseCancelButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -499,6 +507,36 @@ export default function App() {
     );
   }, [findMatches.length]);
 
+  const closeFindAndFocusEditor = useCallback(() => {
+    setFindQuery("");
+    setActiveMatchIndex(0);
+    editorPaneRef.current?.focus();
+    setStatus("Find closed");
+  }, []);
+
+  const handleFindKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        closeFindAndFocusEditor();
+        return;
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (event.shiftKey) {
+          showPreviousMatch();
+        } else {
+          showNextMatch();
+        }
+      }
+    },
+    [closeFindAndFocusEditor, showNextMatch, showPreviousMatch],
+  );
+
   useEffect(() => {
     let cancelled = false;
 
@@ -694,9 +732,6 @@ export default function App() {
         return;
       }
 
-      if (event.key === "Escape" && document.activeElement === findInputRef.current) {
-        setFindQuery("");
-      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -821,6 +856,7 @@ export default function App() {
             type="search"
             value={findQuery}
             onChange={(event) => setFindQuery(event.target.value)}
+            onKeyDown={handleFindKeyDown}
             placeholder="Search active file"
           />
         </label>
@@ -921,6 +957,7 @@ export default function App() {
         <div className="editor-preview-grid">
           <div className="pane editor-pane" aria-label="Editor">
             <EditorPane
+              ref={editorPaneRef}
               activeSearchMatchIndex={activeMatchIndex}
               documentKey={`${documentKey}:${resolvedTheme}`}
               onChange={handleEditorChange}

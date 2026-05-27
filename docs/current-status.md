@@ -8,7 +8,7 @@ Last reviewed: 2026-05-27
 ## Current State
 
 - A touchable Tauri desktop prototype exists.
-- The prototype creates user-selected text/Markdown files, opens a user-selected folder, shows a bounded file tree, opens multiple files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, searches with visible match highlights, and renders a sanitized Markdown preview.
+- The prototype creates user-selected text/Markdown files, opens a user-selected folder, shows a bounded file tree, opens multiple files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, searches with visible match highlights and keyboard navigation, and renders a sanitized Markdown preview.
 - Existing LF / CRLF line endings are detected when a file is opened and preserved through save.
 - Save writes the editor text without adding or removing a final trailing newline by policy; Rust tests cover LF and CRLF final-newline presence.
 - Recent workspace, open tabs, active tab, and theme preference are restored after restart.
@@ -39,7 +39,7 @@ Last reviewed: 2026-05-27
 - Theme selection persistence through `localStorage`
 - Recent workspace restoration through `localStorage`
 - Open tab and active tab restoration through `localStorage`
-- Active-file search with match count, previous/next controls, visible match highlights, and active-match selection
+- Active-file search with match count, previous/next controls, visible match highlights, active-match selection, Enter / Shift+Enter match navigation, and Escape return-to-editor behavior
 - Keyboard shortcuts for New File, Open, Open Folder, Save, Find, and active-tab close
 - Conflict recovery actions for reloading, closing, or continuing with local edits
 - Save-failure recovery wording and retry / keep-editing actions for non-conflict save errors
@@ -87,7 +87,7 @@ Known verification note:
 - Final trailing newline presence has Rust test coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
 - Dirty-tab and app/window close confirmation, including Cancel focus and Escape cancellation, and the newer keyboard shortcuts have build/test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 - Non-conflict save-failure recovery wording and actions have build coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
-- Search highlight visibility has build coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
+- Search highlight visibility and keyboard search flow have build coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 
 ## Risks / Unknowns
 

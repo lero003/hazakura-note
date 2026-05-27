@@ -58,7 +58,9 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 3. Confirm the match count appears.
 4. Confirm all visible matches are highlighted and the active match is visually stronger than the rest.
 5. Use Prev and Next and confirm the stronger active highlight and editor selection move together.
-6. Search for a missing word and confirm highlights clear and the UI reports no matches without changing the file.
+6. With the Find field focused, press Enter and Shift+Enter and confirm the active match moves next and previous.
+7. Press Escape and confirm the Find field clears and keyboard focus returns to the editor.
+8. Search for a missing word and confirm highlights clear and the UI reports no matches without changing the file.
 
 ## Keyboard Shortcuts
 

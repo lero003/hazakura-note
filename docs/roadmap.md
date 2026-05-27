@@ -72,7 +72,7 @@ Status: Completed on 2026-05-26
 - 最近開いたworkspaceの復元
 - 開いていたタブと最後のアクティブタブの復元
 - File tree / Open / restored tabs の同一タブ管理への統合
-- Active-file search with visible match highlights
+- Active-file search with visible match highlights and keyboard next / previous / return-to-editor flow
 - 外部変更衝突後の Reopen from disk / Close without saving / Keep editing
 - dirty tab close時の Save / Discard / Cancel 再確認
 - app/window close時の dirty tab 向け Save All / Discard All / Cancel 再確認

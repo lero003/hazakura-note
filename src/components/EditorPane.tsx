@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { markdown } from "@codemirror/lang-markdown";
 import { StateEffect, StateField } from "@codemirror/state";
 import { Decoration, type DecorationSet, EditorView } from "@codemirror/view";
@@ -14,6 +14,10 @@ type EditorPaneProps = {
   activeSearchMatchIndex: number;
   searchMatches: SearchMatch[];
   onChange: (nextValue: string) => void;
+};
+
+export type EditorPaneHandle = {
+  focus: () => void;
 };
 
 const setSearchMatchesEffect =
@@ -39,17 +43,31 @@ const searchHighlightField = StateField.define<DecorationSet>({
   provide: (field) => EditorView.decorations.from(field),
 });
 
-export default function EditorPane({
-  activeSearchMatchIndex,
-  documentKey,
-  searchMatches,
-  theme,
-  value,
-  onChange,
-}: EditorPaneProps) {
+const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
+  function EditorPane(
+    {
+      activeSearchMatchIndex,
+      documentKey,
+      searchMatches,
+      theme,
+      value,
+      onChange,
+    },
+    ref,
+  ) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      focus() {
+        viewRef.current?.focus();
+      },
+    }),
+    [],
+  );
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -189,7 +207,10 @@ export default function EditorPane({
   }, [activeSearchMatchIndex, searchMatches]);
 
   return <div className="editor-host" ref={hostRef} />;
-}
+  },
+);
+
+export default EditorPane;
 
 function buildSearchDecorations(
   matches: readonly DecoratedSearchMatch[],

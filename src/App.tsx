@@ -633,6 +633,7 @@ export default function App() {
       return;
     }
 
+    setActiveTabId(pendingCloseTabId);
     setPendingCloseTabId(null);
     setStatus("Close stopped");
     focusEditorSoon();

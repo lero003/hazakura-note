@@ -3,7 +3,7 @@
 Status: Operational
 Scope: Development sequence
 Authority: Medium
-Last reviewed: 2026-05-27
+Last reviewed: 2026-05-28
 
 ## Quality Strategy
 
@@ -156,6 +156,7 @@ Status: In progress from 2026-05-27
 - 2026-05-27の初回polishでは、Go to Lineのアクセシビリティ名とmetadata/status separatorの余分な空白を修正済み
 - 2026-05-27の追加polishでは、dirty tab / app close確認中のTab / Shift+Tabフォーカスをdialog内に閉じるように修正済み
 - 2026-05-28のpolishでは、app/window closeのSave All失敗または衝突時に、失敗したtabを選択してeditor focusと通常の回復導線へ戻すように修正済み
+- 2026-05-28の追加polishでは、dirty tab closeのSave失敗または衝突時に、非active tabから閉じた場合でも失敗したtabを選択してeditor focusと通常の回復導線へ戻すように修正済み
 - このフェーズでは、Git連携、LSP、terminal、AI支援、project indexing、署名済みbinary配布、課金導線は扱わない
 
 ## v0.4: Markdown Workspace

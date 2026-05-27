@@ -3,7 +3,7 @@
 Status: Operational
 Scope: Manual prototype checks
 Authority: Medium
-Last reviewed: 2026-05-27
+Last reviewed: 2026-05-28
 
 Use this checklist after changes to file creation, file opening, workspace listing, tabs, saving, preview rendering, theme handling, workspace restoration, search, or save-conflict handling.
 
@@ -14,6 +14,8 @@ Latest Text Editor Usability Pack pass: 2026-05-27 with `/tmp/hazakura-note-usab
 Latest Editor Reliability / Navigation Pack pass: 2026-05-27 with Vite browser smoke at `http://127.0.0.1:1420/`. Confirmed case/regex UI wiring, invalid regex reporting, Go to Line movement/status, cursor line/column status, and editor display setting restoration after reload.
 
 Latest Source Preview Quality Polish pass: 2026-05-27 with `/Users/keisetsu/Projects/hazakura-note-smoke-paid-quality`. Confirmed built-app workspace switching, hidden/heavy directory exclusion, long filename clipping in the tree, Markdown and CRLF metadata, search highlights, external-change recheck on tab return, and Go to Line accessibility naming.
+
+Latest Dirty Tab Close Failure Focus Polish checks: 2026-05-28 automated gates passed after updating the inactive-tab failed-selection path. No fresh built-app manual smoke was claimed.
 
 ## Build First
 
@@ -156,7 +158,7 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 7. Press Escape once and confirm the current tab stays open with its unsaved text and keyboard focus returns to the editor.
 8. Repeat, choose Cancel, and confirm the current tab stays open with keyboard focus returned to the editor.
 9. Repeat and confirm Discard closes the tab without writing the unsaved text.
-10. Repeat with a save failure or external save conflict, choose Save, and confirm the close dialog disappears, the tab stays open, keyboard focus returns to the editor, and the save-failure or conflict recovery actions are visible.
+10. Repeat with a save failure or external save conflict, choose Save, and confirm the close dialog disappears, the failed tab is selected even if the close was requested from an inactive tab, the tab stays open, keyboard focus returns to the editor, and the save-failure or conflict recovery actions are visible.
 
 ## App / Window Close Confirmation
 

@@ -80,6 +80,8 @@ export default function App() {
     readSystemTheme(),
   );
   const findInputRef = useRef<HTMLInputElement | null>(null);
+  const closeTabCancelButtonRef = useRef<HTMLButtonElement | null>(null);
+  const appCloseCancelButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const activeTab = useMemo(
     () => tabs.find((tab) => tab.id === activeTabId) ?? null,
@@ -634,6 +636,18 @@ export default function App() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (modalOpen) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+
+          if (pendingCloseTabId !== null) {
+            setPendingCloseTabId(null);
+          } else if (pendingAppClose) {
+            setPendingAppClose(false);
+          }
+
+          setStatus("Close cancelled");
+        }
+
         return;
       }
 
@@ -696,9 +710,22 @@ export default function App() {
     modalOpen,
     openFile,
     openWorkspace,
+    pendingAppClose,
+    pendingCloseTabId,
     requestCloseTab,
     saveActiveTab,
   ]);
+
+  useEffect(() => {
+    if (pendingCloseTab) {
+      closeTabCancelButtonRef.current?.focus();
+      return;
+    }
+
+    if (pendingAppClose) {
+      appCloseCancelButtonRef.current?.focus();
+    }
+  }, [pendingAppClose, pendingCloseTab]);
 
   return (
     <main className="app-shell">
@@ -916,13 +943,16 @@ export default function App() {
       {pendingCloseTab ? (
         <div className="modal-backdrop" role="presentation">
           <section
+            aria-describedby="close-tab-description"
             aria-labelledby="close-tab-title"
             aria-modal="true"
             className="close-dialog"
             role="dialog"
           >
             <h2 id="close-tab-title">Unsaved changes</h2>
-            <p>{pendingCloseTab.name} has unsaved changes.</p>
+            <p id="close-tab-description">
+              {pendingCloseTab.name} has unsaved changes.
+            </p>
             <div className="dialog-actions">
               <button type="button" onClick={saveAndClosePendingTab}>
                 Save
@@ -933,7 +963,11 @@ export default function App() {
               >
                 Discard
               </button>
-              <button type="button" onClick={() => setPendingCloseTabId(null)}>
+              <button
+                type="button"
+                ref={closeTabCancelButtonRef}
+                onClick={() => setPendingCloseTabId(null)}
+              >
                 Cancel
               </button>
             </div>
@@ -944,13 +978,14 @@ export default function App() {
       {pendingAppClose ? (
         <div className="modal-backdrop" role="presentation">
           <section
+            aria-describedby="close-app-description"
             aria-labelledby="close-app-title"
             aria-modal="true"
             className="close-dialog"
             role="dialog"
           >
             <h2 id="close-app-title">Unsaved changes</h2>
-            <p>
+            <p id="close-app-description">
               {formatDirtyTabCount(dirtyTabCount)} must be saved or discarded
               before closing hazakura-note.
             </p>
@@ -961,7 +996,11 @@ export default function App() {
               <button type="button" onClick={discardAllAndCloseWindow}>
                 Discard All
               </button>
-              <button type="button" onClick={() => setPendingAppClose(false)}>
+              <button
+                type="button"
+                ref={appCloseCancelButtonRef}
+                onClick={() => setPendingAppClose(false)}
+              >
                 Cancel
               </button>
             </div>

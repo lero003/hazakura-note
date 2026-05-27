@@ -35,7 +35,7 @@ Last reviewed: 2026-05-27
 - Rust-side binary-looking file rejection, large-file warning, editing size limit, and atomic save helper
 - Existing LF / CRLF line endings are preserved on save
 - Existing final-newline presence is preserved on save; the app does not add or remove a trailing newline by policy
-- Window close requests are stopped when open tabs have unsaved changes, with Save All / Discard All / Cancel choices
+- Window and dirty-tab close requests are stopped when open tabs have unsaved changes, with safe keyboard cancellation and Save / Discard choices
 
 ## Canonical Docs
 

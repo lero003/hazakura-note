@@ -44,6 +44,7 @@ Last reviewed: 2026-05-27
 - Conflict recovery actions for reloading, closing, or continuing with local edits
 - Save-failure recovery wording and retry / keep-editing actions for non-conflict save errors
 - App/window close confirmation for dirty tabs
+- Dirty-tab and app/window close dialogs focus Cancel by default and can be cancelled with Escape
 - Binary-looking file rejection
 - 5 MB large-file warning flag
 - 10 MB prototype editing limit
@@ -84,7 +85,7 @@ Known verification note:
 - New File creation and existing-file overwrite rejection have Rust test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 - CRLF line-ending preservation has Rust test coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
 - Final trailing newline presence has Rust test coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
-- App/window dirty-tab close confirmation and the newer keyboard shortcuts have build/test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
+- Dirty-tab and app/window close confirmation, including Cancel focus and Escape cancellation, and the newer keyboard shortcuts have build/test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 - Non-conflict save-failure recovery wording and actions have build coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 - Search highlight visibility has build coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
 
@@ -99,7 +100,7 @@ Known verification note:
 ## Next Actions
 
 1. Run recurring automation from `docs/development-automation.md` to harden one small slice at a time.
-2. Manually smoke app/window close confirmation, keyboard shortcuts, New File, CRLF save preservation, final-newline preservation, save-failure recovery, and search highlight visibility in the built app before adding new Markdown features.
+2. Manually smoke app/window close confirmation including Cancel focus and Escape cancellation, keyboard shortcuts, New File, CRLF save preservation, final-newline preservation, save-failure recovery, and search highlight visibility in the built app before adding new Markdown features.
 3. Decide whether unsaved draft restoration belongs in the product or should remain intentionally out of scope.
 4. Keep signing, notarization, and installer packaging separate from editor/workspace hardening.
 

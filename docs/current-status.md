@@ -13,6 +13,7 @@ Last reviewed: 2026-05-27
 - Save writes the editor text without adding or removing a final trailing newline by policy; Rust tests cover LF and CRLF final-newline presence.
 - Recent workspace, open tabs, active tab, and theme preference are restored after restart.
 - Save conflicts now present explicit recovery choices: Reopen from disk, Close without saving, and Keep editing.
+- Non-conflict save failures now state that local edits remain in the editor and offer Try save again / Keep editing actions.
 - Window close requests now stop when any open tab is unsaved and offer Save All, Discard All, or Cancel.
 - Cmd+N creates a new file, Cmd+O opens a file, Cmd+Shift+O opens a folder, and Cmd+W closes the active tab through the same dirty-tab confirmation path as the tab close button.
 - The built macOS app bundle is generated at `src-tauri/target/release/bundle/macos/hazakura-note.app`.
@@ -41,6 +42,7 @@ Last reviewed: 2026-05-27
 - Active-file search with match count and previous/next controls
 - Keyboard shortcuts for New File, Open, Open Folder, Save, Find, and active-tab close
 - Conflict recovery actions for reloading, closing, or continuing with local edits
+- Save-failure recovery wording and retry / keep-editing actions for non-conflict save errors
 - App/window close confirmation for dirty tabs
 - Binary-looking file rejection
 - 5 MB large-file warning flag
@@ -83,6 +85,7 @@ Known verification note:
 - CRLF line-ending preservation has Rust test coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
 - Final trailing newline presence has Rust test coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
 - App/window dirty-tab close confirmation and the newer keyboard shortcuts have build/test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
+- Non-conflict save-failure recovery wording and actions have build coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 
 ## Risks / Unknowns
 
@@ -95,7 +98,7 @@ Known verification note:
 ## Next Actions
 
 1. Run recurring automation from `docs/development-automation.md` to harden one small slice at a time.
-2. Manually smoke app/window close confirmation, keyboard shortcuts, New File, CRLF save preservation, and final-newline preservation in the built app before adding new Markdown features.
+2. Manually smoke app/window close confirmation, keyboard shortcuts, New File, CRLF save preservation, final-newline preservation, and save-failure recovery in the built app before adding new Markdown features.
 3. Decide whether unsaved draft restoration belongs in the product or should remain intentionally out of scope.
 4. Keep signing, notarization, and installer packaging separate from editor/workspace hardening.
 

@@ -119,6 +119,17 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 9. Confirm the editor, preview, and status all show the external disk content.
 10. Trigger the conflict once more if needed and confirm Close without saving closes the tab without overwriting disk.
 
+## Save Failure Recovery
+
+1. Open a throwaway Markdown file.
+2. Edit it in the app without saving.
+3. Make the file or containing folder temporarily unwritable, unavailable, or otherwise unable to accept a normal save.
+4. Click Save in the app.
+5. Confirm the app reports that saving failed and that local edits are still in the editor.
+6. Confirm Try save again is available.
+7. Confirm Keep editing clears the save-failure banner without discarding local edits.
+8. Restore the file or folder to a writable state, save again, and confirm the edited text reaches disk.
+
 ## Markdown Preview Sanitize
 
 1. Open a throwaway Markdown file containing raw HTML such as `script`, `iframe`, or inline event handler attributes.

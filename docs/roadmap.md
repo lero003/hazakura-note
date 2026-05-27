@@ -80,6 +80,7 @@ Status: Completed on 2026-05-26
 - CodeMirror本文とpreview/statusの再読み込み同期
 - 既存ファイルの LF / CRLF 改行コード保持
 - 末尾改行の有無を保存時に勝手に変更しない契約のRustテスト化
+- non-conflict save failure時の Try save again / Keep editing 回復導線
 - System / Light / Dark の復元と可読性確認
 - Rust側 file I/O / workspace listing / 除外 / バイナリ拒否 / 大容量境界テストの拡充
 - README、current-status、roadmap、smoke-checklistの現状同期
@@ -90,7 +91,7 @@ Status: Completed on 2026-05-26
 
 目的: Markdownを書く体験を軽くする。
 
-Before starting broad Markdown helpers, let the recurring automation close small reliability gaps from `docs/development-automation.md`, especially save-failure wording, IME smoke, search highlight visibility, keyboard-only operation, and layout rough edges.
+Before starting broad Markdown helpers, let the recurring automation close small reliability gaps from `docs/development-automation.md`, especially save-failure manual smoke, IME smoke, search highlight visibility, keyboard-only operation, and layout rough edges.
 
 - Markdownプレビュー
 - 見出しアウトライン

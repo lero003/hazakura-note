@@ -292,13 +292,25 @@ button:disabled {
   background: var(--conflict);
 }
 
-.conflict-actions {
+.message-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.message-detail {
+  opacity: 0.82;
+}
+
+.message-actions {
   display: flex;
   flex: none;
   gap: 8px;
 }
 
-.conflict-actions button {
+.message-actions button {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.45);
   color: #fffafa;

@@ -97,6 +97,7 @@ export default function App() {
   const activeDirty = activeTab ? isDirty(activeTab) : false;
   const activeError = activeTab?.error ?? globalError;
   const activeConflict = activeTab?.saveStatus === "conflict";
+  const activeSaveError = isSaveFailureError(activeTab);
   const documentKey = activeTab?.path ?? "welcome";
   const findMatches = useMemo(
     () => findTextMatches(activeContents, findQuery),
@@ -424,7 +425,11 @@ export default function App() {
         setTabs((currentTabs) =>
           currentTabs.map((candidate) =>
             candidate.id === tabId
-              ? { ...candidate, error: String(err), saveStatus: "error" }
+              ? {
+                  ...candidate,
+                  error: `Reopen failed: ${String(err)}`,
+                  saveStatus: "conflict",
+                }
               : candidate,
           ),
         );
@@ -435,6 +440,15 @@ export default function App() {
   );
 
   const keepEditingAfterConflict = useCallback((tabId: string) => {
+    setTabs((currentTabs) =>
+      currentTabs.map((tab) =>
+        tab.id === tabId ? { ...tab, saveStatus: "idle", error: null } : tab,
+      ),
+    );
+    setStatus("Keeping local edits");
+  }, []);
+
+  const clearSaveError = useCallback((tabId: string) => {
     setTabs((currentTabs) =>
       currentTabs.map((tab) =>
         tab.id === tabId ? { ...tab, saveStatus: "idle", error: null } : tab,
@@ -815,13 +829,16 @@ export default function App() {
       <div className="message-row">
         {activeError ? (
           <div
-            className={
-              activeConflict ? "conflict-banner" : "error-banner"
-            }
+            className={activeConflict ? "conflict-banner" : "error-banner"}
           >
-            <span>{activeError}</span>
+            <span className="message-copy">
+              {activeSaveError ? formatSaveFailureMessage() : activeError}
+              {activeSaveError ? (
+                <span className="message-detail">{activeError}</span>
+              ) : null}
+            </span>
             {activeConflict && activeTab ? (
-              <div className="conflict-actions" aria-label="Conflict actions">
+              <div className="message-actions" aria-label="Conflict actions">
                 <button
                   type="button"
                   onClick={() => reopenTabFromDisk(activeTab.id)}
@@ -834,6 +851,21 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => keepEditingAfterConflict(activeTab.id)}
+                >
+                  Keep editing
+                </button>
+              </div>
+            ) : activeSaveError && activeTab ? (
+              <div className="message-actions" aria-label="Save error actions">
+                <button
+                  type="button"
+                  onClick={() => void saveTabById(activeTab.id)}
+                >
+                  Try save again
+                </button>
+                <button
+                  type="button"
+                  onClick={() => clearSaveError(activeTab.id)}
                 >
                   Keep editing
                 </button>
@@ -1109,6 +1141,17 @@ function formatBytes(bytes: number): string {
 
 function formatDirtyTabCount(count: number): string {
   return count === 1 ? "1 unsaved tab" : `${count} unsaved tabs`;
+}
+
+function isSaveFailureError(tab: EditorTab | null): boolean {
+  return tab?.saveStatus === "error";
+}
+
+function formatSaveFailureMessage(): string {
+  return (
+    "Save failed. Your edits are still in the editor. " +
+    "Fix the file or folder issue, then try saving again."
+  );
 }
 
 function suggestedNewFilePath(workspaceRootPath: string | null): string | null {

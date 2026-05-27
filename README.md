@@ -28,6 +28,7 @@ Last reviewed: 2026-05-27
 - Tab-level unsaved state and Save / Discard / Cancel before closing dirty tabs
 - Keyboard shortcuts for New File, Open, Open Folder, Save, Find, and tab close
 - External-change save conflict detection with Reopen from disk / Close without saving / Keep editing actions
+- Non-conflict save failures keep local edits and show Try save again / Keep editing recovery actions
 - In-file search for the active tab
 - System / Light / Dark theme switching with persisted selection
 - Recent workspace, open tabs, and active tab restoration after restart

@@ -19,6 +19,7 @@ Last reviewed: 2026-05-28
 - The workspace header includes a small open-folder action for switching workspace without returning to the native menu.
 - Save writes the editor text without adding or removing a final trailing newline by policy; Rust tests cover LF and CRLF final-newline presence.
 - Markdown preview shows embedded `data:image` PNG/JPEG/GIF/WebP images and blocks external or local image references with an in-preview note.
+- Markdown preview wraps GFM tables in a scrollable table frame with clearer headers, grid lines, row striping, and alignment support.
 - Selecting a PNG/JPEG/GIF/WebP file in the workspace tree opens a read-only local image preview in the work area without adding Markdown local-image loading.
 - Markdown preview and editor panes use lightweight bidirectional scroll synchronization with a small tolerance to avoid jitter while preview is visible.
 - The editor / preview split can be resized with a draggable vertical divider while preview is visible.
@@ -66,6 +67,7 @@ Last reviewed: 2026-05-28
 - Final-newline presence preservation on save
 - Preview visibility toggle through View / Preferences with `localStorage` persistence
 - Safe embedded-image preview policy for Markdown preview
+- GFM table preview styling with a bounded horizontal scroll frame
 - Read-only local workspace image preview for PNG/JPEG/GIF/WebP files
 - Lightweight bidirectional editor/preview scroll synchronization while Markdown preview is visible
 - Resizable editor / preview columns while Markdown preview is visible

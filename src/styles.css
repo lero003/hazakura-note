@@ -1080,6 +1080,75 @@ button:disabled {
   margin: 0 0 16px;
 }
 
+.markdown-table-frame {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  margin: 20px 0 24px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.markdown-table-frame table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  min-width: 520px;
+  width: 100%;
+}
+
+.markdown-table-frame th,
+.markdown-table-frame td {
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 9px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown-table-frame th {
+  background: var(--accent-soft);
+  color: var(--text);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.markdown-table-frame td {
+  color: var(--text);
+  min-width: 120px;
+  overflow-wrap: anywhere;
+}
+
+.markdown-table-frame tbody tr:nth-child(even) td {
+  background: var(--surface-muted);
+}
+
+.markdown-table-frame tr:last-child td {
+  border-bottom: 0;
+}
+
+.markdown-table-frame th:last-child,
+.markdown-table-frame td:last-child {
+  border-right: 0;
+}
+
+.markdown-table-frame th[align="center"],
+.markdown-table-frame td[align="center"] {
+  text-align: center;
+}
+
+.markdown-table-frame th[align="right"],
+.markdown-table-frame td[align="right"] {
+  text-align: right;
+}
+
+.markdown-table-frame code {
+  font-size: 0.86em;
+  white-space: nowrap;
+}
+
 .markdown-preview img {
   border: 1px solid var(--border);
   border-radius: 8px;

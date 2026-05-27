@@ -9,8 +9,9 @@ marked.use({
 export function renderMarkdown(source: string): string {
   const rawHtml = marked.parse(source, { async: false }) as string;
   const imageBoundedHtml = applyImagePreviewPolicy(rawHtml);
+  const tableBoundedHtml = applyTablePreviewPolicy(imageBoundedHtml);
 
-  return DOMPurify.sanitize(imageBoundedHtml, {
+  return DOMPurify.sanitize(tableBoundedHtml, {
     USE_PROFILES: { html: true },
     FORBID_TAGS: ["script", "iframe", "object", "embed"],
     FORBID_ATTR: ["onerror", "onload", "onclick"],
@@ -39,6 +40,26 @@ function applyImagePreviewPolicy(html: string): string {
       ? `Image blocked: ${alt}`
       : "Image blocked: external and local image loading is disabled.";
     image.replaceWith(replacement);
+  }
+
+  return template.innerHTML;
+}
+
+function applyTablePreviewPolicy(html: string): string {
+  const template = document.createElement("template");
+  template.innerHTML = html;
+
+  for (const table of Array.from(template.content.querySelectorAll("table"))) {
+    if (table.parentElement?.classList.contains("markdown-table-frame")) {
+      continue;
+    }
+
+    const frame = document.createElement("div");
+    frame.className = "markdown-table-frame";
+    frame.setAttribute("role", "region");
+    frame.setAttribute("aria-label", "Markdown table");
+    table.replaceWith(frame);
+    frame.append(table);
   }
 
   return template.innerHTML;

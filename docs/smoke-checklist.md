@@ -174,14 +174,16 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 8. Toggle Invisibles and confirm spaces/tabs/trailing whitespace receive visible markers without changing file contents.
 9. Change Font and Tab size, restart or reload the app, and confirm the selected display settings are restored.
 
-## Preview Toggle And Images
+## Preview Toggle, Images, And Tables
 
 1. Toggle Preview off and confirm the editor expands into the preview area.
 2. Toggle Preview on and confirm Markdown preview returns.
 3. Restart the app and confirm the Preview setting is restored.
 4. Add a Markdown external image such as `![remote](https://example.com/image.png)` and confirm the preview shows an image-blocked note instead of loading it.
 5. Add an embedded `data:image/png;base64` image in a throwaway note and confirm the preview treats it as an image.
-6. Confirm `script`, `iframe`, and inline event handlers still do not execute or appear as active content.
+6. Add a GFM table with at least four columns and confirm headers, grid lines, row striping, and alignment markers render readably.
+7. Add a wider table and confirm only the table frame scrolls horizontally instead of breaking the preview layout.
+8. Confirm `script`, `iframe`, and inline event handlers still do not execute or appear as active content.
 
 ## Japanese IME
 

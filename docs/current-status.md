@@ -16,6 +16,7 @@ Last reviewed: 2026-05-27
 - Save conflicts now present explicit recovery choices: Reopen from disk, Close without saving, and Keep editing.
 - Non-conflict save failures now state that local edits remain in the editor and offer Try save again / Keep editing actions.
 - Window close requests now stop when any open tab is unsaved and offer Save All, Discard All, or Cancel.
+- Cancelling dirty-tab and app/window close dialogs by button or Escape returns keyboard focus to the editor.
 - Cmd+N creates a new file, Cmd+O opens a file, Cmd+Shift+O opens a folder, and Cmd+W closes the active tab through the same dirty-tab confirmation path as the tab close button.
 - The built macOS app bundle is generated at `src-tauri/target/release/bundle/macos/hazakura-note.app`.
 
@@ -46,7 +47,7 @@ Last reviewed: 2026-05-27
 - Conflict recovery actions for reloading, closing, or continuing with local edits
 - Save-failure recovery wording and retry / keep-editing actions for non-conflict save errors
 - App/window close confirmation for dirty tabs
-- Dirty-tab and app/window close dialogs focus Cancel by default and can be cancelled with Escape
+- Dirty-tab and app/window close dialogs focus Cancel by default, can be cancelled with Escape, and return focus to the editor after cancellation
 - Long file name and constrained-width layout guardrails for tabs, the file tree, status/error rows, and close dialogs
 - Binary-looking file rejection
 - 5 MB large-file warning flag
@@ -88,7 +89,7 @@ Known verification note:
 - New File creation and existing-file overwrite rejection have Rust test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 - CRLF line-ending preservation has Rust test coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
 - Final trailing newline presence has Rust test coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
-- Dirty-tab and app/window close confirmation, including Cancel focus and Escape cancellation, and the newer keyboard shortcuts have build/test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
+- Dirty-tab and app/window close confirmation, including Cancel focus, Escape cancellation, and editor focus return after cancellation, and the newer keyboard shortcuts have build/test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 - Non-conflict save-failure recovery wording and actions have build coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 - Search highlight visibility and keyboard search flow have build coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 - Long file name and constrained-width layout guardrails have build coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
@@ -105,7 +106,7 @@ Known verification note:
 ## Next Actions
 
 1. Run recurring automation from `docs/development-automation.md` to harden one small slice at a time.
-2. Manually smoke app/window close confirmation including Cancel focus and Escape cancellation, keyboard shortcuts, New File, CRLF save preservation, final-newline preservation, save-failure recovery, search highlight visibility, theme switching during undo/redo, and long file name / constrained-width layout in the built app before adding new Markdown features.
+2. Manually smoke app/window close confirmation including Cancel focus, Escape cancellation, editor focus return after cancellation, keyboard shortcuts, New File, CRLF save preservation, final-newline preservation, save-failure recovery, search highlight visibility, theme switching during undo/redo, and long file name / constrained-width layout in the built app before adding new Markdown features.
 3. Decide whether unsaved draft restoration belongs in the product or should remain intentionally out of scope.
 4. Keep signing, notarization, and installer packaging separate from editor/workspace hardening.
 

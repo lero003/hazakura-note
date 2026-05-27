@@ -116,6 +116,24 @@ export default function App() {
   const allowWindowCloseRef = useRef(false);
   const modalOpen = pendingCloseTab !== null || pendingAppClose;
 
+  const focusEditorSoon = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      editorPaneRef.current?.focus();
+    });
+  }, []);
+
+  const cancelPendingTabClose = useCallback(() => {
+    setPendingCloseTabId(null);
+    setStatus("Close cancelled");
+    focusEditorSoon();
+  }, [focusEditorSoon]);
+
+  const cancelPendingAppClose = useCallback(() => {
+    setPendingAppClose(false);
+    setStatus("Close cancelled");
+    focusEditorSoon();
+  }, [focusEditorSoon]);
+
   const refreshWorkspaceTree = useCallback(async () => {
     if (!workspaceRootPath) {
       return;
@@ -678,12 +696,10 @@ export default function App() {
           event.preventDefault();
 
           if (pendingCloseTabId !== null) {
-            setPendingCloseTabId(null);
+            cancelPendingTabClose();
           } else if (pendingAppClose) {
-            setPendingAppClose(false);
+            cancelPendingAppClose();
           }
-
-          setStatus("Close cancelled");
         }
 
         return;
@@ -741,6 +757,8 @@ export default function App() {
     };
   }, [
     activeTabId,
+    cancelPendingAppClose,
+    cancelPendingTabClose,
     createNewFile,
     modalOpen,
     openFile,
@@ -1007,7 +1025,7 @@ export default function App() {
               <button
                 type="button"
                 ref={closeTabCancelButtonRef}
-                onClick={() => setPendingCloseTabId(null)}
+                onClick={cancelPendingTabClose}
               >
                 Cancel
               </button>
@@ -1040,7 +1058,7 @@ export default function App() {
               <button
                 type="button"
                 ref={appCloseCancelButtonRef}
-                onClick={() => setPendingAppClose(false)}
+                onClick={cancelPendingAppClose}
               >
                 Cancel
               </button>

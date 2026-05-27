@@ -69,7 +69,7 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 3. Press Cmd+Shift+O and confirm the native folder picker opens.
 4. Open a throwaway Markdown file, edit it without saving, then press Cmd+W.
 5. Confirm the app offers Save, Discard, and Cancel through the same dirty-tab confirmation used by the tab close button.
-6. Cancel once and confirm the tab stays open with its unsaved text.
+6. Cancel once and confirm the tab stays open with its unsaved text and keyboard focus returns to the editor.
 7. Repeat Cmd+W and confirm Discard closes the tab without writing the unsaved text.
 8. Press Cmd+W with no active tab and confirm the window stays open.
 
@@ -80,8 +80,8 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 3. Click the tab close button.
 4. Confirm the app offers Save, Discard, and Cancel.
 5. Confirm Cancel receives initial keyboard focus.
-6. Press Escape once and confirm the current tab stays open with its unsaved text.
-7. Repeat, choose Cancel, and confirm the current tab stays open.
+6. Press Escape once and confirm the current tab stays open with its unsaved text and keyboard focus returns to the editor.
+7. Repeat, choose Cancel, and confirm the current tab stays open with keyboard focus returned to the editor.
 8. Repeat and confirm Discard closes the tab without writing the unsaved text.
 
 ## App / Window Close Confirmation
@@ -91,8 +91,8 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 3. Request app or window close from the window close control or Cmd+Q.
 4. Confirm the app stays open and offers Save All, Discard All, and Cancel.
 5. Confirm Cancel receives initial keyboard focus.
-6. Press Escape once and confirm both dirty tabs remain open with their unsaved text.
-7. Request close again, choose Cancel, and confirm both dirty tabs remain open.
+6. Press Escape once and confirm both dirty tabs remain open with their unsaved text and keyboard focus returns to the editor.
+7. Request close again, choose Cancel, and confirm both dirty tabs remain open with keyboard focus returned to the editor.
 8. Request close again and confirm Discard All exits without writing the unsaved text.
 9. Repeat with fresh edits and confirm Save All writes both files before closing.
 10. If one dirty file has an external save conflict, confirm Save All stops the close and leaves the app open.

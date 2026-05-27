@@ -76,6 +76,7 @@ Status: Completed on 2026-05-26
 - 外部変更衝突後の Reopen from disk / Close without saving / Keep editing
 - dirty tab close時の Save / Discard / Cancel 再確認
 - app/window close時の dirty tab 向け Save All / Discard All / Cancel 再確認
+- dirty tab / app close確認をCancelまたはEscapeで閉じた後のeditor focus復帰
 - 長いファイル名と狭い表示幅で tabs / file tree / status / error / close dialog が主要操作を押し出さない表示ガード
 - Cmd+O / Cmd+Shift+O / Cmd+W の基本ショートカット
 - CodeMirror本文とpreview/statusの再読み込み同期

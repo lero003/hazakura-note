@@ -8,6 +8,7 @@ use tauri::Emitter;
 
 const LARGE_FILE_WARNING_BYTES: u64 = 5 * 1024 * 1024;
 const MAX_EDITABLE_BYTES: u64 = 10 * 1024 * 1024;
+const MAX_IMAGE_PREVIEW_BYTES: u64 = 20 * 1024 * 1024;
 const BINARY_SNIFF_BYTES: u64 = 8192;
 const MAX_WORKSPACE_ENTRIES: usize = 2000;
 const MENU_ACTION_EVENT: &str = "hazakura-note://menu-action";
@@ -67,6 +68,15 @@ struct FileMetadataState {
     modified_ms: Option<u64>,
     fingerprint: String,
     large_file_warning: bool,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ImagePreviewDocument {
+    path: String,
+    name: String,
+    data_url: String,
+    size: u64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -282,6 +292,45 @@ fn list_workspace_directory(root: String, directory: String) -> Result<Workspace
     build_workspace_directory(&directory_path)
 }
 
+#[tauri::command]
+fn open_workspace_image(root: String, path: String) -> Result<ImagePreviewDocument, String> {
+    let root_path = PathBuf::from(&root);
+    let image_path = PathBuf::from(&path);
+    let canonical_root = ensure_workspace_root(&root_path)?;
+    let canonical_image =
+        fs::canonicalize(&image_path).map_err(|err| format!("Cannot read image: {err}"))?;
+
+    if !canonical_image.starts_with(&canonical_root) {
+        return Err("Selected image is outside the workspace root.".to_string());
+    }
+
+    let metadata = fs::metadata(&image_path).map_err(|err| format!("Cannot read image: {err}"))?;
+
+    if !metadata.is_file() {
+        return Err("Selected path is not an image file.".to_string());
+    }
+
+    if metadata.len() > MAX_IMAGE_PREVIEW_BYTES {
+        return Err("Image is larger than the preview limit of 20 MB.".to_string());
+    }
+
+    let mime_type = image_mime_type(&image_path)
+        .ok_or_else(|| "Selected image type is not supported.".to_string())?;
+    let bytes = fs::read(&image_path).map_err(|err| format!("Cannot read image: {err}"))?;
+    let name = image_path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("image")
+        .to_string();
+
+    Ok(ImagePreviewDocument {
+        path,
+        name,
+        data_url: format!("data:{mime_type};base64,{}", encode_base64(&bytes)),
+        size: metadata.len(),
+    })
+}
+
 fn readable_text_metadata(path: &Path) -> Result<fs::Metadata, String> {
     let metadata = fs::metadata(path).map_err(|err| format!("Cannot read file: {err}"))?;
 
@@ -298,6 +347,49 @@ fn readable_text_metadata(path: &Path) -> Result<fs::Metadata, String> {
     }
 
     Ok(metadata)
+}
+
+fn image_mime_type(path: &Path) -> Option<&'static str> {
+    match path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .map(|extension| extension.to_ascii_lowercase())
+        .as_deref()
+    {
+        Some("png") => Some("image/png"),
+        Some("jpg") | Some("jpeg") => Some("image/jpeg"),
+        Some("gif") => Some("image/gif"),
+        Some("webp") => Some("image/webp"),
+        _ => None,
+    }
+}
+
+fn encode_base64(bytes: &[u8]) -> String {
+    const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut encoded = String::with_capacity(bytes.len().div_ceil(3) * 4);
+
+    for chunk in bytes.chunks(3) {
+        let first = chunk[0];
+        let second = *chunk.get(1).unwrap_or(&0);
+        let third = *chunk.get(2).unwrap_or(&0);
+
+        encoded.push(TABLE[(first >> 2) as usize] as char);
+        encoded.push(TABLE[(((first & 0b0000_0011) << 4) | (second >> 4)) as usize] as char);
+
+        if chunk.len() > 1 {
+            encoded.push(TABLE[(((second & 0b0000_1111) << 2) | (third >> 6)) as usize] as char);
+        } else {
+            encoded.push('=');
+        }
+
+        if chunk.len() > 2 {
+            encoded.push(TABLE[(third & 0b0011_1111) as usize] as char);
+        } else {
+            encoded.push('=');
+        }
+    }
+
+    encoded
 }
 
 fn ensure_workspace_root(root_path: &Path) -> Result<PathBuf, String> {
@@ -795,6 +887,7 @@ pub fn run() {
             get_file_metadata,
             list_workspace_directory,
             list_workspace_tree,
+            open_workspace_image,
             save_text_file,
             save_text_file_as,
             update_app_menu_state
@@ -1194,6 +1287,46 @@ mod tests {
         .expect_err("outside folder should fail");
 
         assert!(err.contains("outside the workspace root"));
+
+        let _ = fs::remove_dir_all(root);
+        let _ = fs::remove_dir_all(outside);
+    }
+
+    #[test]
+    fn open_workspace_image_returns_data_url_for_supported_image() {
+        let dir = unique_test_dir("workspace_image");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let path = dir.join("tiny.png");
+        fs::write(&path, b"\x89PNG\r\n\x1a\n").expect("write png fixture");
+
+        let image = open_workspace_image(
+            dir.to_string_lossy().to_string(),
+            path.to_string_lossy().to_string(),
+        )
+        .expect("open workspace image");
+
+        assert_eq!(image.name, "tiny.png");
+        assert_eq!(image.data_url, "data:image/png;base64,iVBORw0KGgo=");
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn open_workspace_image_rejects_paths_outside_root() {
+        let root = unique_test_dir("workspace_image_root");
+        let outside = unique_test_dir("workspace_image_outside");
+        fs::create_dir_all(&root).expect("create root dir");
+        fs::create_dir_all(&outside).expect("create outside dir");
+        let outside_image = outside.join("outside.jpg");
+        fs::write(&outside_image, b"fake jpg").expect("write outside image");
+
+        let err = open_workspace_image(
+            root.to_string_lossy().to_string(),
+            outside_image.to_string_lossy().to_string(),
+        )
+        .expect_err("outside image should be rejected");
+
+        assert!(err.contains("outside the workspace root"), "{err}");
 
         let _ = fs::remove_dir_all(root);
         let _ = fs::remove_dir_all(outside);

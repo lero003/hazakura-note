@@ -270,6 +270,7 @@ Find Close Polish checks on 2026-05-28:
 Workspace Image Preview / Quality Automation checks on 2026-05-28:
 
 - Workspace tree image selection now opens a read-only local PNG/JPEG/GIF/WebP preview in the work area.
+- Image preview reads the selected image through a Rust command constrained to the current workspace root and returns a `data:` URL, avoiding broad asset-protocol filesystem access.
 - Markdown preview image safety remains unchanged: local and external Markdown image references stay blocked, while embedded `data:image` references remain allowed.
 - `docs/development-automation.md` and the saved `hazakura-note-quality-loop` automation now prioritize quality-hardening slices that begin from built-app smoke when practical.
 - Automated local gates passed after this change; no fresh built-app manual smoke was claimed.

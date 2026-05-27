@@ -56,6 +56,13 @@ export type WorkspaceTreeEntry = {
   children_truncated: boolean;
 };
 
+export type ImagePreviewDocument = {
+  path: string;
+  name: string;
+  dataUrl: string;
+  size: number;
+};
+
 const TEXT_FILE_EXTENSIONS = [
   "md",
   "markdown",
@@ -192,6 +199,13 @@ export async function listWorkspaceDirectory(
     root,
     directory,
   });
+}
+
+export async function openWorkspaceImage(
+  root: string,
+  path: string,
+): Promise<ImagePreviewDocument> {
+  return invoke<ImagePreviewDocument>("open_workspace_image", { root, path });
 }
 
 export async function saveTextFile(

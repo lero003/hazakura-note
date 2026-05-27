@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { convertFileSrc } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import EditorPane, {
   type EditorPaneHandle,
@@ -23,6 +22,7 @@ import {
   listWorkspaceTree,
   onCurrentWindowCloseRequested,
   openTextFile,
+  openWorkspaceImage,
   pickMarkdownFile,
   pickNewMarkdownFilePath,
   pickSaveAsTextFilePath,
@@ -119,6 +119,7 @@ type ImagePreviewState = {
   path: string;
   name: string;
   url: string;
+  size: number;
 };
 
 export default function App() {
@@ -218,8 +219,11 @@ export default function App() {
   const activeDocumentMeta = activeTab
     ? formatActiveDocumentMeta(activeDocumentStats, activeTab, activeDirty)
     : selectedImage
-      ? `Image · ${selectedImage.name}`
+      ? `Image · ${formatBytes(selectedImage.size)} · ${selectedImage.name}`
     : "No file open";
+  const activeStatusDetail = activeTab
+    ? `${activeDocumentMeta} · ${formatSelectionInfo(selectionInfo)}`
+    : activeDocumentMeta;
   const documentKey = activeTab?.path ?? selectedImage?.path ?? "welcome";
   const findMatches = useMemo(
     () => findTextMatches(activeContents, findQuery, searchOptions),
@@ -503,20 +507,35 @@ export default function App() {
   const openWorkspaceFile = useCallback(
     async (path: string) => {
       if (isSupportedImageFile(path)) {
+        if (!workspaceRootPath) {
+          setGlobalError("Open a workspace before previewing an image.");
+          setStatus("Image preview failed");
+          return;
+        }
+
         setGlobalError(null);
-        setActiveTabId(null);
-        setSelectedImage({
-          path,
-          name: fileNameFromPath(path),
-          url: convertFileSrc(path),
-        });
-        setStatus("Image preview opened");
+        setStatus("Opening image preview...");
+
+        try {
+          const image = await openWorkspaceImage(workspaceRootPath, path);
+          setActiveTabId(null);
+          setSelectedImage({
+            path: image.path,
+            name: image.name,
+            url: image.dataUrl,
+            size: image.size,
+          });
+          setStatus("Image preview opened");
+        } catch (err) {
+          setGlobalError(String(err));
+          setStatus("Image preview failed");
+        }
         return;
       }
 
       await openFilePath(path);
     },
-    [openFilePath],
+    [openFilePath, workspaceRootPath],
   );
 
   const createNewFile = useCallback(async () => {
@@ -2243,9 +2262,7 @@ export default function App() {
 
       <footer className="status-bar">
         <span>{status}</span>
-        <span>
-          {`${activeDocumentMeta} · ${formatSelectionInfo(selectionInfo)}`}
-        </span>
+        <span>{activeStatusDetail}</span>
       </footer>
 
       {pendingCloseTab ? (

@@ -52,7 +52,8 @@ body {
 }
 
 button,
-select {
+select,
+input {
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   background: var(--surface);
@@ -68,13 +69,16 @@ button {
   padding: 8px 14px;
 }
 
-select {
+select,
+.number-control input,
+.goto-control input {
   min-height: 34px;
   padding: 0 8px;
 }
 
 button:hover:not(:disabled),
-select:hover {
+select:hover,
+input:hover {
   background: var(--surface-strong);
   border-color: var(--accent);
 }
@@ -146,12 +150,17 @@ button:disabled {
 
 .theme-control,
 .line-ending-control,
+.number-control,
 .toggle-control {
   align-items: center;
   color: var(--text-muted);
   display: flex;
   font-size: 12px;
   gap: 8px;
+}
+
+.number-control input {
+  width: 58px;
 }
 
 .toggle-control input {
@@ -254,9 +263,10 @@ button:disabled {
 .find-row {
   background: var(--surface-strong);
   border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
   gap: 12px;
   min-width: 0;
-  padding: 0 14px;
+  padding: 5px 14px;
 }
 
 .find-control {
@@ -274,7 +284,8 @@ button:disabled {
   font-size: 12px;
 }
 
-.find-control input {
+.find-control input,
+.goto-control input {
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 6px;
@@ -299,6 +310,29 @@ button:disabled {
   padding: 6px 10px;
 }
 
+.find-options,
+.goto-control {
+  align-items: center;
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+.goto-control span,
+.find-options span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.goto-control input {
+  width: 76px;
+}
+
+.goto-control button {
+  min-width: 48px;
+  padding: 6px 10px;
+}
+
 .shortcut-hint {
   margin-left: auto;
   overflow: hidden;
@@ -311,7 +345,8 @@ button:disabled {
 }
 
 .error-banner,
-.conflict-banner {
+.conflict-banner,
+.draft-banner {
   background: var(--danger);
   color: #fffafa;
   display: flex;
@@ -324,6 +359,10 @@ button:disabled {
 
 .conflict-banner {
   background: var(--conflict);
+}
+
+.draft-banner {
+  background: var(--accent);
 }
 
 .message-copy {

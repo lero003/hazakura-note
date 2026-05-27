@@ -8,7 +8,7 @@ Last reviewed: 2026-05-27
 ## Current State
 
 - A touchable Tauri desktop prototype exists.
-- The prototype creates user-selected text/Markdown files, opens a user-selected folder, shows a lazy bounded file tree, opens multiple files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, searches with visible match highlights and keyboard navigation, and renders a toggleable sanitized Markdown preview.
+- The prototype creates user-selected text/Markdown files, opens a user-selected folder, shows a lazy bounded file tree, opens multiple files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, searches with visible match highlights and keyboard/navigation options, and renders a toggleable sanitized Markdown preview.
 - Existing LF / CRLF line endings are detected when a file is opened and preserved through save.
 - The active tab shows approximate UTF-8 byte count, character count, saved line-ending mode, final-newline state, and clean/unsaved state.
 - Line endings can be explicitly converted between LF and CRLF; conversion marks the tab unsaved until saved.
@@ -16,7 +16,14 @@ Last reviewed: 2026-05-27
 - Save writes the editor text without adding or removing a final trailing newline by policy; Rust tests cover LF and CRLF final-newline presence.
 - Markdown preview shows embedded `data:image` PNG/JPEG/GIF/WebP images and blocks external or local image references with an in-preview note.
 - Recent workspace, open tabs, active tab, and theme preference are restored after restart.
+- Unsaved dirty tab drafts are stored locally and offered for explicit restoration after restart when the on-disk file still matches the draft's saved fingerprint.
+- Editor display settings for wrap, invisible characters, font size, and tab size are persisted locally.
 - Theme changes now reconfigure the active CodeMirror editor without recreating it, so the current cursor, selection, and undo/redo session state are not reset by switching Light / Dark / System.
+- The status bar shows cursor line/column and approximate selection character/line counts.
+- The active tab metadata includes a simple file type/mode label derived from the extension.
+- Active-file search supports case-sensitive, whole-word, and safe regex modes, with invalid regex input reported without throwing.
+- Go to Line jumps the active editor to a requested line.
+- The active tab is rechecked for external on-disk changes when it gains focus through tab switching or app focus/visibility changes.
 - Find-field Enter / Escape handling and global shortcuts now ignore active IME composition events, so Japanese conversion is not mistaken for search movement, find close, save, open, or tab-close commands.
 - Save conflicts now present explicit recovery choices: Reopen from disk, Close without saving, and Keep editing.
 - Non-conflict save failures now state that local edits remain in the editor and offer Try save again / Keep editing actions.
@@ -56,6 +63,13 @@ Last reviewed: 2026-05-27
 - Recent workspace restoration through `localStorage`
 - Open tab and active tab restoration through `localStorage`
 - Active-file search with match count, previous/next controls, visible match highlights, active-match selection, Enter / Shift+Enter match navigation, and Escape return-to-editor behavior
+- Search options for case-sensitive, whole-word, and regex search with invalid-regex reporting
+- Go to Line control
+- Cursor line/column and approximate selection count in the status bar
+- File type/mode label in the active tab metadata row
+- Editor display settings for line wrap, invisible characters, font size, and tab size
+- Unsaved draft recovery prompt after restart
+- External-change metadata recheck on app focus / visibility return and active tab switch
 - IME-safe keyboard handling for find-field Enter / Escape and global shortcuts during active composition
 - Keyboard shortcuts for New File, Open, Open Folder, Save, Find, and active-tab close
 - Conflict recovery actions for reloading, closing, or continuing with local edits
@@ -87,7 +101,7 @@ Source Release Readiness smoke on 2026-05-27:
 
 - `npm run build:vite` passed.
 - `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check` passed.
-- `cargo test --manifest-path src-tauri/Cargo.toml` passed with 14 Rust tests, including external-change conflict rejection, binary-looking file rejection, oversized-file rejection, CRLF preservation, and final-newline preservation.
+- `cargo test --manifest-path src-tauri/Cargo.toml` passed with 16 Rust tests, including external-change conflict rejection, binary-looking file rejection, oversized-file rejection, CRLF preservation, final-newline preservation, Save As, and workspace lazy-listing boundaries.
 - `npm run build` passed and regenerated the local macOS `.app` bundle.
 - Version alignment was confirmed at `0.1.0` across `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`.
 - Manual built-app smoke used `/tmp/hazakura-note-release-smoke-20260527202313`.
@@ -124,6 +138,11 @@ Text Editor Usability Pack smoke on 2026-05-27:
 - Save As through the built app saved the same text to a new `.log` file and switched the tab to the new path. The path normalization handles macOS Save panel double-extension output such as `.log.txt` by saving to the intended known text extension.
 - Rust tests cover Save As creation with a non-Markdown text extension and existing-file overwrite rejection.
 
+Editor Reliability / Navigation Pack smoke on 2026-05-27:
+
+- `npm run build:vite`, `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`, `cargo test --manifest-path src-tauri/Cargo.toml`, `npm run build`, and `git diff --check` passed after adding cursor/selection status, search options, Go to Line, display settings, draft restore, and focus/tab external-change recheck.
+- Vite browser smoke at `http://127.0.0.1:1420/` confirmed search match count, invalid regex reporting, Go to Line status/cursor movement, and persisted editor settings for Invisibles, Font 16, and Tab 4 after reload.
+
 Known verification note:
 
 - Vite reports a production chunk-size warning because CodeMirror and preview libraries are bundled together. This is acceptable for the prototype; revisit before distribution readiness.
@@ -131,7 +150,7 @@ Known verification note:
 
 ## Risks / Unknowns
 
-- Unsaved text is not restored after restart; only workspace path, tab paths, active tab, and theme preference are restored.
+- Unsaved draft restore is intentionally explicit and fingerprint-bound. It is a safety net, not an autosave system, and does not merge with changed disk content.
 - Workspace listing is intentionally lazy and not a project index. Very large directories can still be partially listed when a single folder exceeds the per-folder cap.
 - Save-conflict recovery is explicit but still simple. There is no merge editor or diff-assisted recovery flow yet.
 - Undo/redo remain CodeMirror defaults and have not received dedicated product-level controls beyond preserving the active editor session during theme changes.
@@ -143,7 +162,7 @@ Known verification note:
 1. Run recurring automation from `docs/development-automation.md` to harden one small slice at a time.
 2. Re-smoke long file name / constrained-width layout before binary distribution readiness.
 3. Use `docs/source-release-checklist.md` as the source-only release boundary and do not tag or publish without explicit approval.
-4. Decide whether unsaved draft restoration belongs in the product or should remain intentionally out of scope.
+4. Add focused UI/E2E coverage for draft restore and external-change focus recheck before treating them as distribution-grade behavior.
 5. Keep signing, notarization, and installer packaging separate from source-release and workspace hardening.
 
 ## Avoid

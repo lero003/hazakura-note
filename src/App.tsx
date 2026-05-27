@@ -6,11 +6,15 @@ import {
   useRef,
   useState,
 } from "react";
-import EditorPane, { type EditorPaneHandle } from "./components/EditorPane";
+import EditorPane, {
+  type EditorPaneHandle,
+  type EditorSelectionInfo,
+} from "./components/EditorPane";
 import PreviewPane from "./components/PreviewPane";
 import {
   closeCurrentWindow,
   createTextFile,
+  getFileMetadata,
   listWorkspaceDirectory,
   listWorkspaceTree,
   onCurrentWindowCloseRequested,
@@ -41,7 +45,10 @@ const WELCOME_MARKDOWN = `# hazakura-note
 const THEME_STORAGE_KEY = "hazakura-note-theme";
 const WORKSPACE_STATE_STORAGE_KEY = "hazakura-note-workspace-state";
 const PREVIEW_VISIBLE_STORAGE_KEY = "hazakura-note-preview-visible";
+const EDITOR_SETTINGS_STORAGE_KEY = "hazakura-note-editor-settings";
+const DRAFT_STATE_STORAGE_KEY = "hazakura-note-unsaved-drafts";
 const MAX_RESTORED_TABS = 12;
+const MAX_STORED_DRAFTS = 20;
 
 type SaveStatus = "idle" | "saving" | "saved" | "error" | "conflict";
 type ThemePreference = "system" | "light" | "dark";
@@ -54,6 +61,8 @@ type EditorTab = TextFileDocument & {
   contents: string;
   lastSavedContents: string;
   lastSavedLineEnding: EditableLineEnding;
+  ignoredExternalFingerprint: string | null;
+  externalFingerprint: string | null;
   saveStatus: SaveStatus;
   error: string | null;
 };
@@ -67,6 +76,27 @@ type PersistedWorkspaceState = {
 type TextMatch = {
   from: number;
   to: number;
+};
+
+type SearchOptions = {
+  caseSensitive: boolean;
+  wholeWord: boolean;
+  regex: boolean;
+};
+
+type EditorSettings = {
+  wrapLines: boolean;
+  showInvisibles: boolean;
+  fontSize: number;
+  tabSize: number;
+};
+
+type DraftRecord = {
+  path: string;
+  contents: string;
+  line_ending: EditableLineEnding;
+  savedFingerprint: string;
+  updatedAt: number;
 };
 
 type TextDocumentStats = {
@@ -93,9 +123,25 @@ export default function App() {
   );
   const [pendingAppClose, setPendingAppClose] = useState(false);
   const [findQuery, setFindQuery] = useState("");
+  const [searchOptions, setSearchOptions] = useState<SearchOptions>({
+    caseSensitive: false,
+    wholeWord: false,
+    regex: false,
+  });
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
+  const [goToLineValue, setGoToLineValue] = useState("");
+  const [selectionInfo, setSelectionInfo] = useState<EditorSelectionInfo>({
+    line: 1,
+    column: 1,
+    selectedCharacters: 0,
+    selectedLines: 0,
+  });
+  const [pendingDrafts, setPendingDrafts] = useState<DraftRecord[]>([]);
   const [themePreference, setThemePreference] = useState<ThemePreference>(() =>
     readStoredThemePreference(),
+  );
+  const [editorSettings, setEditorSettings] = useState<EditorSettings>(() =>
+    readStoredEditorSettings(),
   );
   const [previewVisible, setPreviewVisible] = useState(() =>
     readStoredPreviewVisible(),
@@ -107,6 +153,7 @@ export default function App() {
   const editorPaneRef = useRef<EditorPaneHandle | null>(null);
   const closeTabCancelButtonRef = useRef<HTMLButtonElement | null>(null);
   const appCloseCancelButtonRef = useRef<HTMLButtonElement | null>(null);
+  const tabsRef = useRef<EditorTab[]>([]);
 
   const activeTab = useMemo(
     () => tabs.find((tab) => tab.id === activeTabId) ?? null,
@@ -131,9 +178,20 @@ export default function App() {
   );
   const documentKey = activeTab?.path ?? "welcome";
   const findMatches = useMemo(
-    () => findTextMatches(activeContents, findQuery),
-    [activeContents, findQuery],
+    () => findTextMatches(activeContents, findQuery, searchOptions),
+    [activeContents, findQuery, searchOptions],
   );
+  const activeDraft = useMemo(
+    () =>
+      activeTab
+        ? pendingDrafts.find((draft) => draft.path === activeTab.path) ?? null
+        : null,
+    [activeTab, pendingDrafts],
+  );
+  const invalidRegex =
+    searchOptions.regex && findQuery.trim().length > 0
+      ? !canCompileRegex(findQuery)
+      : false;
   const allowWindowCloseRef = useRef(false);
   const modalOpen = pendingCloseTab !== null || pendingAppClose;
 
@@ -214,15 +272,28 @@ export default function App() {
       try {
         const file = await openTextFile(path);
         const nextTab = createEditorTab(file);
+        const draft = readStoredDrafts().find(
+          (candidate) =>
+            candidate.path === path &&
+            candidate.savedFingerprint === file.fingerprint &&
+            candidate.contents !== nextTab.contents,
+        );
 
         setTabs((currentTabs) =>
           currentTabs.some((tab) => tab.path === path)
             ? currentTabs
             : [...currentTabs, nextTab],
         );
+        if (draft) {
+          setPendingDrafts((currentDrafts) =>
+            upsertDraftRecord(currentDrafts, draft),
+          );
+        }
         setActiveTabId(path);
         setStatus(
-          file.large_file_warning
+          draft
+            ? "Opened with recoverable draft"
+            : file.large_file_warning
             ? "Opened with large-file warning"
             : "Opened safely",
         );
@@ -364,6 +435,8 @@ export default function App() {
                   large_file_warning: saved.size >= 5 * 1024 * 1024,
                   lastSavedContents: tab.contents,
                   lastSavedLineEnding: saved.line_ending,
+                  ignoredExternalFingerprint: null,
+                  externalFingerprint: null,
                   saveStatus: "saved",
                   error: null,
                 }
@@ -371,6 +444,7 @@ export default function App() {
           ),
         );
         setStatus("Saved");
+        removeStoredDraft(tab.path);
         return true;
       } catch (err) {
         const message = String(err);
@@ -441,6 +515,7 @@ export default function App() {
         currentTabs.map((tab) => (tab.id === activeTab.id ? nextTab : tab)),
       );
       setActiveTabId(nextTab.id);
+      removeStoredDraft(activeTab.path);
 
       if (workspaceRootPath) {
         try {
@@ -626,7 +701,15 @@ export default function App() {
   const keepEditingAfterConflict = useCallback((tabId: string) => {
     setTabs((currentTabs) =>
       currentTabs.map((tab) =>
-        tab.id === tabId ? { ...tab, saveStatus: "idle", error: null } : tab,
+        tab.id === tabId
+          ? {
+              ...tab,
+              ignoredExternalFingerprint:
+                tab.externalFingerprint ?? tab.ignoredExternalFingerprint,
+              saveStatus: "idle",
+              error: null,
+            }
+          : tab,
       ),
     );
     setStatus("Keeping local edits");
@@ -640,6 +723,109 @@ export default function App() {
     );
     setStatus("Keeping local edits");
   }, []);
+
+  const restoreDraft = useCallback((draft: DraftRecord) => {
+    setTabs((currentTabs) =>
+      currentTabs.map((tab) =>
+        tab.path === draft.path
+          ? {
+              ...tab,
+              contents: draft.contents,
+              line_ending: draft.line_ending,
+              saveStatus: "idle",
+              error: null,
+            }
+          : tab,
+      ),
+    );
+    setPendingDrafts((currentDrafts) =>
+      currentDrafts.filter((candidate) => candidate.path !== draft.path),
+    );
+    setStatus("Draft restored");
+    focusEditorSoon();
+  }, [focusEditorSoon]);
+
+  const discardDraft = useCallback((draftPath: string) => {
+    setPendingDrafts((currentDrafts) =>
+      currentDrafts.filter((candidate) => candidate.path !== draftPath),
+    );
+    removeStoredDraft(draftPath);
+    setStatus("Draft discarded");
+  }, []);
+
+  const goToLine = useCallback(() => {
+    const requestedLine = Number(goToLineValue);
+
+    if (!Number.isFinite(requestedLine) || requestedLine < 1) {
+      setStatus("Enter a valid line number");
+      return;
+    }
+
+    editorPaneRef.current?.goToLine(requestedLine);
+    setStatus(`Moved to line ${Math.trunc(requestedLine)}`);
+  }, [goToLineValue]);
+
+  const checkTabForExternalChange = useCallback(
+    async (tabId: string) => {
+      const tab = tabsRef.current.find((candidate) => candidate.id === tabId);
+
+      if (!tab) {
+        return;
+      }
+
+      try {
+        const metadata = await getFileMetadata(tab.path);
+
+        if (metadata.fingerprint === tab.fingerprint) {
+          setTabs((currentTabs) =>
+            currentTabs.map((candidate) =>
+              candidate.id === tabId
+                ? {
+                    ...candidate,
+                    ignoredExternalFingerprint: null,
+                    externalFingerprint: null,
+                  }
+                : candidate,
+            ),
+          );
+          return;
+        }
+
+        if (metadata.fingerprint === tab.ignoredExternalFingerprint) {
+          return;
+        }
+
+        setTabs((currentTabs) =>
+          currentTabs.map((candidate) =>
+            candidate.id === tabId
+              ? {
+                  ...candidate,
+                  externalFingerprint: metadata.fingerprint,
+                  saveStatus: "conflict",
+                  error:
+                    "External change detected. The file changed on disk since it was opened; saving is stopped until you choose what to do.",
+                }
+              : candidate,
+          ),
+        );
+        setStatus("External change detected");
+      } catch (err) {
+        setTabs((currentTabs) =>
+          currentTabs.map((candidate) =>
+            candidate.id === tabId
+              ? {
+                  ...candidate,
+                  saveStatus: "error",
+                  error: `Metadata check failed: ${String(err)}`,
+                }
+              : candidate,
+          ),
+        );
+        setStatus("Metadata check failed");
+      }
+    },
+    [],
+  );
 
   const handleEditorChange = useCallback(
     (nextValue: string) => {
@@ -717,6 +903,10 @@ export default function App() {
   );
 
   useEffect(() => {
+    tabsRef.current = tabs;
+  }, [tabs]);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function restoreWorkspaceState() {
@@ -751,9 +941,21 @@ export default function App() {
               result.status === "fulfilled",
           )
           .map((result) => createEditorTab(result.value));
+        const storedDrafts = readStoredDrafts();
+        const recoverableDrafts = restoredTabs.flatMap((tab) => {
+          const draft = storedDrafts.find(
+            (candidate) =>
+              candidate.path === tab.path &&
+              candidate.savedFingerprint === tab.fingerprint &&
+              candidate.contents !== tab.contents,
+          );
+
+          return draft ? [draft] : [];
+        });
 
         if (!cancelled) {
           setTabs(restoredTabs);
+          setPendingDrafts(recoverableDrafts);
           setActiveTabId(
             restoredTabs.some(
               (tab) => tab.path === persistedState.activeTabPath,
@@ -761,7 +963,13 @@ export default function App() {
               ? persistedState.activeTabPath
               : restoredTabs[0]?.id ?? null,
           );
-          setStatus(restoredTabs.length > 0 ? "Workspace restored" : "Ready");
+          setStatus(
+            recoverableDrafts.length > 0
+              ? "Workspace restored with drafts"
+              : restoredTabs.length > 0
+                ? "Workspace restored"
+                : "Ready",
+          );
         }
       } catch (err) {
         if (!cancelled) {
@@ -795,8 +1003,28 @@ export default function App() {
   }, [activeTab, restoreComplete, tabs, workspaceRootPath]);
 
   useEffect(() => {
+    if (!restoreComplete) {
+      return;
+    }
+
+    const dirtyDrafts = tabs.filter(isDirty).map((tab) => ({
+      path: tab.path,
+      contents: tab.contents,
+      line_ending: tab.line_ending,
+      savedFingerprint: tab.fingerprint,
+      updatedAt: Date.now(),
+    }));
+    writeStoredDrafts(
+      [...pendingDrafts, ...dirtyDrafts].reduce<DraftRecord[]>(
+        (records, draft) => upsertDraftRecord(records, draft),
+        [],
+      ),
+    );
+  }, [pendingDrafts, restoreComplete, tabs]);
+
+  useEffect(() => {
     setActiveMatchIndex(0);
-  }, [documentKey, findQuery]);
+  }, [documentKey, findQuery, searchOptions]);
 
   useEffect(() => {
     if (activeMatchIndex >= findMatches.length) {
@@ -856,6 +1084,39 @@ export default function App() {
       previewVisible ? "true" : "false",
     );
   }, [previewVisible]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      EDITOR_SETTINGS_STORAGE_KEY,
+      JSON.stringify(editorSettings),
+    );
+  }, [editorSettings]);
+
+  useEffect(() => {
+    if (!activeTabId) {
+      return;
+    }
+
+    void checkTabForExternalChange(activeTabId);
+  }, [activeTabId, checkTabForExternalChange]);
+
+  useEffect(() => {
+    const checkActiveTab = () => {
+      if (!activeTabId || document.visibilityState === "hidden") {
+        return;
+      }
+
+      void checkTabForExternalChange(activeTabId);
+    };
+
+    window.addEventListener("focus", checkActiveTab);
+    document.addEventListener("visibilitychange", checkActiveTab);
+
+    return () => {
+      window.removeEventListener("focus", checkActiveTab);
+      document.removeEventListener("visibilitychange", checkActiveTab);
+    };
+  }, [activeTabId, checkTabForExternalChange]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -1017,6 +1278,65 @@ export default function App() {
             />
             <span>Preview</span>
           </label>
+          <label className="toggle-control">
+            <input
+              type="checkbox"
+              checked={editorSettings.wrapLines}
+              onChange={(event) =>
+                setEditorSettings((current) => ({
+                  ...current,
+                  wrapLines: event.target.checked,
+                }))
+              }
+            />
+            <span>Wrap</span>
+          </label>
+          <label className="toggle-control">
+            <input
+              type="checkbox"
+              checked={editorSettings.showInvisibles}
+              onChange={(event) =>
+                setEditorSettings((current) => ({
+                  ...current,
+                  showInvisibles: event.target.checked,
+                }))
+              }
+            />
+            <span>Invisibles</span>
+          </label>
+          <label className="number-control">
+            <span>Font</span>
+            <input
+              aria-label="Editor font size"
+              type="number"
+              min="12"
+              max="22"
+              value={editorSettings.fontSize}
+              onChange={(event) =>
+                setEditorSettings((current) => ({
+                  ...current,
+                  fontSize: clampNumber(Number(event.target.value), 12, 22, 14),
+                }))
+              }
+            />
+          </label>
+          <label className="line-ending-control">
+            <span>Tab</span>
+            <select
+              aria-label="Tab size"
+              value={editorSettings.tabSize}
+              onChange={(event) =>
+                setEditorSettings((current) => ({
+                  ...current,
+                  tabSize: clampNumber(Number(event.target.value), 2, 8, 2),
+                }))
+              }
+            >
+              <option value={2}>2</option>
+              <option value={4}>4</option>
+              <option value={8}>8</option>
+            </select>
+          </label>
           <label className="theme-control">
             <span>Theme</span>
             <select
@@ -1078,7 +1398,7 @@ export default function App() {
         </div>
         <div className="document-meta">
           {activeTab
-            ? formatDocumentMeta(activeDocumentStats)
+            ? formatDocumentMeta(activeDocumentStats, activeTab.name)
             : previewVisible
               ? "Preview only"
               : "No file open"}
@@ -1116,12 +1436,78 @@ export default function App() {
           </button>
           <span className="find-count">
             {findQuery
-              ? findMatches.length > 0
+              ? invalidRegex
+                ? "Invalid regex"
+                : findMatches.length > 0
                 ? `${activeMatchIndex + 1} / ${findMatches.length}`
                 : "No matches"
               : "No search"}
           </span>
         </div>
+        <div className="find-options" aria-label="Find options">
+          <label className="toggle-control">
+            <input
+              type="checkbox"
+              checked={searchOptions.caseSensitive}
+              onChange={(event) =>
+                setSearchOptions((current) => ({
+                  ...current,
+                  caseSensitive: event.target.checked,
+                }))
+              }
+            />
+            <span>Case</span>
+          </label>
+          <label className="toggle-control">
+            <input
+              type="checkbox"
+              checked={searchOptions.wholeWord}
+              onChange={(event) =>
+                setSearchOptions((current) => ({
+                  ...current,
+                  wholeWord: event.target.checked,
+                }))
+              }
+            />
+            <span>Word</span>
+          </label>
+          <label className="toggle-control">
+            <input
+              type="checkbox"
+              checked={searchOptions.regex}
+              onChange={(event) =>
+                setSearchOptions((current) => ({
+                  ...current,
+                  regex: event.target.checked,
+                }))
+              }
+            />
+            <span>Regex</span>
+          </label>
+        </div>
+        <label className="goto-control">
+          <span>Line</span>
+          <input
+            aria-label="Go to line"
+            type="number"
+            min="1"
+            value={goToLineValue}
+            onChange={(event) => setGoToLineValue(event.target.value)}
+            onKeyDown={(event) => {
+              if (isImeComposing(event.nativeEvent)) {
+                return;
+              }
+
+              if (event.key === "Enter") {
+                event.preventDefault();
+                goToLine();
+              }
+            }}
+          />
+          <button type="button" onClick={goToLine}>
+            Go
+          </button>
+        </label>
         <span className="shortcut-hint">
           Cmd+N new · Cmd+O open · Cmd+Shift+O folder · Cmd+W close · Cmd+F find · Cmd+S save
           · Cmd+Shift+S save as
@@ -1129,6 +1515,27 @@ export default function App() {
       </section>
 
       <div className="message-row">
+        {activeDraft && activeTab ? (
+          <div className="draft-banner">
+            <span className="message-copy">
+              Unsaved draft available for {activeTab.name}.
+              <span className="message-detail">
+                Saved locally {formatTimestamp(activeDraft.updatedAt)}.
+              </span>
+            </span>
+            <div className="message-actions" aria-label="Draft actions">
+              <button type="button" onClick={() => restoreDraft(activeDraft)}>
+                Restore draft
+              </button>
+              <button
+                type="button"
+                onClick={() => discardDraft(activeDraft.path)}
+              >
+                Discard draft
+              </button>
+            </div>
+          </div>
+        ) : null}
         {activeError ? (
           <div
             className={activeConflict ? "conflict-banner" : "error-banner"}
@@ -1203,10 +1610,15 @@ export default function App() {
               ref={editorPaneRef}
               activeSearchMatchIndex={activeMatchIndex}
               documentKey={documentKey}
+              fontSize={editorSettings.fontSize}
               onChange={handleEditorChange}
+              onSelectionChange={setSelectionInfo}
               searchMatches={findMatches}
+              showInvisibles={editorSettings.showInvisibles}
+              tabSize={editorSettings.tabSize}
               theme={resolvedTheme}
               value={activeContents}
+              wrapLines={editorSettings.wrapLines}
             />
           </div>
           {previewVisible ? (
@@ -1219,7 +1631,10 @@ export default function App() {
 
       <footer className="status-bar">
         <span>{status}</span>
-        <span>{saveStatusLabel(activeTab, activeDirty)}</span>
+        <span>
+          {formatSelectionInfo(selectionInfo)} ·{" "}
+          {saveStatusLabel(activeTab, activeDirty)}
+        </span>
       </footer>
 
       {pendingCloseTab ? (
@@ -1411,6 +1826,8 @@ function createEditorTab(file: TextFileDocument): EditorTab {
     contents: editorContents,
     lastSavedContents: editorContents,
     lastSavedLineEnding: file.line_ending,
+    ignoredExternalFingerprint: null,
+    externalFingerprint: null,
     saveStatus: "idle",
     error: null,
   };
@@ -1453,6 +1870,112 @@ function readStoredPreviewVisible(): boolean {
   return window.localStorage.getItem(PREVIEW_VISIBLE_STORAGE_KEY) !== "false";
 }
 
+function readStoredEditorSettings(): EditorSettings {
+  const defaults: EditorSettings = {
+    wrapLines: true,
+    showInvisibles: false,
+    fontSize: 14,
+    tabSize: 2,
+  };
+  const value = window.localStorage.getItem(EDITOR_SETTINGS_STORAGE_KEY);
+
+  if (!value) {
+    return defaults;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as Partial<EditorSettings>;
+
+    return {
+      wrapLines:
+        typeof parsed.wrapLines === "boolean"
+          ? parsed.wrapLines
+          : defaults.wrapLines,
+      showInvisibles:
+        typeof parsed.showInvisibles === "boolean"
+          ? parsed.showInvisibles
+          : defaults.showInvisibles,
+      fontSize: clampNumber(parsed.fontSize, 12, 22, defaults.fontSize),
+      tabSize: [2, 4, 8].includes(Number(parsed.tabSize))
+        ? Number(parsed.tabSize)
+        : defaults.tabSize,
+    };
+  } catch {
+    return defaults;
+  }
+}
+
+function readStoredDrafts(): DraftRecord[] {
+  const value = window.localStorage.getItem(DRAFT_STATE_STORAGE_KEY);
+
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed
+      .filter(isDraftRecord)
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, MAX_STORED_DRAFTS);
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredDrafts(drafts: DraftRecord[]) {
+  const normalizedDrafts = drafts
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, MAX_STORED_DRAFTS);
+
+  if (normalizedDrafts.length === 0) {
+    window.localStorage.removeItem(DRAFT_STATE_STORAGE_KEY);
+    return;
+  }
+
+  window.localStorage.setItem(
+    DRAFT_STATE_STORAGE_KEY,
+    JSON.stringify(normalizedDrafts),
+  );
+}
+
+function removeStoredDraft(path: string) {
+  writeStoredDrafts(
+    readStoredDrafts().filter((draft) => draft.path !== path),
+  );
+}
+
+function upsertDraftRecord(
+  drafts: DraftRecord[],
+  nextDraft: DraftRecord,
+): DraftRecord[] {
+  return [
+    nextDraft,
+    ...drafts.filter((draft) => draft.path !== nextDraft.path),
+  ].slice(0, MAX_STORED_DRAFTS);
+}
+
+function isDraftRecord(value: unknown): value is DraftRecord {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<DraftRecord>;
+
+  return (
+    typeof candidate.path === "string" &&
+    typeof candidate.contents === "string" &&
+    (candidate.line_ending === "lf" || candidate.line_ending === "crlf") &&
+    typeof candidate.savedFingerprint === "string" &&
+    typeof candidate.updatedAt === "number"
+  );
+}
+
 function readPersistedWorkspaceState(): PersistedWorkspaceState | null {
   const value = window.localStorage.getItem(WORKSPACE_STATE_STORAGE_KEY);
 
@@ -1489,29 +2012,100 @@ function readSystemTheme(): ResolvedTheme {
     : "light";
 }
 
-function findTextMatches(source: string, query: string): TextMatch[] {
-  const normalizedQuery = query.trim().toLowerCase();
+function findTextMatches(
+  source: string,
+  query: string,
+  options: SearchOptions,
+): TextMatch[] {
+  const normalizedQuery = query.trim();
 
   if (!normalizedQuery) {
     return [];
   }
 
-  const normalizedSource = source.toLowerCase();
+  if (options.regex) {
+    return findRegexMatches(source, normalizedQuery, options);
+  }
+
+  const haystack = options.caseSensitive ? source : source.toLowerCase();
+  const needle = options.caseSensitive
+    ? normalizedQuery
+    : normalizedQuery.toLowerCase();
   const matches: TextMatch[] = [];
   let cursor = 0;
 
   while (matches.length < 999) {
-    const foundAt = normalizedSource.indexOf(normalizedQuery, cursor);
+    const foundAt = haystack.indexOf(needle, cursor);
 
     if (foundAt === -1) {
       break;
     }
 
-    matches.push({ from: foundAt, to: foundAt + normalizedQuery.length });
-    cursor = foundAt + Math.max(normalizedQuery.length, 1);
+    const to = foundAt + needle.length;
+
+    if (
+      !options.wholeWord ||
+      isWordBoundary(source, foundAt, to)
+    ) {
+      matches.push({ from: foundAt, to });
+    }
+
+    cursor = foundAt + Math.max(needle.length, 1);
   }
 
   return matches;
+}
+
+function findRegexMatches(
+  source: string,
+  query: string,
+  options: SearchOptions,
+): TextMatch[] {
+  const matches: TextMatch[] = [];
+
+  try {
+    const flags = options.caseSensitive ? "gu" : "giu";
+    const regex = new RegExp(query, flags);
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(source)) && matches.length < 999) {
+      const from = match.index;
+      const to = from + match[0].length;
+
+      if (match[0].length === 0) {
+        regex.lastIndex += 1;
+        continue;
+      }
+
+      if (!options.wholeWord || isWordBoundary(source, from, to)) {
+        matches.push({ from, to });
+      }
+    }
+  } catch {
+    return [];
+  }
+
+  return matches;
+}
+
+function canCompileRegex(query: string): boolean {
+  try {
+    new RegExp(query, "u");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function isWordBoundary(source: string, from: number, to: number): boolean {
+  const before = from > 0 ? source[from - 1] : "";
+  const after = to < source.length ? source[to] : "";
+
+  return !isWordCharacter(before) && !isWordCharacter(after);
+}
+
+function isWordCharacter(char: string): boolean {
+  return /^[\p{L}\p{N}_]$/u.test(char);
 }
 
 function isImeComposing(event: KeyboardEvent): boolean {
@@ -1592,13 +2186,50 @@ function normalizeTextLineEndings(
   return lfContents.replace(/\n/g, "\r\n");
 }
 
-function formatDocumentMeta(stats: TextDocumentStats): string {
+function formatDocumentMeta(stats: TextDocumentStats, fileName: string): string {
   return [
+    formatFileType(fileName),
     formatBytes(stats.bytes),
     `${stats.characters.toLocaleString()} chars`,
     formatLineEndingKind(stats.lineEnding),
     stats.hasFinalNewline ? "final newline" : "no final newline",
   ].join(" · ");
+}
+
+function formatFileType(fileName: string): string {
+  const extension = fileName.split(".").at(-1)?.toLowerCase() ?? "";
+
+  switch (extension) {
+    case "md":
+    case "markdown":
+    case "mdown":
+      return "Markdown";
+    case "txt":
+    case "text":
+    case "log":
+      return "Text";
+    case "json":
+    case "jsonl":
+      return "JSON";
+    case "yaml":
+    case "yml":
+      return "YAML";
+    case "toml":
+      return "TOML";
+    case "csv":
+    case "tsv":
+      return "Delimited text";
+    case "html":
+    case "xml":
+      return "Markup";
+    case "css":
+      return "CSS";
+    case "ini":
+    case "conf":
+      return "Config";
+    default:
+      return extension ? extension.toUpperCase() : "Plain text";
+  }
 }
 
 function formatLineEndingKind(lineEnding: LineEndingKind): string {
@@ -1631,6 +2262,41 @@ function formatBytes(bytes: number): string {
 
 function formatDirtyTabCount(count: number): string {
   return count === 1 ? "1 unsaved tab" : `${count} unsaved tabs`;
+}
+
+function formatSelectionInfo(selection: EditorSelectionInfo): string {
+  const selectionText =
+    selection.selectedCharacters > 0
+      ? ` · ${selection.selectedCharacters.toLocaleString()} selected / ${selection.selectedLines.toLocaleString()} lines`
+      : "";
+
+  return `Ln ${selection.line.toLocaleString()}, Col ${selection.column.toLocaleString()}${selectionText}`;
+}
+
+function formatTimestamp(timestamp: number): string {
+  if (!Number.isFinite(timestamp)) {
+    return "recently";
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(timestamp));
+}
+
+function clampNumber(
+  value: unknown,
+  min: number,
+  max: number,
+  fallback: number,
+): number {
+  const numberValue = Number(value);
+
+  if (!Number.isFinite(numberValue)) {
+    return fallback;
+  }
+
+  return Math.min(Math.max(Math.trunc(numberValue), min), max);
 }
 
 function isSaveFailureError(tab: EditorTab | null): boolean {

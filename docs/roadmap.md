@@ -127,6 +127,24 @@ Status: Completed on 2026-05-27
 
 このフェーズでは、画像ファイルブラウザ、外部画像読み込み、ローカル画像プロトコル、UI刷新、Git連携、LSP、terminal、AI支援は扱わない。
 
+## v0.3.4: Editor Reliability / Navigation Pack
+
+Status: Completed on 2026-05-27
+
+目的: 一般的なテキストエディタとして日常操作に必要な表示、検索、復元、外部変更気づきを追加する。
+
+- Status barにcursor line / columnを表示
+- 選択範囲の概算character数とline数を表示
+- Active tab metadataに拡張子由来のfile type / modeを表示
+- Searchにcase-sensitive、whole-word、regex optionを追加し、invalid regexは検索失敗として安全に表示
+- Go to Line controlを追加
+- Line wrap、invisible characters、font size、tab sizeのeditor display settingsを追加し、`localStorage` に保持
+- Dirty tabのunsaved draftをlocalStorageへ保持し、restart後にfingerprintが一致する場合だけ明示的にRestore / Discardできるようにする
+- App focus / visibility復帰とactive tab switch時に外部変更metadataを再確認し、保存前に気づけるようにする
+- Vite buildとbrowser smokeで検索option、invalid regex、Go to Line、editor settings復元を確認
+
+このフェーズでは、autosave、merge editor、diff UI、Git連携、LSP、terminal、AI支援、project indexingは扱わない。
+
 ## v0.4: Markdown Workspace
 
 目的: Markdownを書く体験を軽くする。

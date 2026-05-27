@@ -135,6 +135,10 @@ export async function closeCurrentWindow(): Promise<void> {
 export async function onCurrentWindowCloseRequested(
   handler: (event: CloseRequestedEvent) => void | Promise<void>,
 ): Promise<() => void> {
+  if (!isTauriRuntime()) {
+    return () => {};
+  }
+
   return getCurrentWindow().onCloseRequested(handler);
 }
 
@@ -213,4 +217,10 @@ function normalizeSelectedTextFilePath(path: string): string {
   }
 
   return path;
+}
+
+function isTauriRuntime(): boolean {
+  return Boolean(
+    (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__,
+  );
 }

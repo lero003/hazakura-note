@@ -35,10 +35,14 @@ Last reviewed: 2026-05-27
 - Non-conflict save failures keep local edits and show Try save again / Keep editing recovery actions
 - Workspace tree directory expansion loads direct children on demand, keeps heavy / hidden directory exclusions, and shows a partial-listing note instead of failing the whole workspace when one folder exceeds the entry cap
 - In-file search for the active tab, with visible match highlights, active-match selection, and keyboard next / previous / return-to-editor flow
+- Search options for case-sensitive, whole-word, and regex matching with invalid-regex reporting
+- Go to Line, cursor line/column status, and approximate selected character/line count
+- Editor display settings for line wrap, invisible characters, font size, and tab size, with persisted preference
 - Find-field and global shortcut handling ignores active IME composition so Japanese text conversion is not mistaken for editor commands
 - System / Light / Dark theme switching with persisted selection
 - Theme switching reconfigures the active editor without recreating it, preserving the current editor session state during theme changes
 - Recent workspace, open tabs, and active tab restoration after restart
+- Explicit unsaved draft recovery after restart when the disk file still matches the draft's saved fingerprint
 - Rust-side binary-looking file rejection, large-file warning, editing size limit, and atomic save helper
 - Existing LF / CRLF line endings are preserved on save
 - Existing final-newline presence is preserved on save; the app does not add or remove a trailing newline by policy
@@ -98,7 +102,7 @@ Source-only developer preview boundary:
 
 ## Known Limits
 
-- Unsaved text is not restored after restart; only workspace, tab paths, active tab, and theme are restored.
+- Unsaved draft restore is explicit and fingerprint-bound; it is not autosave and does not merge with changed disk content.
 - The file tree is a workspace browser, not an index. Very large directories are capped per folder and may show only the first visible entries.
 - Save conflicts are recoverable by reopening, closing, or keeping local edits, but there is no merge editor or advanced diff.
 - The app is not signed or notarized with an Apple Developer ID.

@@ -11,6 +11,8 @@ Latest built-app source-release pass: 2026-05-27 with `/tmp/hazakura-note-releas
 
 Latest Text Editor Usability Pack pass: 2026-05-27 with `/tmp/hazakura-note-usability-smoke.VHMxWZ`. Confirmed active-tab byte/character/line-ending/final-newline metadata, CRLF clean-open behavior, explicit LF conversion and save, Save As to `.log`, preview toggle, and safe image preview policy.
 
+Latest Editor Reliability / Navigation Pack pass: 2026-05-27 with Vite browser smoke at `http://127.0.0.1:1420/`. Confirmed case/regex UI wiring, invalid regex reporting, Go to Line movement/status, cursor line/column status, and editor display setting restoration after reload.
+
 ## Build First
 
 ```bash
@@ -94,6 +96,20 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 6. With the Find field focused, press Enter and Shift+Enter and confirm the active match moves next and previous.
 7. Press Escape and confirm the Find field clears and keyboard focus returns to the editor.
 8. Search for a missing word and confirm highlights clear and the UI reports no matches without changing the file.
+9. Enable Case and confirm case mismatches are not counted.
+10. Enable Word and confirm substrings inside longer words are not counted.
+11. Enable Regex, enter a valid expression, and confirm matches are highlighted.
+12. Enter an invalid regex such as `[` and confirm the UI reports invalid regex without changing the file or crashing.
+
+## Editor Navigation And Display Settings
+
+1. Move the cursor in the editor and confirm the status bar shows the current line and column.
+2. Select text spanning one line and multiple lines, then confirm approximate selected character and line counts appear.
+3. Enter a valid line number in the Line control and click Go.
+4. Confirm the cursor moves to that line and the status bar updates.
+5. Toggle Wrap and confirm long lines wrap or stop wrapping without changing file contents.
+6. Toggle Invisibles and confirm spaces/tabs/trailing whitespace receive visible markers without changing file contents.
+7. Change Font and Tab size, restart or reload the app, and confirm the selected display settings are restored.
 
 ## Preview Toggle And Images
 
@@ -175,7 +191,10 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 3. Select a non-first active tab.
 4. Restart the app.
 5. Confirm the workspace tree, open tabs, active tab, and theme preference are restored.
-6. Confirm unsaved text is not expected to restore; save or discard dirty tabs before relying on restart behavior.
+6. Edit one open tab without saving, restart the app, and confirm a draft restore prompt appears only if the file on disk still matches the draft's saved fingerprint.
+7. Choose Restore draft and confirm the unsaved text returns and the tab is dirty.
+8. Repeat and choose Discard draft, then confirm the clean disk contents remain.
+9. Modify the file on disk before restart and confirm the stale draft is not applied automatically.
 
 ## External Change Conflict
 
@@ -189,6 +208,8 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 8. Trigger the conflict again and click Reopen from disk.
 9. Confirm the editor, preview, and status all show the external disk content.
 10. Trigger the conflict once more if needed and confirm Close without saving closes the tab without overwriting disk.
+11. Repeat by modifying the file outside the app, then switch away and back to the tab or refocus the app before pressing Save.
+12. Confirm the app detects the external change and stops with the same recovery choices before the user relies on Save.
 
 ## Save Failure Recovery
 

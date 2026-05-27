@@ -50,6 +50,7 @@ Last reviewed: 2026-05-27
 - Window and dirty-tab close requests are stopped when open tabs have unsaved changes, with safe keyboard cancellation, Save / Discard choices, and editor focus restored after cancellation
 - Dirty-tab and app/window close dialogs keep Tab / Shift+Tab focus within the dialog while it is open
 - Failed or conflicted saves from the dirty-tab close dialog stop the close and return to the editor with the normal recovery actions visible
+- Failed or conflicted Save All from the app/window close dialog stops the close, selects the failed tab, and returns to the editor with the normal recovery actions visible
 - Long file names are clipped or wrapped in tabs, the file tree, status/error rows, and close dialogs so core controls stay reachable
 
 ## Canonical Docs

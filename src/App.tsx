@@ -651,15 +651,17 @@ export default function App() {
       const saved = await saveTabById(tab.id);
 
       if (!saved) {
+        setActiveTabId(tab.id);
         setPendingAppClose(false);
         setStatus("Close stopped");
+        focusEditorSoon();
         return;
       }
     }
 
     allowWindowCloseRef.current = true;
     await closeCurrentWindow();
-  }, [dirtyTabs, saveTabById]);
+  }, [dirtyTabs, focusEditorSoon, saveTabById]);
 
   const discardAllAndCloseWindow = useCallback(async () => {
     allowWindowCloseRef.current = true;

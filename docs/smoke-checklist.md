@@ -170,7 +170,7 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 8. Request close again, choose Cancel, and confirm both dirty tabs remain open with keyboard focus returned to the editor.
 9. Request close again and confirm Discard All exits without writing the unsaved text.
 10. Repeat with fresh edits and confirm Save All writes both files before closing.
-11. If one dirty file has an external save conflict, confirm Save All stops the close and leaves the app open.
+11. If one dirty file has an external save conflict or save failure, confirm Save All stops the close, leaves the app open, selects the failed tab, returns keyboard focus to the editor, and shows the normal recovery actions.
 
 ## Theme Switching
 

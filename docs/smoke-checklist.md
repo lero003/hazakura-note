@@ -157,8 +157,8 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 2. Press Tab with a collapsed cursor and confirm indentation is inserted into the document instead of moving focus to another control.
 3. Select multiple lines and press Tab, then confirm all selected lines are indented.
 4. Press Shift+Tab on the indented selection and confirm the selected lines are outdented without changing unrelated lines.
-5. Press Shift+ArrowLeft and Shift+ArrowRight and confirm the selection expands or shrinks by character.
-6. Press Shift+ArrowUp and Shift+ArrowDown and confirm the selection expands by line.
+5. Press Shift+ArrowLeft and Shift+ArrowRight and confirm the selection expands or shrinks by character with a visible highlight.
+6. Press Shift+ArrowUp and Shift+ArrowDown and confirm the selection expands by line with a visible highlight.
 7. Confirm the status bar reports the selected character and line counts.
 
 ## Unsaved Tab Close Confirmation

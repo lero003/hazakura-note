@@ -419,47 +419,54 @@ function editorTheme(theme: "light" | "dark", fontSize: number) {
   return EditorView.theme(
     {
       "&": {
-        backgroundColor: theme === "dark" ? "#1d2421" : "#f4f8f5",
-        color: theme === "dark" ? "#e7efe9" : "#202824",
+        backgroundColor: theme === "dark" ? "#151b18" : "#ffffff",
+        color: theme === "dark" ? "#ecf3ef" : "#1d2521",
         height: "100%",
         fontSize: `${safeFontSize}px`,
       },
       ".cm-scroller": {
         fontFamily:
-          "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+          "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
       },
       ".cm-content": {
-        caretColor: theme === "dark" ? "#d6e9dd" : "#2f5f49",
+        caretColor: theme === "dark" ? "#7fbfa1" : "#2e5c46",
         padding: "18px 0",
       },
       ".cm-line": {
         padding: "0 22px",
       },
       ".cm-gutters": {
-        backgroundColor: theme === "dark" ? "#17201c" : "#eef4f0",
+        backgroundColor: theme === "dark" ? "#111714" : "#e9f0eb",
         borderRight:
-          theme === "dark" ? "1px solid #303d37" : "1px solid #d5dfda",
-        color: theme === "dark" ? "#9ba9a1" : "#68786f",
+          theme === "dark" ? "1px solid #232c28" : "1px solid #e0e6e2",
+        color: theme === "dark" ? "#8ca094" : "#627267",
       },
       ".cm-activeLine": {
-        backgroundColor: theme === "dark" ? "#243029" : "#eaf2ed",
+        backgroundColor: theme === "dark" ? "rgba(127, 191, 161, 0.08)" : "rgba(46, 92, 70, 0.05)",
       },
       ".cm-activeLineGutter": {
-        backgroundColor: theme === "dark" ? "#243029" : "#eaf2ed",
+        backgroundColor: theme === "dark" ? "rgba(127, 191, 161, 0.08)" : "rgba(46, 92, 70, 0.05)",
       },
-      ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": {
-        backgroundColor: theme === "dark" ? "#355543" : "#c6ddcf",
+      ".cm-selectionLayer .cm-selectionBackground": {
+        backgroundColor: theme === "dark" ? "rgba(127, 191, 161, 0.3)" : "rgba(46, 92, 70, 0.18)",
+        opacity: "1",
+      },
+      "&.cm-focused .cm-selectionLayer .cm-selectionBackground": {
+        backgroundColor: theme === "dark" ? "rgba(127, 191, 161, 0.3)" : "rgba(46, 92, 70, 0.18)",
+      },
+      ".cm-content ::selection": {
+        backgroundColor: theme === "dark" ? "rgba(127, 191, 161, 0.3)" : "rgba(46, 92, 70, 0.18)",
       },
       ".cm-searchMatch": {
-        backgroundColor: theme === "dark" ? "#5f5a2e" : "#f0df90",
+        backgroundColor: theme === "dark" ? "rgba(181, 144, 69, 0.3)" : "rgba(153, 120, 56, 0.2)",
         borderRadius: "3px",
       },
       ".cm-searchMatch-active": {
-        backgroundColor: theme === "dark" ? "#7a6a2f" : "#f5cc52",
+        backgroundColor: theme === "dark" ? "rgba(181, 144, 69, 0.7)" : "rgba(153, 120, 56, 0.5)",
         boxShadow:
           theme === "dark"
-            ? "0 0 0 1px #d8bd5b"
-            : "0 0 0 1px #8b6b16",
+            ? "0 0 0 1px #b59045"
+            : "0 0 0 1px #997838",
       },
       ".cm-invisible-space": {
         backgroundImage:
@@ -471,12 +478,12 @@ function editorTheme(theme: "light" | "dark", fontSize: number) {
       },
       ".cm-invisible-tab": {
         backgroundColor:
-          theme === "dark" ? "rgba(155, 194, 170, 0.12)" : "#dbe8df",
+          theme === "dark" ? "rgba(127, 191, 161, 0.12)" : "rgba(46, 92, 70, 0.12)",
         borderRadius: "3px",
       },
       ".cm-trailing-space": {
         backgroundColor:
-          theme === "dark" ? "rgba(124, 63, 67, 0.38)" : "#f3d4d6",
+          theme === "dark" ? "rgba(178, 77, 82, 0.3)" : "rgba(158, 63, 67, 0.2)",
       },
     },
     { dark: theme === "dark" },

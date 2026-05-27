@@ -1315,15 +1315,16 @@ export default function App() {
               <option value="crlf">CRLF</option>
             </select>
           </label>
-          <label className="toggle-control">
+          <label className="toggle-switch">
             <input
               type="checkbox"
               checked={previewVisible}
               onChange={(event) => setPreviewVisible(event.target.checked)}
             />
+            <span className="slider"></span>
             <span>Preview</span>
           </label>
-          <label className="toggle-control">
+          <label className="toggle-switch">
             <input
               type="checkbox"
               checked={editorSettings.wrapLines}
@@ -1334,9 +1335,10 @@ export default function App() {
                 }))
               }
             />
+            <span className="slider"></span>
             <span>Wrap</span>
           </label>
-          <label className="toggle-control">
+          <label className="toggle-switch">
             <input
               type="checkbox"
               checked={editorSettings.showInvisibles}
@@ -1347,6 +1349,7 @@ export default function App() {
                 }))
               }
             />
+            <span className="slider"></span>
             <span>Invisibles</span>
           </label>
           <label className="number-control">
@@ -1423,9 +1426,7 @@ export default function App() {
                   >
                     <span className="tab-name">{tab.name}</span>
                     {dirty ? (
-                      <span className="tab-dirty" aria-label="unsaved">
-                        *
-                      </span>
+                      <span className="tab-dirty-dot" aria-label="unsaved" />
                     ) : null}
                   </button>
                   <button
@@ -1434,7 +1435,9 @@ export default function App() {
                     onClick={() => requestCloseTab(tab.id)}
                     type="button"
                   >
-                    x
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M1 1L7 7M7 1L1 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                    </svg>
                   </button>
                 </div>
               );
@@ -1776,6 +1779,62 @@ function WorkspaceTree({
   );
 }
 
+// SVGアイコンの定義
+function FolderIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M1.5 3C1.5 2.17157 2.17157 1.5 3 1.5H6.25C6.58152 1.5 6.89946 1.6317 7.13388 1.86612L8.63388 3.36612C8.8683 3.60054 9.18624 3.73223 9.51777 3.73223H13C13.8284 3.73223 14.5 4.4038 14.5 5.23223V13C14.5 13.8284 13.8284 14.5 13 14.5H3C2.17157 14.5 1.5 13.8284 1.5 13V3Z" fill="var(--accent)" opacity="0.85"/>
+    </svg>
+  );
+}
+
+function FolderOpenIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M1.5 4.75C1.5 3.92157 2.17157 3.25 3 3.25H13C13.8284 3.25 14.5 3.92157 14.5 4.75V13C14.5 13.8284 13.8284 14.5 13 14.5H3C2.17157 14.5 1.5 13.8284 1.5 13V4.75Z" fill="var(--accent)" opacity="0.85"/>
+      <path d="M1.5 5.5L2.83333 2.16667C2.96667 1.83333 3.29167 1.5 3.65 1.5H6.25C6.58152 1.5 6.89946 1.6317 7.13388 1.86612L8.63388 3.36612C8.8683 3.60054 9.18624 3.73223 9.51777 3.73223H12" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function MarkdownFileIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 1.5C2.17157 1.5 1.5 2.17157 1.5 3V13C1.5 13.8284 2.17157 14.5 3 14.5H13C13.8284 14.5 14.5 13.8284 14.5 13V3C14.5 2.17157 13.8284 1.5 13 1.5H3Z" stroke="var(--text-muted)" strokeWidth="1.5"/>
+      <path d="M4.5 5V11M4.5 5L7 8.5L9.5 5V11M11.5 6.5V9.5M10.5 8H12.5" stroke="var(--text-muted)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function TextFileIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 1.5C2.17157 1.5 1.5 2.17157 1.5 3V13C1.5 13.8284 2.17157 14.5 3 14.5H13C13.8284 14.5 14.5 13.8284 14.5 13V5.5L10.5 1.5H3Z" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinejoin="round"/>
+      <path d="M10.5 1.5V5.5H14.5" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinejoin="round"/>
+      <path d="M4 8H12M4 11H9" stroke="var(--text-muted)" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      width="8"
+      height="8"
+      viewBox="0 0 8 8"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{
+        transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
+        transition: 'transform 0.15s ease',
+        opacity: 0.6
+      }}
+    >
+      <path d="M2.5 1.5L5 4L2.5 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 function TreeEntry({
   activePath,
   defaultExpanded = false,
@@ -1794,6 +1853,7 @@ function TreeEntry({
   const isDirectory = entry.kind === "directory";
 
   if (!isDirectory) {
+    const isMarkdown = entry.name.toLowerCase().endsWith(".md") || entry.name.toLowerCase().endsWith(".markdown");
     return (
       <button
         className={`tree-file${entry.path === activePath ? " active" : ""}`}
@@ -1801,6 +1861,7 @@ function TreeEntry({
         title={entry.path}
         type="button"
       >
+        {isMarkdown ? <MarkdownFileIcon /> : <TextFileIcon />}
         <span className="tree-name">{entry.name}</span>
       </button>
     );
@@ -1835,7 +1896,8 @@ function TreeEntry({
         title={entry.path}
         type="button"
       >
-        <span aria-hidden="true">{expanded ? "v" : ">"}</span>
+        <ChevronIcon expanded={expanded} />
+        {expanded ? <FolderOpenIcon /> : <FolderIcon />}
         <span className="tree-name">{entry.name}</span>
         {loading ? <span className="tree-meta">Loading...</span> : null}
       </button>

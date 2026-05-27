@@ -1,43 +1,52 @@
 :root {
-  --bg: #edf2ef;
-  --surface: #f8fbf8;
+  --bg: #f3f6f4;
+  --surface: #ffffff;
   --surface-strong: #ffffff;
-  --surface-muted: #e8efeb;
-  --border: #d4ded8;
-  --border-strong: #b7c7be;
-  --text: #202824;
-  --text-muted: #63736a;
-  --accent: #3f6856;
-  --accent-soft: #dbe8df;
-  --danger: #653335;
-  --conflict: #6c5528;
-  --status-bg: #202824;
-  --status-text: #eef7f0;
+  --surface-muted: #e9f0eb;
+  --border: #e0e6e2;
+  --border-strong: #c2cfc7;
+  --text: #1d2521;
+  --text-muted: #627267;
+  --accent: #2e5c46;
+  --accent-soft: #e2ede6;
+  --danger: #9e3f43;
+  --conflict: #997838;
+  --status-bg: #1c2420;
+  --status-text: #f0f7f3;
+
+  /* シャドウ / Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+
   color: var(--text);
   background: var(--bg);
-  font-family:
-    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
 :root[data-theme="dark"] {
-  --bg: #141a17;
-  --surface: #1b231f;
-  --surface-strong: #202a25;
-  --surface-muted: #17201c;
-  --border: #303d37;
-  --border-strong: #46564e;
-  --text: #e7efe9;
-  --text-muted: #a2b0a8;
-  --accent: #9bc2aa;
-  --accent-soft: #26362e;
-  --danger: #7c3f43;
-  --conflict: #7a612f;
-  --status-bg: #0f1412;
-  --status-text: #dfe9e3;
+  --bg: #0f1412;
+  --surface: #151b18;
+  --surface-strong: #1a221f;
+  --surface-muted: #111714;
+  --border: #232c28;
+  --border-strong: #33423b;
+  --text: #ecf3ef;
+  --text-muted: #8ca094;
+  --accent: #7fbfa1;
+  --accent-soft: #1d2c25;
+  --danger: #b24d52;
+  --conflict: #b59045;
+  --status-bg: #0a0e0c;
+  --status-text: #ecf3ef;
+
+  /* ダーク用シャドウ / Dark Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 * {
@@ -51,20 +60,39 @@ body {
   overflow: hidden;
 }
 
+/* アニメーション / Keyframes */
+@keyframes modalShow {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes backdropFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* コントロール要素の洗練 / Control Styles */
 button,
 select,
 input {
   border: 1px solid var(--border-strong);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--surface);
   color: var(--text);
   font: inherit;
   font-size: 13px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 button {
   cursor: pointer;
-  font-weight: 650;
+  font-weight: 550;
   min-width: 78px;
   padding: 8px 14px;
 }
@@ -73,7 +101,7 @@ select,
 .number-control input,
 .goto-control input {
   min-height: 34px;
-  padding: 0 8px;
+  padding: 0 10px;
 }
 
 button:hover:not(:disabled),
@@ -81,6 +109,7 @@ select:hover,
 input:hover {
   background: var(--surface-strong);
   border-color: var(--accent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 button:focus-visible,
@@ -91,18 +120,19 @@ input:focus-visible {
 }
 
 button:active:not(:disabled) {
-  transform: translateY(1px);
+  transform: scale(0.97);
 }
 
 button:disabled {
   color: var(--text-muted);
   cursor: not-allowed;
-  opacity: 0.62;
+  opacity: 0.5;
+  box-shadow: none;
 }
 
 .app-shell {
   display: grid;
-  grid-template-rows: 58px 40px 42px min-content minmax(0, 1fr) 28px;
+  grid-template-rows: 58px 44px 42px min-content minmax(0, 1fr) 28px;
   height: 100vh;
   background: var(--bg);
 }
@@ -116,72 +146,147 @@ button:disabled {
 }
 
 .top-bar {
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
   justify-content: space-between;
   min-width: 0;
-  padding: 0 16px;
+  padding: 0 20px;
+  z-index: 10;
+}
+
+:root[data-theme="dark"] .top-bar {
+  background: rgba(21, 27, 24, 0.8);
+  backdrop-filter: blur(16px);
+}
+
+:root[data-theme="light"] .top-bar {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
 }
 
 .brand-block {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
 }
 
 .app-name {
   font-size: 16px;
-  font-weight: 760;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--accent);
 }
 
 .app-subtitle {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .toolbar {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   justify-content: flex-end;
   min-width: 0;
 }
 
 .theme-control,
 .line-ending-control,
-.number-control,
-.toggle-control {
+.number-control {
   align-items: center;
   color: var(--text-muted);
   display: flex;
   font-size: 12px;
   gap: 8px;
+  font-weight: 500;
 }
 
 .number-control input {
   width: 58px;
 }
 
-.toggle-control input {
-  margin: 0;
+/* トグルスイッチのモダン化 / Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-switch .slider {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+  background-color: var(--border-strong);
+  border-radius: 9px;
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-switch .slider::before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--surface-strong);
+  border-radius: 50%;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-switch input:checked + .slider {
+  background-color: var(--accent);
+}
+
+.toggle-switch input:checked + .slider::before {
+  transform: translateX(14px);
+}
+
+.toggle-switch input:focus-visible + .slider {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .tabs-row {
-  background: var(--surface);
+  background: var(--surface-muted);
   border-bottom: 1px solid var(--border);
-  gap: 14px;
+  gap: 16px;
   justify-content: space-between;
   min-width: 0;
-  padding: 0 12px 0 0;
+  padding: 0 16px 0 6px;
+  height: 44px;
 }
 
 .tab-list {
-  align-items: stretch;
+  align-items: center;
   display: flex;
   flex: 1;
   min-width: 0;
+  height: 100%;
   overflow-x: auto;
+  gap: 4px;
+}
+
+.tab-list::-webkit-scrollbar {
+  display: none;
 }
 
 .empty-tabs {
@@ -189,21 +294,37 @@ button:disabled {
   color: var(--text-muted);
   display: flex;
   font-size: 13px;
-  padding-left: 18px;
+  padding-left: 12px;
+  font-weight: 500;
 }
 
+/* フローティングカード型タブ / Floating Card Tabs */
 .tab-item {
   align-items: center;
-  border-right: 1px solid var(--border);
   display: flex;
   flex: 0 0 auto;
-  max-width: 260px;
-  min-width: 150px;
+  max-width: 200px;
+  min-width: 120px;
+  height: 34px;
+  border-radius: 6px;
+  margin: 0 2px;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
 .tab-item.active {
-  background: var(--surface-strong);
-  box-shadow: inset 0 -2px 0 var(--accent);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+.tab-item:not(.active):hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+:root[data-theme="dark"] .tab-item:not(.active):hover {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .tab-button,
@@ -212,18 +333,27 @@ button:disabled {
   border-radius: 0;
   background: transparent;
   min-width: 0;
+  box-shadow: none;
 }
 
 .tab-button {
   align-items: center;
   display: flex;
   flex: 1;
-  font-size: 13px;
-  gap: 2px;
+  font-size: 12.5px;
+  gap: 6px;
   overflow: hidden;
-  padding: 11px 8px 10px 14px;
+  padding: 0 8px 0 12px;
+  height: 100%;
   text-align: left;
   white-space: nowrap;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.tab-item.active .tab-button {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .tab-name {
@@ -234,39 +364,66 @@ button:disabled {
   text-overflow: ellipsis;
 }
 
-.tab-dirty {
-  flex: none;
+/* 丸いドットの未保存マーク */
+.tab-dirty-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  flex-shrink: 0;
+  margin-left: 2px;
 }
 
 .tab-close {
   color: var(--text-muted);
-  flex: 0 0 28px;
-  font-size: 12px;
-  height: 100%;
-  padding: 0;
+  flex: 0 0 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-item:hover .tab-close,
+.tab-item.active .tab-close {
+  opacity: 0.6;
+  transform: scale(1);
 }
 
 .tab-close:hover {
-  color: var(--text);
+  opacity: 1 !important;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--danger);
+}
+
+:root[data-theme="dark"] .tab-close:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .document-meta {
   color: var(--text-muted);
   flex: 0 1 auto;
-  font-size: 12px;
+  font-size: 11.5px;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 500;
 }
 
+/* 検索バーのスタイリッシュ化 / Find Panel */
 .find-row {
-  background: var(--surface-strong);
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 16px;
   min-width: 0;
-  padding: 5px 14px;
+  padding: 6px 20px;
+  box-shadow: inset 0 -4px 8px -4px rgba(0, 0, 0, 0.02);
 }
 
 .find-control {
@@ -282,20 +439,28 @@ button:disabled {
 .find-count {
   color: var(--text-muted);
   font-size: 12px;
+  font-weight: 500;
 }
 
 .find-control input,
 .goto-control input {
-  background: var(--surface);
+  background: var(--bg);
   border: 1px solid var(--border-strong);
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--text);
   flex: 1;
   font: inherit;
   font-size: 13px;
   min-height: 30px;
   min-width: 0;
-  padding: 0 10px;
+  padding: 0 12px;
+  box-shadow: none;
+}
+
+.find-control input:focus,
+.goto-control input:focus {
+  background: var(--surface);
+  border-color: var(--accent);
 }
 
 .find-actions {
@@ -307,7 +472,7 @@ button:disabled {
 
 .find-actions button {
   min-width: 58px;
-  padding: 6px 10px;
+  padding: 5px 10px;
 }
 
 .find-options,
@@ -322,6 +487,7 @@ button:disabled {
 .find-options span {
   color: var(--text-muted);
   font-size: 12px;
+  font-weight: 500;
 }
 
 .goto-control input {
@@ -330,7 +496,7 @@ button:disabled {
 
 .goto-control button {
   min-width: 48px;
-  padding: 6px 10px;
+  padding: 5px 10px;
 }
 
 .shortcut-hint {
@@ -344,9 +510,11 @@ button:disabled {
   min-height: 0;
 }
 
+/* 通知バナーのカード化とスライドアニメーション */
 .error-banner,
 .conflict-banner,
 .draft-banner {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   background: var(--danger);
   color: #fffafa;
   display: flex;
@@ -355,6 +523,10 @@ button:disabled {
   justify-content: space-between;
   font-size: 13px;
   padding: 10px 18px;
+  border-radius: 8px;
+  margin: 10px 16px 2px;
+  box-shadow: var(--shadow-md);
+  border-left: 4px solid rgba(255,255,255,0.4);
 }
 
 .conflict-banner {
@@ -371,10 +543,12 @@ button:disabled {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  font-weight: 500;
 }
 
 .message-detail {
-  opacity: 0.82;
+  opacity: 0.85;
+  font-size: 11.5px;
   overflow-wrap: anywhere;
 }
 
@@ -385,16 +559,24 @@ button:disabled {
   gap: 8px;
   justify-content: flex-end;
   min-width: 0;
+  align-items: center;
 }
 
 .message-actions button {
   background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.35);
   color: #fffafa;
   min-width: 0;
-  padding: 5px 9px;
+  padding: 5px 12px;
+  box-shadow: none;
 }
 
+.message-actions button:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* ワークスペースとファイルツリー / Workspace & File Explorer */
 .workspace {
   display: grid;
   grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
@@ -408,14 +590,31 @@ button:disabled {
   overflow: auto;
 }
 
+:root[data-theme="dark"] .file-tree-pane {
+  background: rgba(17, 23, 20, 0.7);
+  backdrop-filter: blur(16px);
+}
+
+:root[data-theme="light"] .file-tree-pane {
+  background: rgba(233, 240, 235, 0.7);
+  backdrop-filter: blur(16px);
+}
+
 .workspace-empty {
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   color: var(--text-muted);
   display: flex;
   flex-direction: column;
   font-size: 13px;
   gap: 12px;
-  padding: 16px;
+  padding: 32px 16px;
+  text-align: center;
+  height: 100%;
+}
+
+.workspace-empty span {
+  font-weight: 500;
 }
 
 .workspace-empty button {
@@ -424,19 +623,20 @@ button:disabled {
 
 .workspace-tree {
   font-size: 13px;
-  padding: 8px 0 24px;
+  padding: 12px 8px 24px;
 }
 
+/* フローティングホバースタイルのファイルリスト */
 .tree-directory-button,
 .tree-file {
   align-items: center;
   border: 0;
-  border-radius: 0;
+  border-radius: 6px;
   background: transparent;
   display: flex;
-  gap: 6px;
+  gap: 8px;
   justify-content: flex-start;
-  min-height: 28px;
+  min-height: 30px;
   min-width: 0;
   padding: 5px 10px;
   text-align: left;
@@ -444,6 +644,25 @@ button:disabled {
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
+  color: var(--text-muted);
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.tree-directory-button:hover,
+.tree-file:hover {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text);
+}
+
+:root[data-theme="dark"] .tree-directory-button:hover,
+:root[data-theme="dark"] .tree-file:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tree-directory-button svg,
+.tree-file svg {
+  flex-shrink: 0;
 }
 
 .tree-name {
@@ -457,7 +676,7 @@ button:disabled {
 .tree-meta,
 .tree-partial {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .tree-meta {
@@ -465,23 +684,27 @@ button:disabled {
 }
 
 .tree-partial {
-  padding: 5px 10px 5px 28px;
+  padding: 5px 10px 5px 32px;
+  font-style: italic;
 }
 
 .tree-file {
-  color: var(--text-muted);
   padding-left: 28px;
 }
 
 .tree-file.active {
   background: var(--accent-soft);
   color: var(--text);
-  font-weight: 700;
+  font-weight: 600;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding-left: 25px; /* ボーダー幅の分減らす */
 }
 
 .tree-children {
   border-left: 1px solid var(--border);
-  margin-left: 14px;
+  margin-left: 17px;
+  padding-left: 2px;
 }
 
 .editor-preview-grid {
@@ -516,43 +739,54 @@ button:disabled {
   overflow: auto;
 }
 
+/* プレビューの洗練 / Markdown Preview Styling */
 .markdown-preview {
   color: var(--text);
   font-size: 15px;
-  line-height: 1.72;
+  line-height: 1.75;
   max-width: 760px;
-  padding: 22px 30px 60px;
+  padding: 30px 40px 80px;
 }
 
 .markdown-preview h1,
 .markdown-preview h2,
-.markdown-preview h3 {
-  line-height: 1.25;
+.markdown-preview h3,
+.markdown-preview h4 {
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1.3;
 }
 
 .markdown-preview h1 {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--border);
   font-size: 28px;
   padding-bottom: 12px;
+  margin-top: 0;
+  margin-bottom: 24px;
 }
 
 .markdown-preview h2 {
   font-size: 21px;
-  margin-top: 30px;
+  margin-top: 36px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
 }
 
 .markdown-preview h3 {
   font-size: 17px;
-  margin-top: 24px;
+  margin-top: 28px;
+  margin-bottom: 12px;
 }
 
 .markdown-preview code {
-  background: var(--surface-muted);
+  background: var(--accent-soft);
   border-radius: 4px;
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.92em;
-  padding: 2px 5px;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.88em;
+  padding: 3px 6px;
+  color: var(--accent);
+  font-weight: 500;
 }
 
 .markdown-preview pre {
@@ -561,19 +795,29 @@ button:disabled {
   color: var(--status-text);
   overflow: auto;
   padding: 16px;
+  box-shadow: var(--shadow-md);
+  margin: 18px 0;
 }
 
 .markdown-preview pre code {
   background: transparent;
   color: inherit;
   padding: 0;
+  font-size: 0.9em;
 }
 
 .markdown-preview blockquote {
   border-left: 4px solid var(--accent);
-  color: var(--text-muted);
+  background: var(--accent-soft);
+  color: var(--text);
   margin-left: 0;
-  padding-left: 16px;
+  margin-right: 0;
+  padding: 10px 20px;
+  border-radius: 0 8px 8px 0;
+}
+
+.markdown-preview p {
+  margin: 0 0 16px;
 }
 
 .markdown-preview img {
@@ -581,8 +825,9 @@ button:disabled {
   border-radius: 8px;
   display: block;
   height: auto;
-  margin: 16px 0;
+  margin: 20px 0;
   max-width: 100%;
+  box-shadow: var(--shadow-sm);
 }
 
 .blocked-image {
@@ -591,11 +836,12 @@ button:disabled {
   border-radius: 6px;
   color: var(--text-muted);
   display: inline-block;
-  font-size: 13px;
+  font-size: 12px;
   margin: 6px 0;
   max-width: 100%;
   overflow-wrap: anywhere;
-  padding: 6px 8px;
+  padding: 6px 12px;
+  font-weight: 500;
 }
 
 .status-bar {
@@ -603,7 +849,9 @@ button:disabled {
   color: var(--status-text);
   font-size: 12px;
   justify-content: space-between;
-  padding: 0 14px;
+  padding: 0 20px;
+  z-index: 10;
+  font-weight: 500;
 }
 
 .status-bar span {
@@ -620,37 +868,45 @@ button:disabled {
 
 .status-bar span:last-child {
   flex: none;
+  opacity: 0.85;
 }
 
+/* モーダルダイアログのアニメーション化 / Modals */
 .modal-backdrop {
   align-items: center;
-  background: rgba(15, 20, 18, 0.38);
+  background: rgba(10, 14, 12, 0.4);
+  backdrop-filter: blur(4px);
   display: flex;
   inset: 0;
   justify-content: center;
   position: fixed;
+  z-index: 100;
+  animation: backdropFade 0.2s ease-out forwards;
 }
 
 .close-dialog {
   background: var(--surface-strong);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 18px 46px rgba(15, 20, 18, 0.22);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
   color: var(--text);
   max-width: 420px;
-  padding: 20px;
+  padding: 24px;
   width: min(420px, calc(100vw - 48px));
+  animation: modalShow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .close-dialog h2 {
   font-size: 18px;
-  margin: 0 0 8px;
+  margin: 0 0 10px;
+  font-weight: 700;
 }
 
 .close-dialog p {
   color: var(--text-muted);
   font-size: 14px;
-  margin: 0 0 18px;
+  margin: 0 0 20px;
+  line-height: 1.5;
   overflow-wrap: anywhere;
 }
 
@@ -663,18 +919,18 @@ button:disabled {
 
 @media (max-width: 1040px) {
   .app-shell {
-    grid-template-rows: minmax(58px, auto) 40px minmax(42px, auto) min-content minmax(0, 1fr) 28px;
+    grid-template-rows: minmax(58px, auto) 44px minmax(42px, auto) min-content minmax(0, 1fr) 28px;
   }
 
   .top-bar {
     align-items: flex-start;
     gap: 12px;
-    padding-bottom: 10px;
-    padding-top: 10px;
+    padding-bottom: 12px;
+    padding-top: 12px;
   }
 
   .workspace {
-    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-columns: 200px minmax(0, 1fr);
   }
 
   .editor-preview-grid {

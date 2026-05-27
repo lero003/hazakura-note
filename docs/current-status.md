@@ -206,8 +206,9 @@ Editor Keyboard Editing Polish checks on 2026-05-28:
 - Editor-local Tab now inserts indentation instead of moving focus away from the editor.
 - Shift+Tab outdents selected or current lines.
 - Shift+Arrow selection is explicitly bound for character and line selection.
+- Selection highlight colors were strengthened after browser smoke showed selection state moving while the visible highlight was too subtle.
 - `npm run build:vite` passed.
-- Vite browser smoke at `http://127.0.0.1:1421/` confirmed collapsed-cursor Tab indentation, selected-line Tab / Shift+Tab indent and outdent, and Shift+Arrow character selection status.
+- Vite browser smoke at `http://127.0.0.1:1421/` confirmed collapsed-cursor Tab indentation, selected-line Tab / Shift+Tab indent and outdent, Shift+Arrow character selection status, and visible selection highlight rendering.
 - No fresh built-app manual smoke was claimed.
 
 Known verification note:

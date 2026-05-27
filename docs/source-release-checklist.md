@@ -71,9 +71,9 @@ Use the built app and record concise evidence in `docs/current-status.md` before
 Before tagging:
 
 - Confirm `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml` carry the intended version. Current checked version: `0.1.0` in all three files.
-- Add or update release notes for the source preview. Current source-release note seed: source-only developer preview, local build from source, unsigned/not notarized local `.app`, no binary assets.
+- Add or update release notes for the source preview. Current source-release note seed: source-only developer preview, local build from source, ad-hoc signed but not Developer ID signed or notarized local `.app`, no binary assets.
 - State clearly that users build from source with `npm install` and `npm run build`. This is present in `README.md`.
-- State clearly that the built local app is unsigned and not notarized. This is present in `README.md` Known Limits.
+- State clearly that the built local app is ad-hoc signed only and is not Developer ID signed or notarized. This is present in `README.md` Known Limits.
 - Keep known limits visible in `README.md` and `docs/current-status.md`.
 
 ## Stop Conditions

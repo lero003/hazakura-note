@@ -101,7 +101,7 @@ Source-only developer preview boundary:
 
 - Current intended source version is `0.1.0` across npm, Tauri, and Cargo metadata.
 - Source users build locally with `npm install` and `npm run build`.
-- The generated local `.app` is unsigned and not notarized.
+- The generated local `.app` is ad-hoc signed for local build validation, but it is not Developer ID signed or notarized.
 - Manual smoke evidence is tracked in [Current Status](docs/current-status.md) and reusable steps live in [Smoke Checklist](docs/smoke-checklist.md).
 - Tag creation, push, and GitHub Release publication require explicit user approval.
 

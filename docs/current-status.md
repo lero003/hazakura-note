@@ -95,6 +95,7 @@ Last reviewed: 2026-05-28
 - 10 MB prototype editing limit
 - Atomic save helper with temporary-file cleanup after failed replace attempts and existing-temp-file overwrite protection
 - Minimal app icon for Tauri build requirements
+- Local macOS `.app` bundle icon resource and ad-hoc signing for build-output validation
 
 ## Verification
 
@@ -125,6 +126,14 @@ Native File Menu UI polish on 2026-05-28:
 - `cargo test --manifest-path src-tauri/Cargo.toml` passed with 18 Rust tests.
 - `npm run build` passed and regenerated the local macOS `.app` bundle.
 - The regenerated `.app` launched, and macOS System Events confirmed the native File menu contains New File, Open, Open Folder, Save, and Save As.
+
+Local Bundle Signature Polish checks on 2026-05-28:
+
+- `src-tauri/tauri.conf.json` now points the bundle at `icons/icon.icns` and uses ad-hoc macOS signing for local build validation.
+- `npm run build` passed and regenerated the local macOS `.app` bundle with `Contents/Resources/icon.icns`.
+- `codesign --verify --deep --strict --verbose=2 src-tauri/target/release/bundle/macos/hazakura-note.app` passed.
+- No Developer ID signing or notarization was added.
+- In this sandboxed automation session, `open -n src-tauri/target/release/bundle/macos/hazakura-note.app` returned success after the bundle signature fix, but System Events menu inspection failed with `-1728` / connection-invalid errors, so no fresh native menu smoke was claimed for this polish.
 
 Runtime smoke:
 
@@ -239,6 +248,7 @@ Known verification note:
 - The Discard All Draft Cleanup Polish did not include a fresh built-app manual restart smoke pass; use the updated smoke checklist before treating this path as distribution-grade.
 - The Editor Keyboard Editing Polish used Vite browser smoke only; repeat the new editor keyboard checklist in the built app before treating this path as distribution-grade.
 - The UI Brush-up Search Overlay checks used Vite browser smoke only; repeat active-file search in the built app before treating this path as distribution-grade.
+- The Local Bundle Signature Polish made the generated bundle pass `codesign --verify` and `open -n` returned success, but the current sandboxed automation session could not inspect the running app menus; repeat built-app launch and native File menu smoke outside the sandbox before treating this path as distribution-grade.
 - Long file name clipping was re-smoked in the workspace tree during Source Preview Quality Polish. A narrower-window pass is still useful before binary distribution readiness.
 
 ## Risks / Unknowns
@@ -247,7 +257,7 @@ Known verification note:
 - Workspace listing is intentionally lazy and not a project index. Very large directories can still be partially listed when a single folder exceeds the per-folder cap.
 - Save-conflict recovery is explicit but still simple. There is no merge editor or diff-assisted recovery flow yet.
 - Undo/redo remain CodeMirror defaults and have not received dedicated product-level controls beyond preserving the active editor session during theme changes.
-- The app is not signed or notarized.
+- The app is ad-hoc signed for local build validation, but it is not Developer ID signed or notarized.
 - The GitHub remote is configured over HTTPS. SSH access previously failed with `Permission denied (publickey)`.
 
 ## Next Actions

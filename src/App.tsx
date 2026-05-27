@@ -1747,10 +1747,7 @@ export default function App() {
           <button
             type="button"
             className="find-close"
-            onClick={() => {
-              setFindVisible(false);
-              editorPaneRef.current?.focus();
-            }}
+            onClick={closeFindAndFocusEditor}
             aria-label="Close search"
           >
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">

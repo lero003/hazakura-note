@@ -21,6 +21,8 @@ Latest Discard All Draft Cleanup Polish checks: 2026-05-28 automated gates passe
 
 Latest Editor Keyboard Editing Polish checks: 2026-05-28 with Vite browser smoke at `http://127.0.0.1:1421/`. Confirmed Tab inserts indentation in the editor, selected lines indent/outdent with Tab / Shift+Tab, and Shift+Arrow selects text without moving focus away from the editor. No fresh built-app manual smoke was claimed.
 
+Latest Find Close Polish checks: 2026-05-28 automated gates passed after making the Find close button clear the query and highlights like Escape. No fresh built-app manual smoke was claimed.
+
 ## Build First
 
 ```bash
@@ -114,11 +116,12 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 6. Use Prev and Next and confirm the stronger active highlight and editor selection move together.
 7. With the Find field focused, press Enter and Shift+Enter and confirm the active match moves next and previous.
 8. Press Escape and confirm the Find overlay closes, highlights clear, and keyboard focus returns to the editor.
-9. Search for a missing word and confirm highlights clear and the UI reports no matches without changing the file.
-10. Enable Case and confirm case mismatches are not counted.
-11. Enable Word and confirm substrings inside longer words are not counted.
-12. Enable Regex, enter a valid expression, and confirm matches are highlighted.
-13. Enter an invalid regex such as `[` and confirm the UI reports invalid regex without changing the file or crashing.
+9. Reopen Find, search for the word again, click the close button, and confirm the overlay closes, highlights clear, and keyboard focus returns to the editor.
+10. Search for a missing word and confirm highlights clear and the UI reports no matches without changing the file.
+11. Enable Case and confirm case mismatches are not counted.
+12. Enable Word and confirm substrings inside longer words are not counted.
+13. Enable Regex, enter a valid expression, and confirm matches are highlighted.
+14. Enter an invalid regex such as `[` and confirm the UI reports invalid regex without changing the file or crashing.
 
 ## Editor Navigation And Display Settings
 

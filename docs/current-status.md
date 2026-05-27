@@ -253,6 +253,12 @@ UI Brush-up Search Overlay checks on 2026-05-28:
 - Vite browser smoke at `http://127.0.0.1:1421/` confirmed search count, highlights, no CodeMirror search panel, no horizontal overflow, and editor focus restoration.
 - No fresh built-app manual smoke was claimed.
 
+Find Close Polish checks on 2026-05-28:
+
+- The Find close button now uses the same close path as Escape, clearing the query and search highlights before returning focus to the editor.
+- `docs/smoke-checklist.md` now includes the close-button highlight-clear check in Active File Search.
+- Automated local gates passed after this change; no fresh built-app manual smoke was claimed.
+
 Known verification note:
 
 - Vite reports a production chunk-size warning because CodeMirror and preview libraries are bundled together. This is acceptable for the prototype; revisit before distribution readiness.
@@ -262,6 +268,7 @@ Known verification note:
 - The Discard All Draft Cleanup Polish did not include a fresh built-app manual restart smoke pass; use the updated smoke checklist before treating this path as distribution-grade.
 - The Editor Keyboard Editing Polish used Vite browser smoke only; repeat the new editor keyboard checklist in the built app before treating this path as distribution-grade.
 - The UI Brush-up Search Overlay checks used Vite browser smoke only; repeat active-file search in the built app before treating this path as distribution-grade.
+- The Find Close Polish did not include a fresh built-app manual active-file search pass; use the updated close-button check before treating this path as distribution-grade.
 - The Local Bundle Signature Polish made the generated bundle pass `codesign --verify` and `open -n` returned success, but the current sandboxed automation session could not inspect the running app menus; repeat built-app launch and native File menu smoke outside the sandbox before treating this path as distribution-grade.
 - Long file name clipping was re-smoked in the workspace tree during Source Preview Quality Polish. A narrower-window pass is still useful before binary distribution readiness.
 

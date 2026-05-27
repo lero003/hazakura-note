@@ -161,6 +161,7 @@ Status: In progress from 2026-05-27
 - 2026-05-28の保存安全性polishでは、既存の隠し一時ファイルをatomic saveが上書きまたは削除しないように修正済み
 - 2026-05-28のclose/quit polishでは、app/window close確認のDiscard Allで捨てたdirty tabのunsaved draftが次回起動時に復元候補として残らないように修正済み
 - 2026-05-28のlocal bundle polishでは、生成 `.app` がicon resourceを含み、local build validation用のad-hoc signingで `codesign --verify` を通るように修正済み
+- 2026-05-28の検索polishでは、Find close buttonもEscapeと同じくqueryとhighlightを消してeditor focusへ戻すように修正済み
 - このフェーズでは、Git連携、LSP、terminal、AI支援、project indexing、署名済みbinary配布、課金導線は扱わない
 
 ## v0.4: Markdown Workspace

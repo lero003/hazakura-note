@@ -38,7 +38,7 @@ Choose the first useful slice that is both small and verifiable.
 2. Editor reliability:
    - Undo/redo smoke and explicit docs
    - Japanese IME smoke
-   - search highlight visibility
+   - search highlight visibility manual-smoke follow-up if the new highlights regress
    - focus movement and keyboard-only operation
    - long file name and narrow window layout
 3. Markdown writing comfort:

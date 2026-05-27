@@ -56,8 +56,9 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 1. Open a file containing a repeated test word.
 2. Type the word into the Find field or use Cmd+F and type it.
 3. Confirm the match count appears.
-4. Use Prev and Next and confirm the editor selection moves.
-5. Search for a missing word and confirm the UI reports no matches without changing the file.
+4. Confirm all visible matches are highlighted and the active match is visually stronger than the rest.
+5. Use Prev and Next and confirm the stronger active highlight and editor selection move together.
+6. Search for a missing word and confirm highlights clear and the UI reports no matches without changing the file.
 
 ## Keyboard Shortcuts
 

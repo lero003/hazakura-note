@@ -1,18 +1,48 @@
 import { useEffect, useRef } from "react";
 import { markdown } from "@codemirror/lang-markdown";
-import { basicSetup, EditorView } from "codemirror";
+import { StateEffect, StateField } from "@codemirror/state";
+import { Decoration, type DecorationSet, EditorView } from "@codemirror/view";
+import { basicSetup } from "codemirror";
+
+type SearchMatch = { from: number; to: number };
+type DecoratedSearchMatch = SearchMatch & { active: boolean };
 
 type EditorPaneProps = {
   documentKey: string;
   value: string;
   theme: "light" | "dark";
-  searchMatch: { from: number; to: number } | null;
+  activeSearchMatchIndex: number;
+  searchMatches: SearchMatch[];
   onChange: (nextValue: string) => void;
 };
 
+const setSearchMatchesEffect =
+  StateEffect.define<readonly DecoratedSearchMatch[]>();
+
+const searchHighlightField = StateField.define<DecorationSet>({
+  create() {
+    return Decoration.none;
+  },
+  update(highlights, transaction) {
+    for (const effect of transaction.effects) {
+      if (effect.is(setSearchMatchesEffect)) {
+        return buildSearchDecorations(effect.value);
+      }
+    }
+
+    if (transaction.docChanged) {
+      return highlights.map(transaction.changes);
+    }
+
+    return highlights;
+  },
+  provide: (field) => EditorView.decorations.from(field),
+});
+
 export default function EditorPane({
+  activeSearchMatchIndex,
   documentKey,
-  searchMatch,
+  searchMatches,
   theme,
   value,
   onChange,
@@ -36,6 +66,7 @@ export default function EditorPane({
       extensions: [
         basicSetup,
         markdown(),
+        searchHighlightField,
         EditorView.lineWrapping,
         EditorView.theme(
           {
@@ -70,6 +101,17 @@ export default function EditorPane({
             },
             ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": {
               backgroundColor: theme === "dark" ? "#355543" : "#c6ddcf",
+            },
+            ".cm-searchMatch": {
+              backgroundColor: theme === "dark" ? "#5f5a2e" : "#f0df90",
+              borderRadius: "3px",
+            },
+            ".cm-searchMatch-active": {
+              backgroundColor: theme === "dark" ? "#7a6a2f" : "#f5cc52",
+              boxShadow:
+                theme === "dark"
+                  ? "0 0 0 1px #d8bd5b"
+                  : "0 0 0 1px #8b6b16",
             },
           },
           { dark: theme === "dark" },
@@ -113,20 +155,55 @@ export default function EditorPane({
   useEffect(() => {
     const view = viewRef.current;
 
-    if (!view || !searchMatch) {
+    if (!view) {
+      return;
+    }
+
+    view.dispatch({
+      effects: setSearchMatchesEffect.of(
+        searchMatches.map((match, index) => ({
+          ...match,
+          active: index === activeSearchMatchIndex,
+        })),
+      ),
+    });
+  }, [activeSearchMatchIndex, searchMatches]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    const activeSearchMatch = searchMatches[activeSearchMatchIndex] ?? null;
+
+    if (!view || !activeSearchMatch) {
       return;
     }
 
     view.dispatch({
       selection: {
-        anchor: searchMatch.from,
-        head: searchMatch.to,
+        anchor: activeSearchMatch.from,
+        head: activeSearchMatch.to,
       },
-      effects: EditorView.scrollIntoView(searchMatch.from, {
+      effects: EditorView.scrollIntoView(activeSearchMatch.from, {
         y: "center",
       }),
     });
-  }, [searchMatch]);
+  }, [activeSearchMatchIndex, searchMatches]);
 
   return <div className="editor-host" ref={hostRef} />;
+}
+
+function buildSearchDecorations(
+  matches: readonly DecoratedSearchMatch[],
+): DecorationSet {
+  return Decoration.set(
+    matches
+      .filter((match) => match.from >= 0 && match.to > match.from)
+      .map((match) =>
+        Decoration.mark({
+          class: match.active
+            ? "cm-searchMatch cm-searchMatch-active"
+            : "cm-searchMatch",
+        }).range(match.from, match.to),
+      ),
+    true,
+  );
 }

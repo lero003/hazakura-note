@@ -72,7 +72,7 @@ Status: Completed on 2026-05-26
 - 最近開いたworkspaceの復元
 - 開いていたタブと最後のアクティブタブの復元
 - File tree / Open / restored tabs の同一タブ管理への統合
-- Active-file search
+- Active-file search with visible match highlights
 - 外部変更衝突後の Reopen from disk / Close without saving / Keep editing
 - dirty tab close時の Save / Discard / Cancel 再確認
 - app/window close時の dirty tab 向け Save All / Discard All / Cancel 再確認
@@ -91,7 +91,7 @@ Status: Completed on 2026-05-26
 
 目的: Markdownを書く体験を軽くする。
 
-Before starting broad Markdown helpers, let the recurring automation close small reliability gaps from `docs/development-automation.md`, especially save-failure manual smoke, IME smoke, search highlight visibility, keyboard-only operation, and layout rough edges.
+Before starting broad Markdown helpers, let the recurring automation close small reliability gaps from `docs/development-automation.md`, especially save-failure manual smoke, IME smoke, keyboard-only operation, and layout rough edges.
 
 - Markdownプレビュー
 - 見出しアウトライン

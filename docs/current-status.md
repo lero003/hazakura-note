@@ -8,7 +8,7 @@ Last reviewed: 2026-05-27
 ## Current State
 
 - A touchable Tauri desktop prototype exists.
-- The prototype creates user-selected text/Markdown files, opens a user-selected folder, shows a bounded file tree, opens multiple files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, and renders a sanitized Markdown preview.
+- The prototype creates user-selected text/Markdown files, opens a user-selected folder, shows a bounded file tree, opens multiple files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, searches with visible match highlights, and renders a sanitized Markdown preview.
 - Existing LF / CRLF line endings are detected when a file is opened and preserved through save.
 - Save writes the editor text without adding or removing a final trailing newline by policy; Rust tests cover LF and CRLF final-newline presence.
 - Recent workspace, open tabs, active tab, and theme preference are restored after restart.
@@ -39,7 +39,7 @@ Last reviewed: 2026-05-27
 - Theme selection persistence through `localStorage`
 - Recent workspace restoration through `localStorage`
 - Open tab and active tab restoration through `localStorage`
-- Active-file search with match count and previous/next controls
+- Active-file search with match count, previous/next controls, visible match highlights, and active-match selection
 - Keyboard shortcuts for New File, Open, Open Folder, Save, Find, and active-tab close
 - Conflict recovery actions for reloading, closing, or continuing with local edits
 - Save-failure recovery wording and retry / keep-editing actions for non-conflict save errors
@@ -86,6 +86,7 @@ Known verification note:
 - Final trailing newline presence has Rust test coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
 - App/window dirty-tab close confirmation and the newer keyboard shortcuts have build/test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 - Non-conflict save-failure recovery wording and actions have build coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
+- Search highlight visibility has build coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
 
 ## Risks / Unknowns
 
@@ -98,7 +99,7 @@ Known verification note:
 ## Next Actions
 
 1. Run recurring automation from `docs/development-automation.md` to harden one small slice at a time.
-2. Manually smoke app/window close confirmation, keyboard shortcuts, New File, CRLF save preservation, final-newline preservation, and save-failure recovery in the built app before adding new Markdown features.
+2. Manually smoke app/window close confirmation, keyboard shortcuts, New File, CRLF save preservation, final-newline preservation, save-failure recovery, and search highlight visibility in the built app before adding new Markdown features.
 3. Decide whether unsaved draft restoration belongs in the product or should remain intentionally out of scope.
 4. Keep signing, notarization, and installer packaging separate from editor/workspace hardening.
 

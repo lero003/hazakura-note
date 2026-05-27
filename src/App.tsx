@@ -103,7 +103,6 @@ export default function App() {
     () => findTextMatches(activeContents, findQuery),
     [activeContents, findQuery],
   );
-  const activeFindMatch = findMatches[activeMatchIndex] ?? null;
   const allowWindowCloseRef = useRef(false);
   const modalOpen = pendingCloseTab !== null || pendingAppClose;
 
@@ -895,9 +894,10 @@ export default function App() {
         <div className="editor-preview-grid">
           <div className="pane editor-pane" aria-label="Editor">
             <EditorPane
+              activeSearchMatchIndex={activeMatchIndex}
               documentKey={`${documentKey}:${resolvedTheme}`}
               onChange={handleEditorChange}
-              searchMatch={activeFindMatch}
+              searchMatches={findMatches}
               theme={resolvedTheme}
               value={activeContents}
             />

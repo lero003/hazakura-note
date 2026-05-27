@@ -79,6 +79,7 @@ Status: Completed on 2026-05-26
 - Cmd+O / Cmd+Shift+O / Cmd+W の基本ショートカット
 - CodeMirror本文とpreview/statusの再読み込み同期
 - 既存ファイルの LF / CRLF 改行コード保持
+- 末尾改行の有無を保存時に勝手に変更しない契約のRustテスト化
 - System / Light / Dark の復元と可読性確認
 - Rust側 file I/O / workspace listing / 除外 / バイナリ拒否 / 大容量境界テストの拡充
 - README、current-status、roadmap、smoke-checklistの現状同期

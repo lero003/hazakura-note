@@ -562,6 +562,76 @@ mod tests {
     }
 
     #[test]
+    fn save_preserves_lf_trailing_newline_presence() {
+        let dir = unique_test_dir("save_lf_trailing_newline");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let with_newline_path = dir.join("with-newline.md");
+        let without_newline_path = dir.join("without-newline.md");
+        fs::write(&with_newline_path, b"# Title\n\nBody\n").expect("write lf fixture");
+        fs::write(&without_newline_path, b"# Title\n\nBody").expect("write lf fixture");
+
+        let with_newline_document = open_text_file(with_newline_path.to_string_lossy().to_string())
+            .expect("open lf fixture with final newline");
+        let without_newline_document =
+            open_text_file(without_newline_path.to_string_lossy().to_string())
+                .expect("open lf fixture without final newline");
+
+        save_text_file(
+            with_newline_path.to_string_lossy().to_string(),
+            "# Changed\n\nBody\n".to_string(),
+            with_newline_document.fingerprint,
+            with_newline_document.line_ending,
+        )
+        .expect("save lf document with final newline");
+        save_text_file(
+            without_newline_path.to_string_lossy().to_string(),
+            "# Changed\n\nBody".to_string(),
+            without_newline_document.fingerprint,
+            without_newline_document.line_ending,
+        )
+        .expect("save lf document without final newline");
+
+        assert_eq!(
+            fs::read(&with_newline_path).expect("read saved file"),
+            b"# Changed\n\nBody\n"
+        );
+        assert_eq!(
+            fs::read(&without_newline_path).expect("read saved file"),
+            b"# Changed\n\nBody"
+        );
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn save_preserves_crlf_without_trailing_newline() {
+        let dir = unique_test_dir("save_crlf_no_trailing_newline");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let path = dir.join("note.md");
+        fs::write(&path, b"# Title\r\n\r\nBody").expect("write crlf fixture");
+
+        let document =
+            open_text_file(path.to_string_lossy().to_string()).expect("open crlf fixture");
+
+        assert_eq!(document.line_ending, "crlf");
+
+        save_text_file(
+            path.to_string_lossy().to_string(),
+            "# Changed\n\nBody".to_string(),
+            document.fingerprint,
+            document.line_ending,
+        )
+        .expect("save crlf document without final newline");
+
+        assert_eq!(
+            fs::read(&path).expect("read saved file"),
+            b"# Changed\r\n\r\nBody"
+        );
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn metadata_rejects_oversized_files() {
         let dir = unique_test_dir("oversized");
         fs::create_dir_all(&dir).expect("create test dir");

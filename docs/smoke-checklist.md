@@ -30,6 +30,7 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 7. Read the file from disk and confirm the edited text was written.
 8. Open the same file again from the Open button or file tree and confirm the existing tab is focused instead of duplicated.
 9. Repeat with a CRLF fixture and confirm saving preserves CRLF line endings on disk.
+10. Repeat with one fixture that ends in a final newline and one fixture that does not, then confirm saving does not add or remove the final newline.
 
 ## New File
 
@@ -126,7 +127,7 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 
 ## Binary And Large File Boundary
 
-Binary-looking files and files above the prototype editing limit are covered by Rust tests. Re-run these after changing file I/O:
+Binary-looking files, files above the prototype editing limit, line-ending preservation, and final-newline preservation are covered by Rust tests. Re-run these after changing file I/O:
 
 ```bash
 cargo test --manifest-path src-tauri/Cargo.toml

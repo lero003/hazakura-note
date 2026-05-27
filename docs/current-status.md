@@ -10,6 +10,7 @@ Last reviewed: 2026-05-27
 - A touchable Tauri desktop prototype exists.
 - The prototype creates user-selected text/Markdown files, opens a user-selected folder, shows a bounded file tree, opens multiple files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, and renders a sanitized Markdown preview.
 - Existing LF / CRLF line endings are detected when a file is opened and preserved through save.
+- Save writes the editor text without adding or removing a final trailing newline by policy; Rust tests cover LF and CRLF final-newline presence.
 - Recent workspace, open tabs, active tab, and theme preference are restored after restart.
 - Save conflicts now present explicit recovery choices: Reopen from disk, Close without saving, and Keep editing.
 - Window close requests now stop when any open tab is unsaved and offer Save All, Discard All, or Cancel.
@@ -29,6 +30,7 @@ Last reviewed: 2026-05-27
 - Rust command for bounded workspace tree listing
 - Save-conflict detection using a Rust-generated file fingerprint
 - LF / CRLF line-ending detection and save preservation
+- Final-newline presence preservation on save
 - Multiple open file tabs
 - Tab-level unsaved state
 - Save / Discard / Cancel confirmation before closing an unsaved tab
@@ -79,6 +81,7 @@ Known verification note:
 - Vite reports a production chunk-size warning because CodeMirror and preview libraries are bundled together. This is acceptable for the prototype; revisit before distribution readiness.
 - New File creation and existing-file overwrite rejection have Rust test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 - CRLF line-ending preservation has Rust test coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
+- Final trailing newline presence has Rust test coverage and smoke-checklist coverage, but still needs a manual built-app smoke pass.
 - App/window dirty-tab close confirmation and the newer keyboard shortcuts have build/test coverage and smoke-checklist coverage, but still need a manual built-app smoke pass.
 
 ## Risks / Unknowns
@@ -92,7 +95,7 @@ Known verification note:
 ## Next Actions
 
 1. Run recurring automation from `docs/development-automation.md` to harden one small slice at a time.
-2. Manually smoke app/window close confirmation, keyboard shortcuts, New File, and CRLF save preservation in the built app before adding new Markdown features.
+2. Manually smoke app/window close confirmation, keyboard shortcuts, New File, CRLF save preservation, and final-newline preservation in the built app before adding new Markdown features.
 3. Decide whether unsaved draft restoration belongs in the product or should remain intentionally out of scope.
 4. Keep signing, notarization, and installer packaging separate from editor/workspace hardening.
 

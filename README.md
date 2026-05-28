@@ -49,7 +49,7 @@ Last reviewed: 2026-05-28
 - Existing LF / CRLF line endings are preserved on save
 - Existing final-newline presence is preserved on save; the app does not add or remove a trailing newline by policy
 - Markdown preview blocks external/local image references and allows embedded `data:image` PNG/JPEG/GIF/WebP images
-- Workspace image files can be selected from the file tree and shown as read-only local PNG/JPEG/GIF/WebP previews
+- Workspace image files can be selected from the file tree and shown as read-only local PNG/JPEG/GIF/WebP previews after a lightweight content-signature check
 - Window and dirty-tab close requests are stopped when open tabs have unsaved changes, with safe keyboard cancellation, Save / Discard choices, and editor focus restored after cancellation
 - Dirty-tab and app/window close dialogs keep Tab / Shift+Tab focus within the dialog while it is open
 - Failed or conflicted saves from the dirty-tab close dialog stop the close, select the failed tab, and return to the editor with the normal recovery actions visible

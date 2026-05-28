@@ -162,6 +162,7 @@ Status: In progress from 2026-05-27
 - 2026-05-28のclose/quit polishでは、app/window close確認のDiscard Allで捨てたdirty tabのunsaved draftが次回起動時に復元候補として残らないように修正済み
 - 2026-05-28のlocal bundle polishでは、生成 `.app` がicon resourceを含み、local build validation用のad-hoc signingで `codesign --verify` を通るように修正済み
 - 2026-05-28の検索polishでは、Find close buttonもEscapeと同じくqueryとhighlightを消してeditor focusへ戻すように修正済み
+- 2026-05-28のworkspace image polishでは、対応拡張子の画像previewでも軽量content signatureが合わないファイルを拒否するように修正済み
 - このフェーズでは、Git連携、LSP、terminal、AI支援、project indexing、署名済みbinary配布、課金導線は扱わない
 
 ## v0.4: Markdown Workspace

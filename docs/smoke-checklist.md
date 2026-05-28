@@ -133,8 +133,9 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 3. Select the image from the workspace tree and confirm it opens as a read-only preview in the work area.
 4. Confirm the image file is highlighted in the workspace tree and the status bar identifies the selected image.
 5. Press Cmd+W and confirm the image preview closes without closing the app.
-6. Open the Markdown file from the same tree and confirm text editing, tabs, and Markdown preview still work normally.
-7. Add a Markdown local image reference to the text file and confirm the Markdown preview still shows an image-blocked note instead of loading it.
+6. Add a text file renamed with a supported image extension such as `not-image.png`, select it from the tree, and confirm it is rejected instead of previewed.
+7. Open the Markdown file from the same tree and confirm text editing, tabs, and Markdown preview still work normally.
+8. Add a Markdown local image reference to the text file and confirm the Markdown preview still shows an image-blocked note instead of loading it.
 
 ## Large Workspace Tree
 

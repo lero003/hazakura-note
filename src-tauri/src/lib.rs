@@ -314,9 +314,10 @@ fn open_workspace_image(root: String, path: String) -> Result<ImagePreviewDocume
         return Err("Image is larger than the preview limit of 20 MB.".to_string());
     }
 
-    let mime_type = image_mime_type(&image_path)
-        .ok_or_else(|| "Selected image type is not supported.".to_string())?;
     let bytes = fs::read(&image_path).map_err(|err| format!("Cannot read image: {err}"))?;
+    let mime_type = image_mime_type(&image_path, &bytes).ok_or_else(|| {
+        "Selected image contents do not match a supported image type.".to_string()
+    })?;
     let name = image_path
         .file_name()
         .and_then(|name| name.to_str())
@@ -349,17 +350,23 @@ fn readable_text_metadata(path: &Path) -> Result<fs::Metadata, String> {
     Ok(metadata)
 }
 
-fn image_mime_type(path: &Path) -> Option<&'static str> {
-    match path
+fn image_mime_type(path: &Path, bytes: &[u8]) -> Option<&'static str> {
+    let extension = path
         .extension()
         .and_then(|extension| extension.to_str())
-        .map(|extension| extension.to_ascii_lowercase())
-        .as_deref()
-    {
-        Some("png") => Some("image/png"),
-        Some("jpg") | Some("jpeg") => Some("image/jpeg"),
-        Some("gif") => Some("image/gif"),
-        Some("webp") => Some("image/webp"),
+        .map(|extension| extension.to_ascii_lowercase());
+
+    match extension.as_deref() {
+        Some("png") if bytes.starts_with(b"\x89PNG\r\n\x1a\n") => Some("image/png"),
+        Some("jpg") | Some("jpeg") if bytes.starts_with(&[0xff, 0xd8, 0xff]) => Some("image/jpeg"),
+        Some("gif") if bytes.starts_with(b"GIF87a") || bytes.starts_with(b"GIF89a") => {
+            Some("image/gif")
+        }
+        Some("webp")
+            if bytes.len() >= 12 && bytes.starts_with(b"RIFF") && &bytes[8..12] == b"WEBP" =>
+        {
+            Some("image/webp")
+        }
         _ => None,
     }
 }
@@ -1330,6 +1337,27 @@ mod tests {
 
         let _ = fs::remove_dir_all(root);
         let _ = fs::remove_dir_all(outside);
+    }
+
+    #[test]
+    fn open_workspace_image_rejects_supported_extension_with_non_image_bytes() {
+        let dir = unique_test_dir("workspace_image_non_image");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let path = dir.join("not-an-image.png");
+        fs::write(&path, b"# Not an image\n").expect("write fake image");
+
+        let err = open_workspace_image(
+            dir.to_string_lossy().to_string(),
+            path.to_string_lossy().to_string(),
+        )
+        .expect_err("non-image bytes should be rejected");
+
+        assert!(
+            err.contains("contents do not match a supported image type"),
+            "{err}"
+        );
+
+        let _ = fs::remove_dir_all(dir);
     }
 
     #[test]

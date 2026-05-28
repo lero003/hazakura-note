@@ -2544,6 +2544,62 @@ mod tests {
     }
 
     #[test]
+    fn agent_workbench_start_allows_new_session_after_stop() {
+        let store = AgentWorkbenchSessionStore::default();
+        let adapter = RecordingRuntimeAdapter::default();
+        let dir = unique_test_dir("agent_restart_after_stop");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let command_path = dir.join(AGENT_PROVIDER_CODEX);
+        fs::write(&command_path, b"#!/bin/sh\n").expect("write fake provider");
+        make_executable(&command_path);
+        let path_env = env::join_paths([dir.clone()]).expect("join PATH fixture");
+
+        let first_start = start_agent_workbench_session_with_store(
+            &store,
+            &adapter,
+            true,
+            true,
+            AGENT_PROVIDER_CODEX.to_string(),
+            dir.to_str().unwrap().to_string(),
+            Some(path_env.as_os_str()),
+            None,
+            None,
+        )
+        .expect("start first session");
+        let first_session = first_start.session.expect("first session");
+
+        let stopped =
+            stop_agent_workbench_session_with_store(&store, &adapter).expect("stop first session");
+        assert_eq!(
+            stopped.session.as_ref().unwrap().status,
+            AgentWorkbenchSessionStatus::Stopped
+        );
+
+        let second_start = start_agent_workbench_session_with_store(
+            &store,
+            &adapter,
+            true,
+            true,
+            AGENT_PROVIDER_CODEX.to_string(),
+            dir.to_str().unwrap().to_string(),
+            Some(path_env.as_os_str()),
+            Some(120),
+            Some(40),
+        )
+        .expect("start second session");
+        let second_session = second_start.session.expect("second session");
+
+        assert_eq!(second_session.status, AgentWorkbenchSessionStatus::Active);
+        assert!(second_session.created_at_ms >= first_session.created_at_ms);
+        assert_eq!(adapter.start_calls().len(), 2);
+        assert_eq!(adapter.stop_calls(), vec![first_session.runtime]);
+        assert_eq!(adapter.start_calls()[1].terminal_columns, Some(120));
+        assert_eq!(adapter.start_calls()[1].terminal_rows, Some(40));
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn agent_workbench_adapter_failure_does_not_create_session() {
         let store = AgentWorkbenchSessionStore::default();
         let adapter = RecordingRuntimeAdapter::failing_start();
@@ -4042,7 +4098,7 @@ mod tests {
         let mut state =
             get_agent_workbench_session_state_with_store(store).expect("read agent session state");
 
-        for _ in 0..40 {
+        for _ in 0..80 {
             if predicate(&state) {
                 return state;
             }

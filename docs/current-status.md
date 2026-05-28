@@ -142,7 +142,7 @@ Agent Workbench xterm Terminal Surface on 2026-05-28:
 - `@xterm/xterm` and `@xterm/addon-fit` were added as frontend dependencies.
 - `npm run build:vite` passed.
 - `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check` passed.
-- `cargo test --manifest-path src-tauri/Cargo.toml` passed with 65 Rust tests, including invalid/no-session/active/exited terminal resize coverage, real PTY `stty size` verification for launch-time and runtime terminal resize, exited-session input rejection, and new session start after provider exit.
+- `cargo test --manifest-path src-tauri/Cargo.toml` passed with 66 Rust tests, including invalid/no-session/active/exited terminal resize coverage, real PTY `stty size` verification for launch-time and runtime terminal resize, exited-session input rejection, and new session start after provider exit or user stop.
 - `npm run build` passed and regenerated the local macOS `.app` bundle.
 - Browser smoke at `http://127.0.0.1:1421/` confirmed normal Safe Editor startup loads without Agent Workbench UI visible.
 - Real `codex` / `opencode` behavior still needs trusted-workspace manual smoke because provider-internal behavior is outside hazakura-side automation.

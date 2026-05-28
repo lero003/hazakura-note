@@ -43,6 +43,8 @@ Latest Agent Workbench OpenCode trusted-provider observation: 2026-05-29 user sm
 
 Latest app icon update: 2026-05-29 automated build passed after replacing the local Tauri icon assets with a centered `🌸` emoji mark on a soft pink rounded base. Built-app launch or Dock visual smoke is still useful before distribution readiness.
 
+Latest start panel layout polish: 2026-05-29 built-app smoke confirmed the no-file start panel keeps the Japanese heading on one line, places recent files below the primary actions, and still starts in Safe Editor surface with no file open.
+
 ## Build First
 
 ```bash

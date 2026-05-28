@@ -159,6 +159,12 @@ Cherry blossom app icon update on 2026-05-29:
 - The built app `Info.plist` still references `icon.icns`, and the bundle resource contains the regenerated `icon.icns`.
 - `git diff --check` passed.
 
+Start panel layout polish on 2026-05-29:
+
+- The no-file start panel now stacks recent files below the primary start actions, giving the Japanese heading enough room in the common editor-plus-preview layout.
+- Built-app smoke inspected the current app surface and confirmed Safe Editor startup still shows no file open, the workspace browser, Preview/Agent tabs, and the start actions with the heading on one line.
+- `npm run build` passed and regenerated the local macOS `.app` bundle.
+
 Agent Workbench Workspace Path Handoff on 2026-05-29:
 
 - Workspace file rows now support right-click Copy full path for passing a file path string to an Agent provider prompt without copying file contents.

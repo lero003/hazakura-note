@@ -985,9 +985,11 @@ button:disabled {
 .start-panel {
   align-items: center;
   display: grid;
-  grid-template-columns: minmax(280px, 0.85fr) minmax(220px, 0.45fr);
-  gap: 40px;
+  gap: 28px;
   height: 100%;
+  justify-items: start;
+  margin: 0 auto;
+  max-width: 440px;
   padding: 48px clamp(32px, 7vw, 96px);
 }
 
@@ -1007,11 +1009,12 @@ button:disabled {
 
 .start-panel h1 {
   color: var(--text);
-  font-size: clamp(28px, 4vw, 46px);
+  font-size: clamp(28px, 3.2vw, 40px);
   font-weight: 740;
   letter-spacing: 0;
   line-height: 1.1;
   margin: 0;
+  white-space: nowrap;
 }
 
 .start-actions {
@@ -1027,12 +1030,13 @@ button:disabled {
 }
 
 .start-recent {
-  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
-  padding-left: 24px;
+  padding-top: 20px;
+  width: 100%;
 }
 
 .start-recent > span {

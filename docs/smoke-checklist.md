@@ -31,6 +31,8 @@ Latest Workspace Image Close Return checks: 2026-05-28 automated gates passed af
 
 Latest Local Bundle Launch Metadata Polish checks: 2026-05-28 build output confirmed `LSRequiresCarbon => false`, `CFBundleExecutable => "hazakura-note"`, and valid ad-hoc signing. No fresh built-app manual UI smoke was claimed because `open -n` still returned `kLSNoExecutableErr` in this automation session.
 
+Latest Local Bundle Minimum System Version checks: 2026-05-28 build output confirmed `LSMinimumSystemVersion => "11.0"`, matching the Rust executable's `minos 11.0`, and valid ad-hoc signing. No fresh built-app manual UI smoke was claimed because `open -n` still returned `kLSNoExecutableErr` in this automation session.
+
 ## Build First
 
 ```bash

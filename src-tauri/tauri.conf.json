@@ -28,6 +28,7 @@
     "targets": "app",
     "icon": ["icons/icon.icns"],
     "macOS": {
+      "minimumSystemVersion": "11.0",
       "signingIdentity": "-"
     }
   }

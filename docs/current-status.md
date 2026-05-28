@@ -110,7 +110,7 @@ Last reviewed: 2026-05-28
 - 10 MB prototype editing limit
 - Atomic save helper with temporary-file cleanup after failed replace attempts and existing-temp-file overwrite protection
 - Minimal app icon for Tauri build requirements
-- Local macOS `.app` bundle icon resource, explicit non-Carbon launch metadata, and ad-hoc signing for build-output validation
+- Local macOS `.app` bundle icon resource, explicit non-Carbon launch metadata, macOS 11.0 minimum-system metadata aligned with the Rust binary, and ad-hoc signing for build-output validation
 
 ## Verification
 
@@ -298,6 +298,15 @@ Workspace Image Size Limit Coverage checks on 2026-05-28:
 - `npm run build:vite`, `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`, `cargo test --manifest-path src-tauri/Cargo.toml`, `npm run build`, and `git diff --check` passed.
 - No fresh built-app manual smoke was claimed.
 
+Local Bundle Minimum System Version Polish checks on 2026-05-28:
+
+- `src-tauri/tauri.conf.json` now sets the macOS bundle minimum system version to `11.0`, matching the Rust binary's `LC_BUILD_VERSION` minimum OS.
+- `npm run build` regenerated the local `.app` bundle.
+- `plutil -p src-tauri/target/release/bundle/macos/hazakura-note.app/Contents/Info.plist` confirmed `LSMinimumSystemVersion => "11.0"` while preserving `CFBundleExecutable => "hazakura-note"`.
+- `otool -l src-tauri/target/release/bundle/macos/hazakura-note.app/Contents/MacOS/hazakura-note` confirmed the executable still reports `minos 11.0`.
+- `codesign --verify --deep --strict --verbose=2 src-tauri/target/release/bundle/macos/hazakura-note.app` passed.
+- `open -n src-tauri/target/release/bundle/macos/hazakura-note.app` still returned `kLSNoExecutableErr` in this automation session, so no fresh built-app manual UI smoke is claimed.
+
 Workspace Image Close Return Polish checks on 2026-05-28:
 
 - Closing a selected workspace image preview now restores the text tab that was active before the image was opened when that tab is still open, falling back to the first open text tab if needed.
@@ -315,7 +324,7 @@ Known verification note:
 - The UI Brush-up Search Overlay checks used Vite browser smoke only; repeat active-file search in the built app before treating this path as distribution-grade.
 - The Find Close Polish did not include a fresh built-app manual active-file search pass; use the updated close-button check before treating this path as distribution-grade.
 - The Workspace Image Preview / Quality Automation, content-validation, size-limit coverage, and close-return checks did not include a fresh built-app image-selection smoke pass; use the updated workspace image checklist before treating this path as distribution-grade.
-- The Local Bundle Launch Metadata Polish verified generated bundle metadata and ad-hoc signing, but the current automation session could not complete `open -n`; repeat built-app launch and native File menu smoke outside this automation environment before treating this path as distribution-grade.
+- The Local Bundle Launch Metadata and Minimum System Version polish verified generated bundle metadata and ad-hoc signing, but the current automation session could not complete `open -n`; repeat built-app launch and native File menu smoke outside this automation environment before treating this path as distribution-grade.
 - Long file name clipping was re-smoked in the workspace tree during Source Preview Quality Polish. A narrower-window pass is still useful before binary distribution readiness.
 
 ## Risks / Unknowns

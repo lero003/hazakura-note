@@ -17,7 +17,7 @@ Name: `hazakura-note-agent-workbench-micro-stabilization`
 
 Cadence: 30-minute heartbeat loop for non-goal micro-polish work.
 
-Current phase: Agent Workbench micro-polish and release-readiness hardening.
+Current phase: 0.3-oriented Agent Workbench micro-polish and post-pre0.2 release-readiness hardening.
 
 Primary outcome: one coherent improvement per run, verified, documented, committed, and pushed when checks pass. A verified no-op is acceptable when no safe useful slice is found.
 

@@ -136,14 +136,16 @@ Agent Workbench output state stabilization on 2026-05-29:
 - The frontend now applies Agent output snapshots monotonically by output sequence, so an older async state response from input, refresh, stop, or launch handling cannot roll the terminal output state backward.
 - Rust coverage now verifies Agent output sequence numbers strictly increase, continue across a new provider session after provider exit, and remain monotonic when the bounded output buffer prunes older chunks.
 - Rust coverage now verifies stop after provider exit is a no-op for the runtime adapter and preserves the exited session/output state.
+- Rust coverage now verifies a second stop after an already stopped session is a no-op and does not call the runtime adapter again.
 - The explicit reset path is still used when Agent Workbench becomes unavailable, preserving the Safe Editor default boundary.
 - `npm run build:vite` passed.
 - `cargo test --manifest-path src-tauri/Cargo.toml agent_workbench_start_allows_new_session_after_exit` passed.
 - `cargo test --manifest-path src-tauri/Cargo.toml agent_workbench_output_chunks_are_bounded_and_pruned_oldest_first` passed.
 - `cargo test --manifest-path src-tauri/Cargo.toml agent_workbench_fake_provider_large_stdout_prunes_oldest_output` passed.
 - `cargo test --manifest-path src-tauri/Cargo.toml agent_workbench_stop_after_exit_does_not_call_runtime_adapter` passed.
+- `cargo test --manifest-path src-tauri/Cargo.toml agent_workbench_second_stop_after_stopped_session_is_noop` passed.
 - `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check` passed.
-- `cargo test --manifest-path src-tauri/Cargo.toml` passed with 67 Rust tests.
+- `cargo test --manifest-path src-tauri/Cargo.toml` passed with 68 Rust tests.
 - `git diff --check` passed.
 
 Agent Workbench xterm Terminal Surface on 2026-05-28:

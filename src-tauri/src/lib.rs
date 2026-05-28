@@ -2715,6 +2715,42 @@ mod tests {
     }
 
     #[test]
+    fn agent_workbench_second_stop_after_stopped_session_is_noop() {
+        let store = AgentWorkbenchSessionStore::default();
+        let adapter = RecordingRuntimeAdapter::default();
+        let dir = unique_test_dir("agent_command_second_stop");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let command_path = dir.join(AGENT_PROVIDER_CODEX);
+        fs::write(&command_path, b"#!/bin/sh\n").expect("write fake provider");
+        make_executable(&command_path);
+        let path_env = env::join_paths([dir.clone()]).expect("join PATH fixture");
+
+        let started = start_agent_workbench_session_with_store(
+            &store,
+            &adapter,
+            true,
+            true,
+            AGENT_PROVIDER_CODEX.to_string(),
+            dir.to_str().unwrap().to_string(),
+            Some(path_env.as_os_str()),
+            None,
+            None,
+        )
+        .expect("start session");
+        let started_session = started.session.expect("started session");
+
+        stop_agent_workbench_session_with_store(&store, &adapter).expect("first stop");
+        let state = stop_agent_workbench_session_with_store(&store, &adapter).expect("second stop");
+        let session = state.session.as_ref().expect("stopped session");
+
+        assert_eq!(adapter.stop_calls(), vec![started_session.runtime]);
+        assert_eq!(session.status, AgentWorkbenchSessionStatus::Stopped);
+        assert_eq!(session.runtime.status, AgentRuntimeStatus::Stopped);
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn agent_workbench_stop_without_session_does_not_call_runtime_adapter() {
         let store = AgentWorkbenchSessionStore::default();
         let adapter = RecordingRuntimeAdapter::default();

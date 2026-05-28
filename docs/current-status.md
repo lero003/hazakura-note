@@ -48,6 +48,7 @@ Last reviewed: 2026-05-29
 - Cmd+N creates a new file, Cmd+O opens a file, Cmd+Shift+O opens a folder, Cmd+W closes the active tab through the same dirty-tab confirmation path as the tab close button, and Cmd+Shift+W requests window close.
 - Workspace tree loading now reads only direct children for the opened root or expanded directory, keeps heavy and hidden directory exclusions, rejects direct child listing outside the selected workspace root, and reports per-folder cap overflow as a partial listing instead of failing the whole workspace.
 - Atomic save cleanup removes the hidden temporary save file if the final replace step fails and refuses to overwrite a pre-existing hidden save temp file.
+- The app bundle icon uses a cherry-blossom emoji mark centered on a soft pink rounded base.
 - The built macOS app bundle is generated at `src-tauri/target/release/bundle/macos/hazakura-note.app`.
 
 ## Implemented
@@ -115,7 +116,7 @@ Last reviewed: 2026-05-29
 - 5 MB large-file warning flag
 - 10 MB prototype editing limit
 - Atomic save helper with temporary-file cleanup after failed replace attempts and existing-temp-file overwrite protection
-- Minimal app icon for Tauri build requirements
+- Cherry-blossom emoji-based app icon for Tauri build outputs
 - Local macOS `.app` bundle icon resource, explicit non-Carbon launch metadata, macOS 11.0 minimum-system metadata aligned with the Rust binary, and ad-hoc signing for build-output validation
 
 ## Verification
@@ -144,11 +145,18 @@ Agent Workbench TUI Responsiveness Stabilization on 2026-05-29:
 - Terminal input writes now return success/failure only instead of returning a full session/output snapshot for every keypress. Active-session output refresh remains handled by the session polling path.
 - Active Agent session polling now runs every 100 ms instead of every 1000 ms so TUI output echo/render updates reach xterm sooner.
 - Rust coverage now includes a fake-provider input-burst test to exercise repeated small writes without adding arbitrary shell, command, path, multi-session, restore, auto-apply, auto-commit, or Git behavior.
-- A fresh trusted OpenCode re-smoke is still needed to confirm perceived input latency improved on the real provider.
+- Follow-up user smoke reported the basic input speed became comfortable. Real `codex` / `opencode` provider behavior still remains trusted-workspace manual smoke, not automated provider-internal approval.
 - `npm run build:vite` passed.
 - `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check` passed.
 - `cargo test --manifest-path src-tauri/Cargo.toml` passed with 69 Rust tests.
 - `npm run build` passed and regenerated the local macOS `.app` bundle.
+- `git diff --check` passed.
+
+Cherry blossom app icon update on 2026-05-29:
+
+- `src-tauri/icons/icon.png` and `src-tauri/icons/icon.icns` now use a centered `🌸` emoji mark on a soft pink rounded base.
+- `npm run build` passed and regenerated the local macOS `.app` bundle.
+- The built app `Info.plist` still references `icon.icns`, and the bundle resource contains the regenerated `icon.icns`.
 - `git diff --check` passed.
 
 Agent Workbench Workspace Path Handoff on 2026-05-29:

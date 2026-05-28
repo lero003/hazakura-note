@@ -39,7 +39,9 @@ Latest Agent Workbench xterm Terminal Surface checks: 2026-05-28 automated gates
 
 Latest Agent Workbench Trusted Provider Smoke Readiness checks: 2026-05-29 automated gates passed after updating the manual smoke path and result template for the compact xterm Agent pane. No real `codex` / `opencode` manual smoke was claimed by this update.
 
-Latest Agent Workbench OpenCode trusted-provider observation: 2026-05-29 user smoke reported OpenCode CLI launched, OpenCode Zen/free model could edit a local file, and the xterm pane rendered the TUI, but text input in the OpenCode TUI felt very slow. Re-smoke after TUI responsiveness changes is still needed.
+Latest Agent Workbench OpenCode trusted-provider observation: 2026-05-29 user smoke reported OpenCode CLI launched, OpenCode Zen/free model could edit a local file, and the xterm pane rendered the TUI. Initial input felt very slow, then follow-up smoke after the responsiveness change reported basic input speed was comfortable. Real `codex` / `opencode` behavior remains trusted-workspace manual smoke, not automated provider-internal approval.
+
+Latest app icon update: 2026-05-29 automated build passed after replacing the local Tauri icon assets with a centered `🌸` emoji mark on a soft pink rounded base. Built-app launch or Dock visual smoke is still useful before distribution readiness.
 
 ## Build First
 

@@ -63,6 +63,8 @@ export type ImagePreviewDocument = {
   size: number;
 };
 
+export type AgentWorkbenchProvider = "codex" | "opencode";
+
 const TEXT_FILE_EXTENSIONS = [
   "md",
   "markdown",
@@ -231,6 +233,18 @@ export async function saveTextFileAs(
     path,
     contents,
     lineEnding,
+  });
+}
+
+export async function startAgentWorkbenchSession(
+  agentWorkbenchEnabled: boolean,
+  provider: AgentWorkbenchProvider,
+  workspaceRoot: string,
+): Promise<void> {
+  await invoke("start_agent_workbench_session", {
+    agentWorkbenchEnabled,
+    provider,
+    workspaceRoot,
   });
 }
 

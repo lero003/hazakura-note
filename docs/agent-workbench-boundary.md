@@ -72,6 +72,8 @@ Requirements:
 
 - User explicitly enables Agent Workbench mode.
 - Enabling Agent Workbench mode requires restart before agent UI or backend launch commands become available.
+- The initial mode gate stores the requested mode separately from the active app-session mode.
+- The backend launch entry rejects while the active app-session mode is off, even if a caller bypasses hidden UI.
 - User explicitly starts the session.
 - Exactly one TUI agent session may run at a time.
 - Session starts with `cwd` set to the selected workspace root.

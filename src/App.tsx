@@ -46,6 +46,8 @@ const EDITOR_SETTINGS_STORAGE_KEY = "hazakura-note-editor-settings";
 const DRAFT_STATE_STORAGE_KEY = "hazakura-note-unsaved-drafts";
 const RECENT_FILES_STORAGE_KEY = "hazakura-note-recent-files";
 const RECENT_FOLDERS_STORAGE_KEY = "hazakura-note-recent-folders";
+const AGENT_WORKBENCH_ENABLED_STORAGE_KEY =
+  "hazakura-note-agent-workbench-enabled";
 const MAX_RESTORED_TABS = 12;
 const MAX_STORED_DRAFTS = 20;
 const MAX_RECENT_ITEMS = 8;
@@ -177,6 +179,12 @@ export default function App() {
   );
   const [pendingAppClose, setPendingAppClose] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [agentWorkbenchActive] = useState(() =>
+    readStoredAgentWorkbenchEnabled(),
+  );
+  const [agentWorkbenchPreference, setAgentWorkbenchPreference] = useState(
+    () => readStoredAgentWorkbenchEnabled(),
+  );
   const [findQuery, setFindQuery] = useState("");
   const [findVisible, setFindVisible] = useState(false);
   const [searchOptions, setSearchOptions] = useState<SearchOptions>({
@@ -240,6 +248,8 @@ export default function App() {
   );
   const dirtyTabs = useMemo(() => tabs.filter(isDirty), [tabs]);
   const dirtyTabCount = dirtyTabs.length;
+  const agentWorkbenchRestartRequired =
+    agentWorkbenchPreference !== agentWorkbenchActive;
   const resolvedTheme: ResolvedTheme =
     themePreference === "system" ? systemTheme : themePreference;
   const editorTheme: BaseTheme = resolvedTheme === "dark" ? "dark" : "light";
@@ -1492,6 +1502,22 @@ export default function App() {
     [closeFindAndFocusEditor, showNextMatch, showPreviousMatch],
   );
 
+  const updateAgentWorkbenchPreference = useCallback(
+    (enabled: boolean) => {
+      setAgentWorkbenchPreference(enabled);
+      setStatus(
+        enabled === agentWorkbenchActive
+          ? enabled
+            ? "Agent Workbench active"
+            : "Agent Workbench disabled"
+          : enabled
+            ? "Agent Workbench will enable after restart"
+            : "Agent Workbench will disable after restart",
+      );
+    },
+    [agentWorkbenchActive],
+  );
+
   useEffect(() => {
     tabsRef.current = tabs;
   }, [tabs]);
@@ -1774,6 +1800,13 @@ export default function App() {
       JSON.stringify(editorSettings),
     );
   }, [editorSettings]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      AGENT_WORKBENCH_ENABLED_STORAGE_KEY,
+      agentWorkbenchPreference ? "true" : "false",
+    );
+  }, [agentWorkbenchPreference]);
 
   useEffect(() => {
     if (!activeTabId) {
@@ -2646,6 +2679,31 @@ export default function App() {
                   </select>
                 </label>
               </section>
+              <section className="preference-section" aria-label="Agent Workbench">
+                <h3>Workbench</h3>
+                <label className="toggle-switch">
+                  <input
+                    type="checkbox"
+                    checked={agentWorkbenchPreference}
+                    onChange={(event) =>
+                      updateAgentWorkbenchPreference(event.target.checked)
+                    }
+                  />
+                  <span className="slider"></span>
+                  <span>Agent Workbench</span>
+                </label>
+                <p className="preference-note">
+                  {agentWorkbenchActive
+                    ? "Agent Workbench mode is active for this app session."
+                    : "Safe Editor Mode is active for this app session."}
+                </p>
+                {agentWorkbenchRestartRequired ? (
+                  <p className="preference-warning">
+                    Restart hazakura-note before Agent Workbench UI or backend
+                    launch commands change.
+                  </p>
+                ) : null}
+              </section>
             </div>
           </section>
         </div>
@@ -3167,6 +3225,12 @@ function readStoredEditorSettings(): EditorSettings {
   } catch {
     return defaults;
   }
+}
+
+function readStoredAgentWorkbenchEnabled(): boolean {
+  return (
+    window.localStorage.getItem(AGENT_WORKBENCH_ENABLED_STORAGE_KEY) === "true"
+  );
 }
 
 function readStoredDrafts(): DraftRecord[] {

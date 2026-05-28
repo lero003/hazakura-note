@@ -11,6 +11,8 @@ const MAX_EDITABLE_BYTES: u64 = 10 * 1024 * 1024;
 const MAX_IMAGE_PREVIEW_BYTES: u64 = 20 * 1024 * 1024;
 const BINARY_SNIFF_BYTES: u64 = 8192;
 const MAX_WORKSPACE_ENTRIES: usize = 2000;
+const AGENT_PROVIDER_CODEX: &str = "codex";
+const AGENT_PROVIDER_OPENCODE: &str = "opencode";
 const MENU_ACTION_EVENT: &str = "hazakura-note://menu-action";
 const MENU_NEW_FILE: &str = "new-file";
 const MENU_OPEN_FILE: &str = "open-file";
@@ -333,6 +335,17 @@ fn open_workspace_image(root: String, path: String) -> Result<ImagePreviewDocume
     })
 }
 
+#[tauri::command]
+fn start_agent_workbench_session(
+    agent_workbench_enabled: bool,
+    provider: String,
+    workspace_root: String,
+) -> Result<(), String> {
+    validate_agent_workbench_launch(agent_workbench_enabled, &provider, &workspace_root)?;
+
+    Err("Agent Workbench launch is not implemented in this foundation build.".to_string())
+}
+
 fn readable_text_metadata(path: &Path) -> Result<fs::Metadata, String> {
     let metadata = fs::metadata(path).map_err(|err| format!("Cannot read file: {err}"))?;
 
@@ -409,6 +422,28 @@ fn ensure_workspace_root(root_path: &Path) -> Result<PathBuf, String> {
     }
 
     fs::canonicalize(root_path).map_err(|err| format!("Cannot read workspace folder: {err}"))
+}
+
+fn validate_agent_workbench_launch(
+    agent_workbench_enabled: bool,
+    provider: &str,
+    workspace_root: &str,
+) -> Result<(), String> {
+    if !agent_workbench_enabled {
+        return Err(
+            "Agent Workbench is disabled. Enable it in Preferences and restart before launching an agent."
+                .to_string(),
+        );
+    }
+
+    if !matches!(provider, AGENT_PROVIDER_CODEX | AGENT_PROVIDER_OPENCODE) {
+        return Err("Agent provider is not allowlisted.".to_string());
+    }
+
+    let workspace_root_path = PathBuf::from(workspace_root);
+    ensure_workspace_root(&workspace_root_path)?;
+
+    Ok(())
 }
 
 fn build_workspace_directory(path: &Path) -> Result<WorkspaceTreeEntry, String> {
@@ -905,6 +940,7 @@ pub fn run() {
             list_workspace_directory,
             list_workspace_tree,
             open_workspace_image,
+            start_agent_workbench_session,
             save_text_file,
             save_text_file_as,
             update_app_menu_state
@@ -926,6 +962,55 @@ mod tests {
         fs::write(&path, b"abc\0def").expect("write binary fixture");
 
         assert!(looks_binary(&path).expect("inspect file"));
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn agent_workbench_launch_rejects_disabled_mode() {
+        let error =
+            validate_agent_workbench_launch(false, AGENT_PROVIDER_CODEX, "/tmp").unwrap_err();
+
+        assert!(error.contains("disabled"));
+    }
+
+    #[test]
+    fn agent_workbench_launch_rejects_non_allowlisted_provider() {
+        let dir = unique_test_dir("agent_provider");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let error =
+            validate_agent_workbench_launch(true, "zsh", dir.to_str().unwrap()).unwrap_err();
+
+        assert!(error.contains("allowlisted"));
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn agent_workbench_launch_validates_workspace_root_before_future_launch() {
+        let dir = unique_test_dir("agent_workspace");
+        fs::create_dir_all(&dir).expect("create test dir");
+
+        assert!(
+            validate_agent_workbench_launch(true, AGENT_PROVIDER_CODEX, dir.to_str().unwrap())
+                .is_ok()
+        );
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn agent_workbench_command_stops_before_launch_in_foundation_build() {
+        let dir = unique_test_dir("agent_command");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let error = start_agent_workbench_session(
+            true,
+            AGENT_PROVIDER_OPENCODE.to_string(),
+            dir.to_str().unwrap().to_string(),
+        )
+        .unwrap_err();
+
+        assert!(error.contains("not implemented"));
 
         let _ = fs::remove_dir_all(dir);
     }

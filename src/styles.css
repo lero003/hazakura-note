@@ -1555,6 +1555,10 @@ button:disabled {
   border-left: 1px solid var(--border);
 }
 
+.preference-section:nth-child(2n + 1) {
+  border-left: 0;
+}
+
 .preference-section h3 {
   color: var(--text-muted);
   font-size: 11px;
@@ -1578,6 +1582,26 @@ button:disabled {
 .field-control input,
 .field-control select {
   min-height: 32px;
+}
+
+.preference-note,
+.preference-warning {
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0;
+  padding: 8px 10px;
+}
+
+.preference-note {
+  background: var(--surface-muted);
+  color: var(--text-muted);
+}
+
+.preference-warning {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 650;
 }
 
 .close-dialog h2 {

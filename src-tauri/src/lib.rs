@@ -2951,6 +2951,50 @@ mod tests {
     }
 
     #[test]
+    fn agent_workbench_exited_session_rejects_input_without_changing_state() {
+        let store = AgentWorkbenchSessionStore::default();
+        let adapter = RealAgentRuntimeAdapter::new_piped_for_tests(&store);
+        let provider = fake_provider_fixture(
+            "agent_input_exited",
+            AGENT_PROVIDER_CODEX,
+            b"#!/bin/sh\nexit 0\n",
+        );
+
+        start_agent_workbench_session_with_store(
+            &store,
+            &adapter,
+            true,
+            true,
+            AGENT_PROVIDER_CODEX.to_string(),
+            provider.workspace_root(),
+            Some(provider.path_var()),
+            None,
+            None,
+        )
+        .expect("start fake provider");
+        let exited_state = wait_for_agent_state(&store, |state| {
+            state
+                .session
+                .as_ref()
+                .is_some_and(|session| session.status == AgentWorkbenchSessionStatus::Exited)
+        });
+        let output_len_before = exited_state.output.len();
+
+        let error = write_agent_workbench_session_input_with_store(&store, "hello\n".to_string())
+            .unwrap_err();
+        let state = get_agent_workbench_session_state_with_store(&store).expect("read state");
+
+        assert!(error.contains("not active"));
+        assert_eq!(
+            state.session.as_ref().unwrap().status,
+            AgentWorkbenchSessionStatus::Exited
+        );
+        assert_eq!(state.output.len(), output_len_before);
+
+        provider.cleanup();
+    }
+
+    #[test]
     fn agent_workbench_stdin_failure_keeps_session_state() {
         let store = AgentWorkbenchSessionStore::default();
         let dir = unique_test_dir("agent_input_failure");

@@ -8,7 +8,7 @@ Last reviewed: 2026-05-29
 ## Current State
 
 - A touchable Tauri desktop prototype exists.
-- The prototype creates user-selected text/Markdown files, opens a user-selected folder, shows a lazy bounded file tree, opens multiple files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, searches with visible match highlights and keyboard/navigation options, renders a toggleable sanitized Markdown preview, and shows selected workspace images in a read-only preview.
+- The prototype creates user-selected text/Markdown files, opens common UTF-8 text documents from File > Open or Finder/app-icon open events, opens a user-selected folder, shows a lazy bounded file tree, opens multiple files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, searches with visible match highlights and keyboard/navigation options, renders a toggleable sanitized Markdown preview, and shows selected workspace images in a read-only preview.
 - Existing LF / CRLF line endings are detected when a file is opened and preserved through save.
 - The status bar shows approximate UTF-8 byte count, character count, saved line-ending mode, final-newline state, and clean/unsaved state.
 - Line endings can be explicitly converted between LF and CRLF; conversion marks the tab unsaved until saved.
@@ -59,6 +59,7 @@ Last reviewed: 2026-05-29
 - CodeMirror 6 editor
 - Markdown preview with `marked` and `DOMPurify`
 - Native open-file dialog through `@tauri-apps/plugin-dialog`
+- macOS document-open handling for common text file associations with `rank = None`, routed through the same Rust text-open validation as File > Open
 - Native open-folder dialog through `@tauri-apps/plugin-dialog`
 - Native save-path dialog through `@tauri-apps/plugin-dialog`
 - Rust commands for creating, opening, and saving UTF-8 text files

@@ -114,6 +114,8 @@ export type AgentWorkbenchSessionState = {
   output: AgentWorkbenchOutputChunk[];
 };
 
+export const OPENED_FILES_EVENT = "hazakura-note://opened-files";
+
 const TEXT_FILE_EXTENSIONS = [
   "md",
   "markdown",
@@ -226,6 +228,10 @@ export async function onCurrentWindowCloseRequested(
 
 export async function openTextFile(path: string): Promise<TextFileDocument> {
   return invoke<TextFileDocument>("open_text_file", { path });
+}
+
+export async function drainOpenedFiles(): Promise<string[]> {
+  return invoke<string[]>("drain_opened_files");
 }
 
 export async function createTextFile(path: string): Promise<TextFileDocument> {

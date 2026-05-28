@@ -45,6 +45,8 @@ Latest app icon update: 2026-05-29 automated build passed after replacing the lo
 
 Latest start panel layout polish: 2026-05-29 built-app smoke confirmed the no-file start panel keeps the Japanese heading on one line, places recent files below the primary actions, and still starts in Safe Editor surface with no file open.
 
+Latest Finder text document open checks: 2026-05-29 built-app smoke confirmed a `.json` file passed through macOS open-file handling opens as a normal clean editor tab, and the app quits cleanly after the smoke.
+
 ## Build First
 
 ```bash
@@ -69,6 +71,15 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 8. Open the same file again from File > Open or the file tree and confirm the existing tab is focused instead of duplicated.
 9. Repeat with a CRLF fixture and confirm saving preserves CRLF line endings on disk.
 10. Repeat with one fixture that ends in a final newline and one fixture that does not, then confirm saving does not add or remove the final newline.
+
+## Finder Text Document Open
+
+1. Build the app.
+2. Create a throwaway `.json` file outside the repo.
+3. Open it through Finder/app-icon drag or `open -n path/to/file.json -a src-tauri/target/release/bundle/macos/hazakura-note.app`.
+4. Confirm it opens as a normal clean editor tab, not an image preview or Agent surface.
+5. Repeat while the app is already running and confirm the same tab path is focused instead of duplicated.
+6. Quit the app after the smoke and confirm no hazakura-note process is left running.
 
 ## Text Metadata And Line Endings
 

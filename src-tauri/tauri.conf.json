@@ -27,6 +27,34 @@
     "active": true,
     "targets": "app",
     "icon": ["icons/icon.icns"],
+    "fileAssociations": [
+      {
+        "name": "Text files",
+        "ext": [
+          "md",
+          "markdown",
+          "mdown",
+          "txt",
+          "text",
+          "log",
+          "json",
+          "jsonl",
+          "yaml",
+          "yml",
+          "toml",
+          "csv",
+          "tsv",
+          "css",
+          "html",
+          "xml",
+          "ini",
+          "conf"
+        ],
+        "contentTypes": ["public.text", "public.plain-text", "public.json"],
+        "role": "Editor",
+        "rank": "None"
+      }
+    ],
     "macOS": {
       "minimumSystemVersion": "11.0",
       "signingIdentity": "-"

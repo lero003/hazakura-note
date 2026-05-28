@@ -22,9 +22,11 @@ import PreviewPane from "./components/PreviewPane";
 import {
   closeCurrentWindow,
   createTextFile,
+  drainOpenedFiles,
   getFileMetadata,
   listWorkspaceDirectory,
   listWorkspaceTree,
+  OPENED_FILES_EVENT,
   onCurrentWindowCloseRequested,
   openTextFile,
   openWorkspaceImage,
@@ -669,6 +671,15 @@ export default function App() {
       }
     },
     [rememberRecentFile, tabs],
+  );
+
+  const openExternalFilePaths = useCallback(
+    async (paths: string[]) => {
+      for (const path of Array.from(new Set(paths)).filter(Boolean)) {
+        await openFilePath(path);
+      }
+    },
+    [openFilePath],
   );
 
   const openWorkspaceFile = useCallback(
@@ -2185,6 +2196,48 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!restoreComplete) {
+      return;
+    }
+
+    let cancelled = false;
+    let unlisten: UnlistenFn | null = null;
+
+    const openPendingFiles = async () => {
+      try {
+        const paths = await drainOpenedFiles();
+
+        if (!cancelled && paths.length > 0) {
+          await openExternalFilePaths(paths);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setGlobalError(String(err));
+          setStatus("Open failed");
+        }
+      }
+    };
+
+    void openPendingFiles();
+
+    void listen<string[]>(OPENED_FILES_EVENT, () => {
+      void openPendingFiles();
+    }).then((nextUnlisten) => {
+      if (cancelled) {
+        nextUnlisten();
+        return;
+      }
+
+      unlisten = nextUnlisten;
+    });
+
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [openExternalFilePaths, restoreComplete]);
 
   useEffect(() => {
     if (!restoreComplete) {

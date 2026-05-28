@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::menu::{AboutMetadata, CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
-use tauri::Emitter;
+use tauri::{Emitter, Manager};
 
 #[cfg(unix)]
 use std::os::fd::{AsRawFd, FromRawFd, RawFd};
@@ -38,6 +38,7 @@ const O_RDWR_FLAG: i32 = 0x0002;
 #[cfg(target_os = "macos")]
 const O_NOCTTY_FLAG: i32 = 0x00020000;
 const MENU_ACTION_EVENT: &str = "hazakura-note://menu-action";
+const OPENED_FILES_EVENT: &str = "hazakura-note://opened-files";
 const MENU_NEW_FILE: &str = "new-file";
 const MENU_OPEN_FILE: &str = "open-file";
 const MENU_OPEN_FOLDER: &str = "open-folder";
@@ -191,6 +192,9 @@ struct AgentWorkbenchSessionStore {
     output: Arc<Mutex<Vec<AgentWorkbenchOutputChunk>>>,
     next_output_seq: Arc<Mutex<u64>>,
 }
+
+#[derive(Default)]
+struct OpenedFileStore(Mutex<Vec<String>>);
 
 impl Default for AgentWorkbenchSessionStore {
     fn default() -> Self {
@@ -1972,6 +1976,15 @@ fn update_app_menu_state<R: tauri::Runtime>(
     Ok(())
 }
 
+#[tauri::command]
+fn drain_opened_files(store: tauri::State<'_, OpenedFileStore>) -> Result<Vec<String>, String> {
+    let mut paths = store
+        .0
+        .lock()
+        .map_err(|_| "Cannot read pending opened files.".to_string())?;
+    Ok(paths.drain(..).collect())
+}
+
 fn metadata_fingerprint(metadata: &fs::Metadata) -> String {
     let modified_ns = metadata
         .modified()
@@ -1987,6 +2000,7 @@ fn metadata_fingerprint(metadata: &fs::Metadata) -> String {
 pub fn run() {
     let builder = tauri::Builder::default()
         .manage(AgentWorkbenchSessionStore::default())
+        .manage(OpenedFileStore::default())
         .plugin(tauri_plugin_dialog::init());
 
     #[cfg(desktop)]
@@ -2007,12 +2021,35 @@ pub fn run() {
             get_agent_workbench_session_state,
             write_agent_workbench_session_input,
             resize_agent_workbench_terminal,
+            drain_opened_files,
             save_text_file,
             save_text_file_as,
             update_app_menu_state
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if let tauri::RunEvent::Opened { urls } = event {
+                let paths = urls
+                    .into_iter()
+                    .filter_map(|url| url.to_file_path().ok())
+                    .filter(|path| path.is_file())
+                    .map(|path| path.to_string_lossy().to_string())
+                    .collect::<Vec<_>>();
+
+                if paths.is_empty() {
+                    return;
+                }
+
+                if let Some(store) = app.try_state::<OpenedFileStore>() {
+                    if let Ok(mut pending_paths) = store.0.lock() {
+                        pending_paths.extend(paths.clone());
+                    }
+                }
+
+                let _ = app.emit(OPENED_FILES_EVENT, paths);
+            }
+        });
 }
 
 #[cfg(test)]
@@ -3769,6 +3806,21 @@ mod tests {
         assert!(err.contains("Binary-looking"));
 
         let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn open_text_file_opens_utf8_json() {
+        let dir = unique_test_dir("open_json_text_file");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let path = dir.join("settings.json");
+        fs::write(&path, "{\n  \"enabled\": true\n}\n").expect("write json fixture");
+
+        let document =
+            open_text_file(path.to_string_lossy().to_string()).expect("open json text file");
+
+        assert_eq!(document.name, "settings.json");
+        assert!(document.contents.contains("\"enabled\": true"));
+        assert_eq!(document.line_ending, "lf");
     }
 
     #[test]

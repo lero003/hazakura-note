@@ -3,7 +3,7 @@
 Status: Operational
 Scope: Current implementation state and next safe actions
 Authority: High
-Last reviewed: 2026-05-28
+Last reviewed: 2026-05-29
 
 ## Current State
 
@@ -13,11 +13,11 @@ Last reviewed: 2026-05-28
 - The status bar shows approximate UTF-8 byte count, character count, saved line-ending mode, final-newline state, and clean/unsaved state.
 - Line endings can be explicitly converted between LF and CRLF; conversion marks the tab unsaved until saved.
 - Save As can create a new UTF-8 text file with common text extensions such as `.txt`, `.log`, `.json`, `.yaml`, `.toml`, `.csv`, `.css`, and `.html`, while refusing to overwrite an existing file.
-- New File, Open, Open Folder, Save, Save As, and Recent file/folder actions are available from the native File menu instead of occupying the top toolbar.
-- Preview, Wrap, Invisibles, Theme, Font, and Tab display settings now live in the native View menu and Preferences dialog, leaving the always-visible editor chrome minimal.
-- Preferences includes an Agent Workbench developer-mode gate. Changing it stores the requested mode and requires restart before Agent UI or backend launch-command availability changes.
-- When Agent Workbench mode is active for the current app session, Preferences shows only allowlisted provider choices (`codex` / `opencode`) and requires explicit responsibility-boundary consent before the backend launch gate can pass.
-- When Agent Workbench mode is active and consent is acknowledged, the right pane can switch between Preview and a compact Agent pane shell that displays provider/session state above an expanded xterm-based terminal surface. The shell can start one allowlisted provider process in the selected workspace root, render PTY output, send terminal input to it, resize the backend PTY from xterm rows/columns, and stop it through the runtime adapter boundary.
+- New File, Open, Open Folder, Preferences, Agent Workbench, Save, Save As, and Recent file/folder actions are available from the native File menu instead of occupying the top toolbar.
+- Preview, Wrap, Invisibles, and Theme live in the native View menu. Editor/application settings live in Preferences, including an English/Japanese File/View menu language switch.
+- Agent Workbench now opens as its own dialog instead of sharing the Preferences contents. Changing the developer-mode gate stores the requested mode and requires restart before Agent UI or backend launch-command availability changes.
+- When Agent Workbench mode is active for the current app session, the Agent Workbench dialog shows only allowlisted provider choices (`codex` / `opencode`) and requires explicit responsibility-boundary consent before the backend launch gate can pass.
+- When Agent Workbench mode is active and consent is acknowledged, the right pane can switch between Preview and a compact Agent pane shell that emphasizes provider, running state, and workspace path above an expanded xterm-based terminal surface. The shell can start one allowlisted provider process in the selected workspace root, render PTY output, send terminal input to it, resize the backend PTY from xterm rows/columns, and stop it through the runtime adapter boundary.
 - The app window title follows the active file and marks unsaved state, so the redundant in-app title header is no longer shown.
 - The workspace header includes a small open-folder action for switching workspace without returning to the native menu.
 - Save writes the editor text without adding or removing a final trailing newline by policy; Rust tests cover LF and CRLF final-newline presence.
@@ -33,7 +33,7 @@ Last reviewed: 2026-05-28
 - The status bar groups supplemental document details: file type, approximate byte count, character count, line-ending mode, final-newline state, clean/unsaved state, cursor line/column, and approximate selection counts.
 - Active-file search supports case-sensitive, whole-word, and safe regex modes, with invalid regex input reported without throwing.
 - Go to Line jumps the active editor to a requested line.
-- The active tab is rechecked for external on-disk changes when it gains focus through tab switching or app focus/visibility changes, and external-change recovery is surfaced as a focused banner.
+- The active tab is rechecked for external on-disk changes when it gains focus through tab switching or app focus/visibility changes. Clean tabs are refreshed from disk automatically, while dirty tabs keep the explicit external-change recovery banner.
 - Find-field Enter / Escape handling and global shortcuts now ignore active IME composition events, so Japanese conversion is not mistaken for search movement, find close, save, open, or tab-close commands.
 - Editor-local keyboard editing keeps Tab inside the editor for indentation, supports Shift+Tab outdent, and preserves Shift+Arrow text selection.
 - Editor-local Markdown helpers wrap or insert bold, italic, inline-code, and link syntax from the tabs row or Cmd+B / Cmd+I / Cmd+E / Cmd+K while focus is inside the editor.
@@ -93,12 +93,11 @@ Last reviewed: 2026-05-28
 - IME-safe keyboard handling for find-field Enter / Escape and global shortcuts during active composition
 - Editor-local Tab / Shift+Tab indentation and Shift+Arrow selection key handling
 - Markdown input helpers for bold, italic, inline code, and link syntax
-- Native File menu actions for New File, Open, Open Folder, Save, Save As, and Recent file/folder reopening
-- Native View menu actions for Preview, Wrap, Invisibles, Theme, and Preferences
-- Preferences dialog for display settings that were previously exposed in the top toolbar
-- Agent Workbench mode gate in Preferences, with requested mode stored separately from the active app-session mode
-- Agent Workbench provider/consent gate in Preferences, visible only when Agent Workbench is active for the current app session
-- Agent Workbench right-pane shell, visible only after active-session mode and consent gates pass, with compact provider/session state, bounded PTY-backed xterm output/input, PTY resize from xterm rows/columns, and no arbitrary command, shell selector, auto-apply, auto-commit, or Git integration
+- Native File menu actions for New File, Open, Open Folder, Preferences, Agent Workbench, Save, Save As, and Recent file/folder reopening
+- Native View menu actions for Preview, Wrap, Invisibles, Theme, and fullscreen
+- Preferences dialog for editor/application settings that were previously exposed in the top toolbar, including File/View menu language
+- Separate Agent Workbench dialog for the mode gate, requested mode, provider, consent, and responsibility boundary
+- Agent Workbench right-pane shell, visible only after active-session mode and consent gates pass, with compact provider/running/workspace state, bounded PTY-backed xterm output/input, PTY resize from xterm rows/columns, and no arbitrary command, shell selector, auto-apply, auto-commit, or Git integration
 - Rust-side Agent Workbench launch preflight, runtime adapter, and in-memory session lifecycle that rejects disabled mode, unacknowledged consent, non-allowlisted providers, invalid workspace roots, provider-not-found starts, adapter failures, stop-adapter failures, and second active sessions before starting an allowlisted provider process
 - Dynamic window title for active file and unsaved state
 - Keyboard shortcuts for New File, Open, Open Folder, Save, Find, active-tab close, and window close
@@ -130,6 +129,59 @@ cargo test --manifest-path src-tauri/Cargo.toml
 npm run build
 git diff --check
 ```
+
+Agent Workbench Trusted Provider Smoke Readiness on 2026-05-29:
+
+- `docs/smoke-checklist.md` now reflects the compact xterm Agent pane and includes separate codex/opencode result fields for trusted-workspace manual smoke.
+- The checklist explicitly records provider-not-found / not-run outcomes instead of requiring provider installation during smoke.
+- The optional external-change smoke path now states that hazakura does not auto-apply, auto-commit, or make Git decisions for provider-made changes; existing external-change/conflict handling remains the safe-editor receiving path.
+- Agent pane launch messages now make provider-not-found, selected-workspace launch, and rejected launch states easier to read during manual smoke.
+- No new Agent Workbench capabilities were added; multiple sessions, session restore, arbitrary shell/command/path UI, auto-apply, auto-commit, Git integration, and provider-add UI remain out of scope.
+
+Agent Workbench TUI Responsiveness Stabilization on 2026-05-29:
+
+- Trusted-provider smoke feedback reported that OpenCode CLI launched, could edit a local file through OpenCode Zen/free model, and rendered in the xterm pane, but text input in the OpenCode TUI felt very slow.
+- Terminal input writes now return success/failure only instead of returning a full session/output snapshot for every keypress. Active-session output refresh remains handled by the session polling path.
+- Active Agent session polling now runs every 100 ms instead of every 1000 ms so TUI output echo/render updates reach xterm sooner.
+- Rust coverage now includes a fake-provider input-burst test to exercise repeated small writes without adding arbitrary shell, command, path, multi-session, restore, auto-apply, auto-commit, or Git behavior.
+- A fresh trusted OpenCode re-smoke is still needed to confirm perceived input latency improved on the real provider.
+- `npm run build:vite` passed.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check` passed.
+- `cargo test --manifest-path src-tauri/Cargo.toml` passed with 69 Rust tests.
+- `npm run build` passed and regenerated the local macOS `.app` bundle.
+- `git diff --check` passed.
+
+Agent Workbench Workspace Path Handoff on 2026-05-29:
+
+- Workspace file rows now support right-click Copy full path for passing a file path string to an Agent provider prompt without copying file contents.
+- Workspace file rows also provide a text/plain drag payload containing the file full path, plus a hazakura-specific path payload, so drag/drop can be used as a path handoff where supported.
+- While one Agent session is running, the workspace file context menu can send that selected file's full path to the Agent as plain terminal input. It does not append a command or newline.
+- This does not add arbitrary path input UI, arbitrary shell/command execution, auto-apply, auto-commit, Git integration, provider-add UI, or file-copy behavior.
+- `npm run build:vite` passed.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check` passed.
+- `cargo test --manifest-path src-tauri/Cargo.toml` passed with 69 Rust tests.
+- `npm run build` passed and regenerated the local macOS `.app` bundle.
+- `git diff --check` passed.
+
+Agent Workbench External Change Live Refresh on 2026-05-29:
+
+- Clean open tabs now reload automatically when the active file changes on disk, updating the central editor view without treating the change as hazakura approval, auto-apply, auto-commit, or a Git decision.
+- Dirty tabs still keep the existing external-change recovery path and stop saving until the user chooses Reopen from disk, Close without saving, or Keep editing.
+- While an Agent Workbench provider session is running, the active tab is rechecked on a lightweight interval so provider-made changes in a trusted workspace can appear in the editor without requiring a tab switch.
+- The conflict banner now frames the source as an outside-hazakura change, including possible Agent provider edits.
+- `npm run build:vite` passed.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check` passed.
+- `cargo test --manifest-path src-tauri/Cargo.toml` passed with 69 Rust tests.
+- `npm run build` passed and regenerated the local macOS `.app` bundle.
+- `git diff --check` passed.
+
+Agent Workbench UI/Menu Separation Polish on 2026-05-29:
+
+- The Agent pane compact header now emphasizes provider, running state, and workspace path. The verbose gate/status strip is hidden during a normal running session and remains available for idle/checking/rejected states.
+- Preferences now contains editor/application settings only, including an English/Japanese File/View menu language switch.
+- Agent Workbench now opens as a separate dialog for mode gate, provider, session summary, and responsibility-boundary consent.
+- Native Preferences and Agent Workbench entries moved out of the View menu and into the File menu; View now remains focused on preview/display actions.
+- No Agent backend capability, provider allowlist, arbitrary shell/command/path UI, auto-apply, auto-commit, Git integration, session restore, or multi-session behavior was added.
 
 Agent Workbench output state stabilization on 2026-05-29:
 

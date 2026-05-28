@@ -1,4 +1,5 @@
 import {
+  type DragEvent as ReactDragEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
@@ -55,6 +56,7 @@ const THEME_STORAGE_KEY = "hazakura-note-theme";
 const WORKSPACE_STATE_STORAGE_KEY = "hazakura-note-workspace-state";
 const PREVIEW_VISIBLE_STORAGE_KEY = "hazakura-note-preview-visible";
 const EDITOR_SETTINGS_STORAGE_KEY = "hazakura-note-editor-settings";
+const MENU_LANGUAGE_STORAGE_KEY = "hazakura-note-menu-language";
 const DRAFT_STATE_STORAGE_KEY = "hazakura-note-unsaved-drafts";
 const RECENT_FILES_STORAGE_KEY = "hazakura-note-recent-files";
 const RECENT_FOLDERS_STORAGE_KEY = "hazakura-note-recent-folders";
@@ -72,6 +74,10 @@ const AGENT_WORKBENCH_PROVIDERS: Array<{
   { id: "opencode", label: "OpenCode CLI" },
 ];
 const AGENT_WORKBENCH_MAX_OUTPUT_CHUNKS = 500;
+const AGENT_WORKBENCH_SESSION_POLL_MS = 100;
+const EXTERNAL_CHANGE_ACTIVE_POLL_MS = 1000;
+const EXTERNAL_CHANGE_CONFLICT_MESSAGE =
+  "The file changed on disk, possibly from another app or Agent provider. Saving is stopped until you choose how to continue.";
 const MAX_RESTORED_TABS = 12;
 const MAX_STORED_DRAFTS = 20;
 const MAX_RECENT_ITEMS = 8;
@@ -88,6 +94,8 @@ type ResolvedTheme = BaseTheme | "sakura";
 type EditableLineEnding = "lf" | "crlf";
 type LineEndingKind = EditableLineEnding | "mixed" | "none";
 type RightPaneMode = "preview" | "agent";
+type MenuLanguage = "en" | "ja";
+type PreferencesDialogMode = "settings" | "agent";
 
 type AgentLaunchGateState = {
   kind: "idle" | "checking" | "passed" | "rejected";
@@ -214,7 +222,8 @@ export default function App() {
     null,
   );
   const [pendingAppClose, setPendingAppClose] = useState(false);
-  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [preferencesDialogMode, setPreferencesDialogMode] =
+    useState<PreferencesDialogMode | null>(null);
   const [agentWorkbenchActive] = useState(() =>
     readStoredAgentWorkbenchEnabled(),
   );
@@ -267,6 +276,9 @@ export default function App() {
   );
   const [previewColumnPercent, setPreviewColumnPercent] = useState(
     DEFAULT_PREVIEW_COLUMN_PERCENT,
+  );
+  const [menuLanguage, setMenuLanguage] = useState<MenuLanguage>(() =>
+    readStoredMenuLanguage(),
   );
   const [recentFiles, setRecentFiles] = useState<RecentEntry[]>(() =>
     readStoredRecentEntries(RECENT_FILES_STORAGE_KEY),
@@ -392,6 +404,7 @@ export default function App() {
       : false;
   const allowWindowCloseRef = useRef(false);
   const discardingWindowCloseRef = useRef(false);
+  const preferencesOpen = preferencesDialogMode !== null;
   const modalOpen =
     pendingCloseTab !== null || pendingAppClose || preferencesOpen;
   const editorPreviewGridStyle =
@@ -849,6 +862,19 @@ export default function App() {
     setStatus("Compare source cleared");
   }, []);
 
+  const copyWorkspaceFullPath = useCallback(async (file: CompareAnchor) => {
+    setWorkspaceContextMenu(null);
+    setGlobalError(null);
+
+    try {
+      await writeTextToClipboard(file.path);
+      setStatus(`Copied full path: ${file.name}`);
+    } catch (err) {
+      setGlobalError(`Copy path failed: ${String(err)}`);
+      setStatus("Copy path failed");
+    }
+  }, []);
+
   const closeCompareView = useCallback(() => {
     setCompareView(null);
     setStatus("Compare closed");
@@ -1166,8 +1192,10 @@ export default function App() {
           setThemePreference("sakura");
           break;
         case "preferences":
+          setPreferencesDialogMode("settings");
+          break;
         case "agent-workbench":
-          setPreferencesOpen(true);
+          setPreferencesDialogMode("agent");
           break;
       }
     })
@@ -1493,6 +1521,52 @@ export default function App() {
           return;
         }
 
+        if (
+          tab.saveStatus === "conflict" &&
+          metadata.fingerprint === tab.externalFingerprint
+        ) {
+          return;
+        }
+
+        if (!isDirty(tab)) {
+          const file = await openTextFile(tab.path);
+          const refreshedTab = createEditorTab(file);
+          const latestTab = tabsRef.current.find(
+            (candidate) => candidate.id === tabId,
+          );
+
+          if (!latestTab) {
+            return;
+          }
+
+          if (isDirty(latestTab)) {
+            setTabs((currentTabs) =>
+              currentTabs.map((candidate) =>
+                candidate.id === tabId
+                  ? {
+                      ...candidate,
+                      externalFingerprint: refreshedTab.fingerprint,
+                      saveStatus: "conflict",
+                      error: EXTERNAL_CHANGE_CONFLICT_MESSAGE,
+                    }
+                  : candidate,
+              ),
+            );
+            setStatus("External change detected");
+            return;
+          }
+
+          setTabs((currentTabs) =>
+            currentTabs.map((candidate) =>
+              candidate.id === tabId && !isDirty(candidate)
+                ? refreshedTab
+                : candidate,
+            ),
+          );
+          setStatus("External change refreshed");
+          return;
+        }
+
         setTabs((currentTabs) =>
           currentTabs.map((candidate) =>
             candidate.id === tabId
@@ -1500,8 +1574,7 @@ export default function App() {
                   ...candidate,
                   externalFingerprint: metadata.fingerprint,
                   saveStatus: "conflict",
-                  error:
-                    "The file changed on disk since it was opened. Saving is stopped until you choose how to continue.",
+                  error: EXTERNAL_CHANGE_CONFLICT_MESSAGE,
                 }
               : candidate,
           ),
@@ -1684,6 +1757,32 @@ export default function App() {
     }
   }, [applyAgentOutput]);
 
+  const sendWorkspacePathToAgent = useCallback(
+    async (file: CompareAnchor) => {
+      setWorkspaceContextMenu(null);
+      setGlobalError(null);
+
+      if (!isActiveAgentSession(agentSession)) {
+        setStatus("Running Agent session required");
+        return;
+      }
+
+      try {
+        await writeAgentWorkbenchSessionInput(file.path);
+        setStatus(`Sent full path to Agent: ${file.name}`);
+      } catch (err) {
+        setAgentLaunchGate({
+          kind: "rejected",
+          message: String(err),
+          preflight: null,
+        });
+        setStatus("Agent path send failed");
+        void refreshAgentSessionState();
+      }
+    },
+    [agentSession, refreshAgentSessionState],
+  );
+
   const checkAgentLaunchGate = useCallback(async () => {
     if (!workspaceRootPath) {
       setAgentLaunchGate({
@@ -1715,7 +1814,7 @@ export default function App() {
       if (!result.preflight.providerAvailable) {
         setAgentLaunchGate({
           kind: "rejected",
-          message: `Provider not found: ${providerLabel(agentWorkbenchProvider)} was not found in the app search path.`,
+          message: `Provider not found: ${providerLabel(agentWorkbenchProvider)} was not found in the app search path, including common Homebrew and user bin locations.`,
           preflight: result.preflight,
         });
         setAgentSession(null);
@@ -1727,7 +1826,7 @@ export default function App() {
       if (!result.session) {
         setAgentLaunchGate({
           kind: "rejected",
-          message: "Provider not found; session stub was not created.",
+          message: "Provider not found; no Agent session was started.",
           preflight: result.preflight,
         });
         setAgentSession(null);
@@ -1738,7 +1837,7 @@ export default function App() {
 
       setAgentLaunchGate({
         kind: "passed",
-        message: "Agent session running. Only the selected allowlisted CLI was launched.",
+        message: "Agent session running in the selected workspace. Only the selected allowlisted CLI was launched.",
         preflight: result.preflight,
       });
       setAgentSession(result.session);
@@ -1759,13 +1858,13 @@ export default function App() {
 
       setAgentLaunchGate({
         kind: "rejected",
-        message,
+        message: `Agent launch rejected: ${message}`,
         preflight: null,
       });
       if (message.toLowerCase().includes("already active")) {
         void refreshAgentSessionState();
       }
-      setStatus("Agent launch gate rejected");
+      setStatus("Agent launch rejected");
     }
   }, [
     agentWorkbenchActive,
@@ -1815,10 +1914,7 @@ export default function App() {
     }
 
     void writeAgentWorkbenchSessionInput(data)
-      .then((state) => {
-        setAgentSession(state.session);
-        applyAgentOutput(state.output);
-      })
+      .then(() => undefined)
       .catch((err) => {
         setAgentLaunchGate({
           kind: "rejected",
@@ -1828,7 +1924,7 @@ export default function App() {
         setStatus("Agent input failed");
         void refreshAgentSessionState();
       });
-  }, [agentSession, applyAgentOutput, refreshAgentSessionState]);
+  }, [agentSession, refreshAgentSessionState]);
 
   const resizeAgentTerminal = useCallback((size: AgentTerminalSize) => {
     setAgentTerminalSize((current) => {
@@ -1882,7 +1978,7 @@ export default function App() {
 
     const intervalId = window.setInterval(() => {
       void refreshAgentSessionState();
-    }, 1000);
+    }, AGENT_WORKBENCH_SESSION_POLL_MS);
 
     return () => window.clearInterval(intervalId);
   }, [agentSession, agentWorkbenchAvailable, refreshAgentSessionState]);
@@ -1988,6 +2084,7 @@ export default function App() {
       wrapLines: editorSettings.wrapLines,
       showInvisibles: editorSettings.showInvisibles,
       themePreference,
+      menuLanguage,
       recentFiles: menuRecentFiles,
       recentFolders: menuRecentFolders,
     }).catch((err) => {
@@ -1998,6 +2095,7 @@ export default function App() {
     activeTab,
     editorSettings.showInvisibles,
     editorSettings.wrapLines,
+    menuLanguage,
     previewVisible,
     recentFiles,
     recentFolders,
@@ -2189,6 +2287,10 @@ export default function App() {
   }, [editorSettings]);
 
   useEffect(() => {
+    window.localStorage.setItem(MENU_LANGUAGE_STORAGE_KEY, menuLanguage);
+  }, [menuLanguage]);
+
+  useEffect(() => {
     window.localStorage.setItem(
       AGENT_WORKBENCH_ENABLED_STORAGE_KEY,
       agentWorkbenchPreference ? "true" : "false",
@@ -2236,6 +2338,18 @@ export default function App() {
   }, [activeTabId, checkTabForExternalChange]);
 
   useEffect(() => {
+    if (!activeAgentSession || !activeTabId) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void checkTabForExternalChange(activeTabId);
+    }, EXTERNAL_CHANGE_ACTIVE_POLL_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [activeAgentSession, activeTabId, checkTabForExternalChange]);
+
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isImeComposing(event)) {
         return;
@@ -2250,7 +2364,7 @@ export default function App() {
           } else if (pendingAppClose) {
             cancelPendingAppClose();
           } else if (preferencesOpen) {
-            setPreferencesOpen(false);
+            setPreferencesDialogMode(null);
             focusEditorSoon();
           }
         }
@@ -2277,7 +2391,7 @@ export default function App() {
 
       if ((event.metaKey || event.ctrlKey) && event.key === ",") {
         event.preventDefault();
-        setPreferencesOpen(true);
+        setPreferencesDialogMode("settings");
         return;
       }
 
@@ -2723,7 +2837,7 @@ export default function App() {
           >
             <span className="message-copy">
               {activeConflict
-                ? "File changed on disk"
+                ? "File changed outside hazakura"
                 : activeSaveError
                   ? formatSaveFailureMessage()
                   : activeError}
@@ -2885,7 +2999,6 @@ export default function App() {
                 <DiffPane view={compareView} onClose={closeCompareView} />
               ) : sidePaneMode === "agent" ? (
                 <AgentPaneShell
-                  consentAcknowledged={agentWorkbenchConsent}
                   gate={agentLaunchGate}
                   onCheckGate={() => void checkAgentLaunchGate()}
                   onStopSession={() => void stopAgentSession()}
@@ -2993,17 +3106,21 @@ export default function App() {
           <section
             aria-labelledby="preferences-title"
             aria-modal="true"
-            className="preferences-dialog"
+            className={`preferences-dialog ${preferencesDialogMode === "agent" ? "agent-workbench-dialog" : "settings-dialog"}`}
             ref={preferencesDialogRef}
             role="dialog"
           >
             <div className="preferences-header">
-              <h2 id="preferences-title">Preferences</h2>
+              <h2 id="preferences-title">
+                {preferencesDialogMode === "agent"
+                  ? "Agent Workbench"
+                  : "Preferences"}
+              </h2>
               <button
-                aria-label="Close preferences"
+                aria-label="Close dialog"
                 className="icon-button"
                 onClick={() => {
-                  setPreferencesOpen(false);
+                  setPreferencesDialogMode(null);
                   focusEditorSoon();
                 }}
                 ref={preferencesCloseButtonRef}
@@ -3014,134 +3131,46 @@ export default function App() {
                 </svg>
               </button>
             </div>
-            <div className="preferences-sections">
-              <section className="preference-section" aria-label="Editor display">
-                <h3>Editor</h3>
-                <label className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={editorSettings.wrapLines}
-                    onChange={(event) =>
-                      setEditorSettings((current) => ({
-                        ...current,
-                        wrapLines: event.target.checked,
-                      }))
-                    }
-                  />
-                  <span className="slider"></span>
-                  <span>Wrap lines</span>
-                </label>
-                <label className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={editorSettings.showInvisibles}
-                    onChange={(event) =>
-                      setEditorSettings((current) => ({
-                        ...current,
-                        showInvisibles: event.target.checked,
-                      }))
-                    }
-                  />
-                  <span className="slider"></span>
-                  <span>Show invisibles</span>
-                </label>
-                <label className="field-control">
-                  <span>Font size</span>
-                  <input
-                    aria-label="Editor font size"
-                    type="number"
-                    min="12"
-                    max="22"
-                    value={editorSettings.fontSize}
-                    onChange={(event) =>
-                      setEditorSettings((current) => ({
-                        ...current,
-                        fontSize: clampNumber(
-                          Number(event.target.value),
-                          12,
-                          22,
-                          14,
-                        ),
-                      }))
-                    }
-                  />
-                </label>
-                <label className="field-control">
-                  <span>Tab size</span>
-                  <select
-                    aria-label="Tab size"
-                    value={editorSettings.tabSize}
-                    onChange={(event) =>
-                      setEditorSettings((current) => ({
-                        ...current,
-                        tabSize: clampNumber(
-                          Number(event.target.value),
-                          2,
-                          8,
-                          2,
-                        ),
-                      }))
-                    }
-                  >
-                    <option value={2}>2</option>
-                    <option value={4}>4</option>
-                    <option value={8}>8</option>
-                  </select>
-                </label>
-              </section>
-              <section className="preference-section" aria-label="Appearance">
-                <h3>Appearance</h3>
-                <label className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={previewVisible}
-                    onChange={(event) => setPreviewVisible(event.target.checked)}
-                  />
-                  <span className="slider"></span>
-                  <span>Preview pane</span>
-                </label>
-                <label className="field-control">
-                  <span>Theme</span>
-                  <select
-                    aria-label="Theme"
-                    value={themePreference}
-                    onChange={(event) =>
-                      setThemePreference(event.target.value as ThemePreference)
-                    }
-                  >
-                    <option value="system">System</option>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                    <option value="sakura">Sakura</option>
-                  </select>
-                </label>
-              </section>
-              <section className="preference-section" aria-label="Agent Workbench">
-                <h3>Workbench</h3>
-                <label className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={agentWorkbenchPreference}
-                    onChange={(event) =>
-                      updateAgentWorkbenchPreference(event.target.checked)
-                    }
-                  />
-                  <span className="slider"></span>
-                  <span>Agent Workbench</span>
-                </label>
-                <p className="preference-note">
-                  {agentWorkbenchActive
-                    ? "Agent Workbench mode is active for this app session."
-                    : "Safe Editor Mode is active for this app session."}
-                </p>
-                {agentWorkbenchRestartRequired ? (
-                  <p className="preference-warning">
-                    Restart hazakura-note before Agent Workbench UI or backend
-                    launch commands change.
+            {preferencesDialogMode === "agent" ? (
+              <div className="agent-workbench-settings">
+                <section className="preference-section" aria-label="Agent mode">
+                  <h3>Mode</h3>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={agentWorkbenchPreference}
+                      onChange={(event) =>
+                        updateAgentWorkbenchPreference(event.target.checked)
+                      }
+                    />
+                    <span className="slider"></span>
+                    <span>Enable Agent Workbench after restart</span>
+                  </label>
+                  <p className="preference-note">
+                    {agentWorkbenchActive
+                      ? "Agent Workbench mode is active for this app session."
+                      : "Safe Editor Mode is active for this app session."}
                   </p>
-                ) : null}
-                {agentWorkbenchActive ? (
-                  <>
+                  {agentWorkbenchRestartRequired ? (
+                    <p className="preference-warning">
+                      Restart hazakura-note before Agent Workbench UI or backend
+                      launch commands change.
+                    </p>
+                  ) : null}
+                </section>
+                <section className="preference-section" aria-label="Agent session">
+                  <h3>Session</h3>
+                  <div className="preference-status-grid">
+                    <span>Provider</span>
+                    <strong>{providerLabel(agentWorkbenchProvider)}</strong>
+                    <span>Session</span>
+                    <strong>{agentSessionStateLabel(agentSession)}</strong>
+                    <span>Workspace</span>
+                    <strong title={workspaceRootPath ?? undefined}>
+                      {workspaceRootPath ?? "No workspace selected"}
+                    </strong>
+                  </div>
+                  {agentWorkbenchActive ? (
                     <label className="field-control">
                       <span>Provider</span>
                       <select
@@ -3161,28 +3190,149 @@ export default function App() {
                         ))}
                       </select>
                     </label>
-                    <ul className="agent-consent-list">
-                      <li>hazakura does not provide a general-purpose shell prompt.</li>
-                      <li>hazakura can directly launch only allowlisted agent CLIs.</li>
-                      <li>The launched CLI behavior depends on the CLI and your actions inside it.</li>
-                      <li>Use Agent Workbench only in trusted workspaces.</li>
-                      <li>You review and decide what to do with CLI-made changes.</li>
-                    </ul>
-                    <label className="toggle-switch">
-                      <input
-                        type="checkbox"
-                        checked={agentWorkbenchConsent}
-                        onChange={(event) =>
-                          updateAgentWorkbenchConsent(event.target.checked)
-                        }
-                      />
-                      <span className="slider"></span>
-                      <span>I understand the Agent Workbench responsibility boundary.</span>
-                    </label>
-                  </>
-                ) : null}
-              </section>
-            </div>
+                  ) : null}
+                </section>
+                <section className="preference-section" aria-label="Agent responsibility boundary">
+                  <h3>Boundary</h3>
+                  <ul className="agent-consent-list">
+                    <li>hazakura does not provide a general-purpose shell prompt.</li>
+                    <li>hazakura can directly launch only allowlisted agent CLIs.</li>
+                    <li>The launched CLI behavior depends on the CLI and your actions inside it.</li>
+                    <li>Use Agent Workbench only in trusted workspaces.</li>
+                    <li>You review and decide what to do with CLI-made changes.</li>
+                  </ul>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={agentWorkbenchConsent}
+                      disabled={!agentWorkbenchActive}
+                      onChange={(event) =>
+                        updateAgentWorkbenchConsent(event.target.checked)
+                      }
+                    />
+                    <span className="slider"></span>
+                    <span>I understand the Agent Workbench responsibility boundary.</span>
+                  </label>
+                </section>
+              </div>
+            ) : (
+              <div className="preferences-sections">
+                <section className="preference-section" aria-label="Editor display">
+                  <h3>Editor</h3>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={editorSettings.wrapLines}
+                      onChange={(event) =>
+                        setEditorSettings((current) => ({
+                          ...current,
+                          wrapLines: event.target.checked,
+                        }))
+                      }
+                    />
+                    <span className="slider"></span>
+                    <span>Wrap lines</span>
+                  </label>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={editorSettings.showInvisibles}
+                      onChange={(event) =>
+                        setEditorSettings((current) => ({
+                          ...current,
+                          showInvisibles: event.target.checked,
+                        }))
+                      }
+                    />
+                    <span className="slider"></span>
+                    <span>Show invisibles</span>
+                  </label>
+                  <label className="field-control">
+                    <span>Font size</span>
+                    <input
+                      aria-label="Editor font size"
+                      type="number"
+                      min="12"
+                      max="22"
+                      value={editorSettings.fontSize}
+                      onChange={(event) =>
+                        setEditorSettings((current) => ({
+                          ...current,
+                          fontSize: clampNumber(
+                            Number(event.target.value),
+                            12,
+                            22,
+                            14,
+                          ),
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="field-control">
+                    <span>Tab size</span>
+                    <select
+                      aria-label="Tab size"
+                      value={editorSettings.tabSize}
+                      onChange={(event) =>
+                        setEditorSettings((current) => ({
+                          ...current,
+                          tabSize: clampNumber(
+                            Number(event.target.value),
+                            2,
+                            8,
+                            2,
+                          ),
+                        }))
+                      }
+                    >
+                      <option value={2}>2</option>
+                      <option value={4}>4</option>
+                      <option value={8}>8</option>
+                    </select>
+                  </label>
+                </section>
+                <section className="preference-section" aria-label="Application">
+                  <h3>Application</h3>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={previewVisible}
+                      onChange={(event) => setPreviewVisible(event.target.checked)}
+                    />
+                    <span className="slider"></span>
+                    <span>Preview pane</span>
+                  </label>
+                  <label className="field-control">
+                    <span>Theme</span>
+                    <select
+                      aria-label="Theme"
+                      value={themePreference}
+                      onChange={(event) =>
+                        setThemePreference(event.target.value as ThemePreference)
+                      }
+                    >
+                      <option value="system">System</option>
+                      <option value="light">Light</option>
+                      <option value="dark">Dark</option>
+                      <option value="sakura">Sakura</option>
+                    </select>
+                  </label>
+                  <label className="field-control">
+                    <span>Menu language</span>
+                    <select
+                      aria-label="Menu language"
+                      value={menuLanguage}
+                      onChange={(event) =>
+                        setMenuLanguage(event.target.value as MenuLanguage)
+                      }
+                    >
+                      <option value="en">English</option>
+                      <option value="ja">日本語</option>
+                    </select>
+                  </label>
+                </section>
+              </div>
+            )}
           </section>
         </div>
       ) : null}
@@ -3190,6 +3340,7 @@ export default function App() {
       {workspaceContextMenu ? (
         <WorkspaceContextMenu
           anchor={workspaceContextMenu}
+          canSendToAgent={activeAgentSession}
           compareSource={compareAnchor}
           onClearCompareSource={clearCompareSource}
           onClose={closeWorkspaceContextMenu}
@@ -3198,6 +3349,10 @@ export default function App() {
             closeWorkspaceContextMenu();
             void openWorkspaceFile(workspaceContextMenu.path);
           }}
+          onCopyFullPath={() => void copyWorkspaceFullPath(workspaceContextMenu)}
+          onSendFullPathToAgent={() =>
+            void sendWorkspacePathToAgent(workspaceContextMenu)
+          }
           onSetCompareSource={() => setCompareSource(workspaceContextMenu)}
         />
       ) : null}
@@ -3306,7 +3461,6 @@ function PreviewUnavailablePane({ reason }: { reason: string }) {
 }
 
 function AgentPaneShell({
-  consentAcknowledged,
   gate,
   onCheckGate,
   onStopSession,
@@ -3318,7 +3472,6 @@ function AgentPaneShell({
   stopPending,
   workspaceRootPath,
 }: {
-  consentAcknowledged: boolean;
   gate: AgentLaunchGateState;
   onCheckGate: () => void;
   onStopSession: () => void;
@@ -3335,13 +3488,15 @@ function AgentPaneShell({
   const gateMessage = workspaceAvailable
     ? gate.message
     : "Launch unavailable: open a workspace folder first.";
+  const showGateMessage =
+    !activeSession || gate.kind === "checking" || gate.kind === "rejected";
 
   return (
     <section className="agent-pane" aria-label="Agent Workbench pane">
       <div className="agent-compact-header">
         <div className="agent-compact-title">
           <strong>{providerLabel(provider)}</strong>
-          <span>{agentSessionStatusLabel(session)}</span>
+          <span>{agentSessionStateLabel(session)}</span>
         </div>
         <div className="agent-actions">
           <button
@@ -3358,7 +3513,7 @@ function AgentPaneShell({
             }
             type="button"
           >
-            {gate.kind === "checking" ? "Starting..." : "Start"}
+            {gate.kind === "checking" ? "Starting..." : "Start session"}
           </button>
           <button
             disabled={!activeSession || stopPending}
@@ -3366,30 +3521,23 @@ function AgentPaneShell({
             title={activeSession ? undefined : "No running Agent session."}
             type="button"
           >
-            {stopPending ? "Stopping..." : "Stop"}
+            {stopPending ? "Stopping..." : "Stop session"}
           </button>
         </div>
       </div>
       <div className="agent-compact-meta">
-        <span title={gate.preflight?.providerPath ?? undefined}>
-          {workspaceAvailable
-            ? providerAvailabilityLabel(gate)
-            : "Unavailable"}
-        </span>
-        <span>{consentAcknowledged ? "Acknowledged" : "Consent required"}</span>
-        <span>{workspaceAvailable ? launchGateLabel(gate.kind) : "Unavailable"}</span>
-        <span title={session?.runtime.providerPath ?? undefined}>
-          {runtimeStatusLabel(session)}
-        </span>
         <span title={workspaceRootPath ?? undefined}>
           {workspaceRootPath ?? "No workspace selected"}
         </span>
+        <span>{activeSession ? "Agent running" : "Agent inactive"}</span>
       </div>
-      <p
-        className={`agent-gate-message ${workspaceAvailable ? gate.kind : "rejected"}`}
-      >
-        {gateMessage}
-      </p>
+      {showGateMessage ? (
+        <p
+          className={`agent-gate-message ${workspaceAvailable ? gate.kind : "rejected"}`}
+        >
+          {gateMessage}
+        </p>
+      ) : null}
       <AgentTerminalView
         activeSession={activeSession}
         onData={onTerminalData}
@@ -3578,6 +3726,39 @@ function normalizeTerminalLineEndings(text: string): string {
   return text.replace(/\r?\n/g, "\r\n");
 }
 
+function startWorkspacePathDrag(
+  event: ReactDragEvent<HTMLButtonElement>,
+  entry: WorkspaceTreeEntry,
+) {
+  event.dataTransfer.effectAllowed = "copy";
+  event.dataTransfer.setData("text/plain", entry.path);
+  event.dataTransfer.setData("application/x-hazakura-workspace-path", entry.path);
+}
+
+async function writeTextToClipboard(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "true");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.style.top = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    if (!document.execCommand("copy")) {
+      throw new Error("Clipboard copy was not accepted by the browser.");
+    }
+  } finally {
+    document.body.removeChild(textarea);
+  }
+}
+
 function lastAgentOutputSeq(output: AgentWorkbenchOutputChunk[]): number {
   return output.at(-1)?.seq ?? 0;
 }
@@ -3589,55 +3770,22 @@ function providerLabel(provider: AgentWorkbenchProvider): string {
   );
 }
 
-function launchGateLabel(kind: AgentLaunchGateState["kind"]): string {
-  switch (kind) {
-    case "checking":
-      return "Checking";
-    case "passed":
-      return "Passed";
-    case "rejected":
-      return "Rejected";
-    case "idle":
-      return "Not checked";
-  }
-}
-
-function providerAvailabilityLabel(gate: AgentLaunchGateState): string {
-  if (!gate.preflight) {
-    return "Not checked";
-  }
-
-  return gate.preflight.providerAvailable ? "Found" : "Provider not found";
-}
-
 function isActiveAgentSession(session: AgentWorkbenchSession | null): boolean {
   return session?.status === "active";
 }
 
-function agentSessionStatusLabel(session: AgentWorkbenchSession | null): string {
+function agentSessionStateLabel(session: AgentWorkbenchSession | null): string {
   if (!session) {
-    return "None";
+    return "Not running";
   }
 
-  return session.status === "active"
-    ? `Running (${providerLabel(session.provider)})`
-    : session.status === "exited"
-      ? `Exited (${providerLabel(session.provider)})`
-      : `Stopped (${providerLabel(session.provider)})`;
-}
-
-function runtimeStatusLabel(session: AgentWorkbenchSession | null): string {
-  if (!session) {
-    return "None";
-  }
-
-  switch (session.runtime.status) {
-    case "running":
-      return "Running process";
-    case "stopped":
-      return "Stopped";
+  switch (session.status) {
+    case "active":
+      return "Running";
     case "exited":
       return "Exited";
+    case "stopped":
+      return "Stopped";
   }
 }
 
@@ -3697,19 +3845,25 @@ function DiffPane({
 
 function WorkspaceContextMenu({
   anchor,
+  canSendToAgent,
   compareSource,
   onClearCompareSource,
   onClose,
   onCompare,
+  onCopyFullPath,
   onOpen,
+  onSendFullPathToAgent,
   onSetCompareSource,
 }: {
   anchor: WorkspaceContextMenuState;
+  canSendToAgent: boolean;
   compareSource: CompareAnchor | null;
   onClearCompareSource: () => void;
   onClose: () => void;
   onCompare: () => void;
+  onCopyFullPath: () => void;
   onOpen: () => void;
+  onSendFullPathToAgent: () => void;
   onSetCompareSource: () => void;
 }) {
   const hasDifferentCompareSource =
@@ -3726,6 +3880,14 @@ function WorkspaceContextMenu({
       <button type="button" role="menuitem" onClick={onOpen}>
         Open
       </button>
+      <button type="button" role="menuitem" onClick={onCopyFullPath}>
+        Copy full path
+      </button>
+      {canSendToAgent ? (
+        <button type="button" role="menuitem" onClick={onSendFullPathToAgent}>
+          Send full path to Agent
+        </button>
+      ) : null}
       <button
         type="button"
         role="menuitem"
@@ -3910,8 +4072,10 @@ function TreeEntry({
     return (
       <button
         className={`tree-file${entry.path === activePath ? " active" : ""}${entry.path === compareSourcePath ? " compare-source" : ""}`}
+        draggable
         onClick={() => void onOpenFile(entry.path)}
         onContextMenu={(event) => onOpenContextMenu(entry, event)}
+        onDragStart={(event) => startWorkspacePathDrag(event, entry)}
         title={entry.path}
         type="button"
       >
@@ -4037,6 +4201,12 @@ function readStoredThemePreference(): ThemePreference {
   }
 
   return "system";
+}
+
+function readStoredMenuLanguage(): MenuLanguage {
+  return window.localStorage.getItem(MENU_LANGUAGE_STORAGE_KEY) === "ja"
+    ? "ja"
+    : "en";
 }
 
 function readStoredPreviewVisible(): boolean {

@@ -1359,10 +1359,13 @@ button:disabled {
   text-overflow: ellipsis;
 }
 
-.agent-compact-meta span:not(:last-child)::after {
-  color: var(--border-strong);
-  content: "/";
-  margin-left: 10px;
+.agent-compact-meta span:first-child {
+  flex: 1 1 auto;
+}
+
+.agent-compact-meta span:last-child {
+  flex: 0 0 auto;
+  font-weight: 650;
 }
 
 .agent-gate-message {
@@ -1684,6 +1687,11 @@ button:disabled {
   overflow: hidden;
 }
 
+.preferences-dialog.agent-workbench-dialog {
+  max-width: 760px;
+  width: min(760px, calc(100vw - 48px));
+}
+
 .preferences-header {
   align-items: center;
   border-bottom: 1px solid var(--border);
@@ -1727,6 +1735,17 @@ button:disabled {
   gap: 0;
 }
 
+.agent-workbench-settings {
+  display: grid;
+  gap: 0;
+  grid-template-columns: 0.82fr 1fr;
+}
+
+.agent-workbench-settings .preference-section:nth-child(3) {
+  border-top: 1px solid var(--border);
+  grid-column: 1 / -1;
+}
+
 .preference-section {
   display: flex;
   flex-direction: column;
@@ -1739,6 +1758,10 @@ button:disabled {
 }
 
 .preference-section:nth-child(2n + 1) {
+  border-left: 0;
+}
+
+.agent-workbench-settings .preference-section:nth-child(2n + 1) {
   border-left: 0;
 }
 
@@ -1801,6 +1824,28 @@ button:disabled {
   margin-top: 5px;
 }
 
+.preference-status-grid {
+  display: grid;
+  gap: 8px 12px;
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+
+.preference-status-grid span {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.preference-status-grid strong {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 650;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .close-dialog h2 {
   font-size: 18px;
   margin: 0 0 10px;
@@ -1846,8 +1891,13 @@ button:disabled {
     padding-top: 20px;
   }
 
-  .preferences-sections {
+  .preferences-sections,
+  .agent-workbench-settings {
     grid-template-columns: 1fr;
+  }
+
+  .agent-workbench-settings .preference-section:nth-child(3) {
+    grid-column: auto;
   }
 
   .preference-section + .preference-section {

@@ -659,6 +659,7 @@ struct AppMenuState {
     wrap_lines: bool,
     show_invisibles: bool,
     theme_preference: String,
+    menu_language: String,
     recent_files: Vec<AppMenuRecentItem>,
     recent_folders: Vec<AppMenuRecentItem>,
 }
@@ -949,7 +950,7 @@ fn get_agent_workbench_session_state(
 fn write_agent_workbench_session_input(
     session_store: tauri::State<'_, AgentWorkbenchSessionStore>,
     input: String,
-) -> Result<AgentWorkbenchSessionState, String> {
+) -> Result<(), String> {
     write_agent_workbench_session_input_with_store(session_store.inner(), input)
 }
 
@@ -1074,11 +1075,11 @@ fn get_agent_workbench_session_state_with_store(
 fn write_agent_workbench_session_input_with_store(
     session_store: &AgentWorkbenchSessionStore,
     input: String,
-) -> Result<AgentWorkbenchSessionState, String> {
+) -> Result<(), String> {
     refresh_agent_workbench_session_exit(session_store)?;
 
     if input.is_empty() {
-        return get_agent_workbench_session_state_with_store(session_store);
+        return Ok(());
     }
 
     let session_is_active = session_store
@@ -1111,8 +1112,7 @@ fn write_agent_workbench_session_input_with_store(
         .flush()
         .map_err(|err| format!("Cannot flush provider stdin: {err}"))?;
 
-    drop(runtime);
-    get_agent_workbench_session_state_with_store(session_store)
+    Ok(())
 }
 
 fn resize_agent_workbench_terminal_with_store(
@@ -1631,24 +1631,47 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
     let theme_preference = state
         .map(|state| state.theme_preference.as_str())
         .unwrap_or("system");
+    let menu_is_japanese = state
+        .map(|state| state.menu_language.as_str() == "ja")
+        .unwrap_or(false);
+    let label = |english: &'static str, japanese: &'static str| {
+        if menu_is_japanese {
+            japanese
+        } else {
+            english
+        }
+    };
     let file_menu = Submenu::with_items(
         app,
-        "File",
+        label("File", "ファイル"),
         true,
         &[
-            &MenuItem::with_id(app, MENU_NEW_FILE, "New File", true, Some("CmdOrCtrl+N"))?,
-            &MenuItem::with_id(app, MENU_OPEN_FILE, "Open...", true, Some("CmdOrCtrl+O"))?,
+            &MenuItem::with_id(
+                app,
+                MENU_NEW_FILE,
+                label("New File", "新規ファイル"),
+                true,
+                Some("CmdOrCtrl+N"),
+            )?,
+            &MenuItem::with_id(
+                app,
+                MENU_OPEN_FILE,
+                label("Open...", "開く..."),
+                true,
+                Some("CmdOrCtrl+O"),
+            )?,
             &MenuItem::with_id(
                 app,
                 MENU_OPEN_FOLDER,
-                "Open Folder...",
+                label("Open Folder...", "フォルダを開く..."),
                 true,
                 Some("CmdOrCtrl+Shift+O"),
             )?,
             &PredefinedMenuItem::separator(app)?,
             &recent_submenu(
                 app,
-                "Recent Files",
+                label("Recent Files", "最近使ったファイル"),
+                label("No Recent Items", "最近使った項目はありません"),
                 MENU_RECENT_FILE_PREFIX,
                 state
                     .map(|state| state.recent_files.as_slice())
@@ -1656,18 +1679,40 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
             )?,
             &recent_submenu(
                 app,
-                "Recent Folders",
+                label("Recent Folders", "最近使ったフォルダ"),
+                label("No Recent Items", "最近使った項目はありません"),
                 MENU_RECENT_FOLDER_PREFIX,
                 state
                     .map(|state| state.recent_folders.as_slice())
                     .unwrap_or(&[]),
             )?,
             &PredefinedMenuItem::separator(app)?,
-            &MenuItem::with_id(app, MENU_SAVE, "Save", active_dirty, Some("CmdOrCtrl+S"))?,
+            &MenuItem::with_id(
+                app,
+                MENU_PREFERENCES,
+                label("Preferences...", "設定..."),
+                true,
+                Some("CmdOrCtrl+,"),
+            )?,
+            &MenuItem::with_id(
+                app,
+                MENU_AGENT_WORKBENCH,
+                label("Agent Workbench...", "Agent Workbench..."),
+                true,
+                None::<&str>,
+            )?,
+            &PredefinedMenuItem::separator(app)?,
+            &MenuItem::with_id(
+                app,
+                MENU_SAVE,
+                label("Save", "保存"),
+                active_dirty,
+                Some("CmdOrCtrl+S"),
+            )?,
             &MenuItem::with_id(
                 app,
                 MENU_SAVE_AS,
-                "Save As...",
+                label("Save As...", "別名で保存..."),
                 has_active_tab,
                 Some("CmdOrCtrl+Shift+S"),
             )?,
@@ -1675,7 +1720,7 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
             &MenuItem::with_id(
                 app,
                 MENU_CLOSE_WINDOW,
-                "Close Window",
+                label("Close Window", "ウィンドウを閉じる"),
                 true,
                 Some("CmdOrCtrl+Shift+W"),
             )?,
@@ -1683,13 +1728,13 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
     )?;
     let view_menu = Submenu::with_items(
         app,
-        "View",
+        label("View", "表示"),
         true,
         &[
             &CheckMenuItem::with_id(
                 app,
                 MENU_TOGGLE_PREVIEW,
-                "Preview",
+                label("Preview", "プレビュー"),
                 true,
                 preview_visible,
                 Some("CmdOrCtrl+Option+P"),
@@ -1697,7 +1742,7 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
             &CheckMenuItem::with_id(
                 app,
                 MENU_TOGGLE_WRAP,
-                "Wrap Lines",
+                label("Wrap Lines", "行を折り返す"),
                 true,
                 wrap_lines,
                 Some("CmdOrCtrl+Option+W"),
@@ -1705,7 +1750,7 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
             &CheckMenuItem::with_id(
                 app,
                 MENU_TOGGLE_INVISIBLES,
-                "Show Invisibles",
+                label("Show Invisibles", "不可視文字を表示"),
                 true,
                 show_invisibles,
                 Some("CmdOrCtrl+Option+I"),
@@ -1713,13 +1758,13 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
             &PredefinedMenuItem::separator(app)?,
             &Submenu::with_items(
                 app,
-                "Theme",
+                label("Theme", "テーマ"),
                 true,
                 &[
                     &CheckMenuItem::with_id(
                         app,
                         MENU_THEME_SYSTEM,
-                        "System",
+                        label("System", "システム"),
                         true,
                         theme_preference == "system",
                         None::<&str>,
@@ -1727,7 +1772,7 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
                     &CheckMenuItem::with_id(
                         app,
                         MENU_THEME_LIGHT,
-                        "Light",
+                        label("Light", "ライト"),
                         true,
                         theme_preference == "light",
                         None::<&str>,
@@ -1735,7 +1780,7 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
                     &CheckMenuItem::with_id(
                         app,
                         MENU_THEME_DARK,
-                        "Dark",
+                        label("Dark", "ダーク"),
                         true,
                         theme_preference == "dark",
                         None::<&str>,
@@ -1749,21 +1794,6 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
                         None::<&str>,
                     )?,
                 ],
-            )?,
-            &PredefinedMenuItem::separator(app)?,
-            &MenuItem::with_id(
-                app,
-                MENU_PREFERENCES,
-                "Preferences...",
-                true,
-                Some("CmdOrCtrl+,"),
-            )?,
-            &MenuItem::with_id(
-                app,
-                MENU_AGENT_WORKBENCH,
-                "Agent Workbench...",
-                true,
-                None::<&str>,
             )?,
             &PredefinedMenuItem::separator(app)?,
             &PredefinedMenuItem::fullscreen(app, None)?,
@@ -1811,13 +1841,14 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
 fn recent_submenu<R: tauri::Runtime>(
     app: &tauri::AppHandle<R>,
     title: &str,
+    empty_label: &str,
     id_prefix: &str,
     items: &[AppMenuRecentItem],
 ) -> tauri::Result<Submenu<R>> {
     let submenu = Submenu::new(app, title, true)?;
 
     if items.is_empty() {
-        submenu.append(&MenuItem::new(app, "No Recent Items", false, None::<&str>)?)?;
+        submenu.append(&MenuItem::new(app, empty_label, false, None::<&str>)?)?;
         return Ok(submenu);
     }
 
@@ -2873,11 +2904,12 @@ mod tests {
         assert_eq!(session.runtime.status, AgentRuntimeStatus::Running);
         assert_eq!(session.provider_path, provider.provider_path());
 
-        let state = write_agent_workbench_session_input_with_store(
+        write_agent_workbench_session_input_with_store(
             &store,
             "hello from hazakura\nexit\n".to_string(),
         )
         .expect("write provider input");
+        let state = get_agent_workbench_session_state_with_store(&store).expect("read state");
 
         assert!(state
             .output
@@ -2923,6 +2955,57 @@ mod tests {
             .output
             .iter()
             .any(|chunk| chunk.stream == AgentWorkbenchOutputStream::System));
+
+        provider.cleanup();
+    }
+
+    #[test]
+    fn agent_workbench_real_runtime_accepts_input_burst() {
+        let store = AgentWorkbenchSessionStore::default();
+        let adapter = RealAgentRuntimeAdapter::new_piped_for_tests(&store);
+        let provider = fake_provider_fixture(
+            "agent_real_runtime_input_burst",
+            AGENT_PROVIDER_OPENCODE,
+            b"#!/bin/sh\nwhile IFS= read line; do\n  printf 'burst:%s\\n' \"$line\"\n  [ \"$line\" = 'done' ] && exit 0\ndone\n",
+        );
+
+        start_agent_workbench_session_with_store(
+            &store,
+            &adapter,
+            true,
+            true,
+            AGENT_PROVIDER_OPENCODE.to_string(),
+            provider.workspace_root(),
+            Some(provider.path_var()),
+            None,
+            None,
+        )
+        .expect("start burst fake provider");
+
+        for index in 0..20 {
+            write_agent_workbench_session_input_with_store(&store, format!("line-{index}\n"))
+                .expect("write burst input");
+        }
+        write_agent_workbench_session_input_with_store(&store, "done\n".to_string())
+            .expect("write burst terminator");
+
+        let final_state = wait_for_agent_state(&store, |state| {
+            let combined_output = combined_agent_output(state);
+            state
+                .session
+                .as_ref()
+                .is_some_and(|session| session.status == AgentWorkbenchSessionStatus::Exited)
+                && combined_output.contains("burst:line-0")
+                && combined_output.contains("burst:line-19")
+                && combined_output.contains("burst:done")
+        });
+        let combined_output = combined_agent_output(&final_state);
+
+        assert_eq!(combined_output.matches("burst:line-").count(), 20);
+        assert_eq!(
+            final_state.session.as_ref().unwrap().status,
+            AgentWorkbenchSessionStatus::Exited
+        );
 
         provider.cleanup();
     }

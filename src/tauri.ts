@@ -16,6 +16,7 @@ export type AppMenuState = {
   wrapLines: boolean;
   showInvisibles: boolean;
   themePreference: "system" | "light" | "dark" | "sakura";
+  menuLanguage: "en" | "ja";
   recentFiles: AppMenuRecentItem[];
   recentFolders: AppMenuRecentItem[];
 };
@@ -314,8 +315,8 @@ export async function getAgentWorkbenchSessionState(): Promise<AgentWorkbenchSes
 
 export async function writeAgentWorkbenchSessionInput(
   input: string,
-): Promise<AgentWorkbenchSessionState> {
-  return invoke<AgentWorkbenchSessionState>("write_agent_workbench_session_input", {
+): Promise<void> {
+  return invoke<void>("write_agent_workbench_session_input", {
     input,
   });
 }

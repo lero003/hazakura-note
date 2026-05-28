@@ -3,7 +3,7 @@
 Status: Operational
 Scope: Manual prototype checks
 Authority: Medium
-Last reviewed: 2026-05-28
+Last reviewed: 2026-05-29
 
 Use this checklist after changes to file creation, file opening, workspace listing, tabs, saving, preview rendering, theme handling, workspace restoration, search, or save-conflict handling.
 
@@ -36,6 +36,10 @@ Latest Local Bundle Minimum System Version checks: 2026-05-28 build output confi
 Latest Agent Workbench Automated Stabilization checks: 2026-05-28 automated gates passed with fake allowlist providers. No real `codex` / `opencode` manual smoke was claimed.
 
 Latest Agent Workbench xterm Terminal Surface checks: 2026-05-28 automated gates passed after replacing the simple log/input surface with an xterm-based provider terminal, compacting the Agent pane header, and passing xterm rows/columns to the backend PTY. Rust coverage now verifies real PTY `stty size` at launch and after resize. Real `codex` / `opencode` behavior remains trusted-workspace manual smoke.
+
+Latest Agent Workbench Trusted Provider Smoke Readiness checks: 2026-05-29 automated gates passed after updating the manual smoke path and result template for the compact xterm Agent pane. No real `codex` / `opencode` manual smoke was claimed by this update.
+
+Latest Agent Workbench OpenCode trusted-provider observation: 2026-05-29 user smoke reported OpenCode CLI launched, OpenCode Zen/free model could edit a local file, and the xterm pane rendered the TUI, but text input in the OpenCode TUI felt very slow. Re-smoke after TUI responsiveness changes is still needed.
 
 ## Build First
 
@@ -126,11 +130,16 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 4. Edit the file and confirm the window title marks unsaved state, then save and confirm the mark clears.
 5. Confirm File > Recent Files can reopen a recently opened file.
 6. Toggle View > Preview, View > Wrap Lines, and View > Show Invisibles and confirm each setting changes the editor or preview.
-7. Open View > Preferences and confirm Font size, Tab size, Theme, Preview, Wrap, and Invisibles persist after restart.
+7. Confirm Preferences and Agent Workbench are not in the View menu.
+8. Open File > Preferences and confirm Font size, Tab size, Theme, Preview, Wrap, Invisibles, and Menu language persist after restart.
+9. Change Menu language to Japanese and confirm the native File/View menu labels update without adding editor-side Japanese UI.
+10. Open File > Agent Workbench and confirm it shows Agent mode, provider/session summary, and responsibility-boundary controls separately from Preferences.
 
 ## Agent Workbench Trusted Workspace Manual Smoke
 
 Use this only in a trusted throwaway workspace. Do not use a repository with important uncommitted work. This smoke confirms hazakura-side launch, input, output, stop, and external-change observation; it does not approve or validate real provider-internal behavior.
+
+Run this once per provider when practical. If only one provider is installed, record the other provider as not run or provider-not-found rather than installing or configuring it during the smoke.
 
 Setup:
 
@@ -147,11 +156,11 @@ Safe Editor default:
 
 Mode gate:
 
-1. Open View > Preferences.
+1. Open File > Agent Workbench.
 2. Turn Agent Workbench on.
 3. Confirm the UI says restart is required before Agent UI or backend launch commands change.
 4. Quit and relaunch the app.
-5. Reopen Preferences and confirm Agent Workbench mode is active for this app session.
+5. Reopen Agent Workbench and confirm Agent Workbench mode is active for this app session.
 6. Select the provider.
 7. Read the responsibility-boundary list and acknowledge consent.
 
@@ -159,24 +168,32 @@ Launch and session:
 
 1. Open the trusted throwaway workspace folder.
 2. Switch the right pane to Agent.
-3. Confirm the pane shows compact provider/session status and gives most of the right pane height to the xterm terminal surface.
-4. Click Start session.
-5. If the provider is missing, confirm the UI reports provider not found and no session starts.
-6. If the provider is found, confirm one session starts, runtime status becomes active/running, and terminal output mentions the provider start.
-7. While the session is active, confirm provider selection is disabled.
-8. Type only harmless, user-chosen input into the terminal surface. Do not approve provider-internal command execution or file edits unless intentionally testing in the throwaway workspace.
-9. Confirm the provider receives input and terminal control output is rendered by the terminal surface instead of appearing as raw escape text.
-10. Resize the right pane if practical and confirm the provider terminal remains usable.
-11. Click Stop session.
-12. Confirm session/runtime status becomes stopped or exited and terminal output records the stop or exit.
-13. Confirm terminal input no longer reaches the provider after stop.
+3. Confirm the pane shows compact provider/session/runtime status and gives most of the right pane height to the xterm terminal surface.
+4. Right-click the small Markdown file in the workspace tree and choose Copy full path; confirm the clipboard contains the file path string, not file contents.
+5. Drag the file row if practical and confirm the drag payload can be used as text/path input rather than a file-copy operation.
+6. Click Start session.
+7. If the provider is missing, confirm the UI reports provider not found and no session starts.
+8. If the provider is found, confirm one session starts, launch gate is passed, runtime status becomes active/running, and terminal output mentions the provider start.
+9. While the session is active, confirm provider selection is disabled.
+10. Right-click the small Markdown file again and confirm Send full path to Agent is available only while the session is running.
+11. Choose Send full path to Agent and confirm only the selected workspace file path is sent as plain input, without hazakura adding a shell command or arbitrary path field.
+12. Type only harmless, user-chosen input into the terminal surface. Do not approve provider-internal command execution or file edits unless intentionally testing in the throwaway workspace.
+13. Confirm the provider receives input and terminal control output is rendered by the terminal surface instead of appearing as raw escape text.
+14. If testing file-targeted agent work, use only the copied/sent full path string in the provider prompt; hazakura should not expose an arbitrary path input field.
+15. Resize the right pane if practical and confirm the provider terminal remains usable.
+16. Click Stop session.
+17. Confirm session/runtime status becomes stopped or exited and terminal output records the stop or exit.
+18. Confirm terminal input no longer reaches the provider after stop.
 
 External-change path, optional:
 
 1. Only inside the throwaway workspace, intentionally allow the provider to edit the small Markdown file.
-2. Return to the file in hazakura-note.
-3. Confirm the existing external-change/conflict handling path observes the on-disk change before overwriting it.
-4. Decide manually whether to keep, reload, discard, or inspect the provider-made change outside hazakura-note.
+2. If the file is open and clean in hazakura-note, confirm the editor content refreshes from disk without pressing Save.
+3. Confirm the status bar reports the external refresh.
+4. Repeat with unsaved local edits in the same tab and confirm hazakura shows the external-change recovery choices instead of overwriting either side.
+5. Confirm hazakura does not auto-approve, auto-commit, or make a Git decision for the provider-made change.
+6. If the file was not already open, open it manually and treat the provider-made contents as an ordinary on-disk file change.
+7. Decide manually whether to keep, reload, discard, or inspect the provider-made change outside hazakura-note.
 
 Close cleanup:
 
@@ -190,12 +207,18 @@ Record:
 - Date:
 - App build path:
 - Workspace path:
-- Provider:
-- Provider found: yes/no
-- Start result:
-- Input result:
-- Stop/quit cleanup result:
-- Optional external-change result:
+- Codex provider found: yes/no/not run
+- Codex launch/start result:
+- Codex input/render result:
+- Codex stop result:
+- Codex quit cleanup result:
+- Codex optional external-change result:
+- OpenCode provider found: yes/no/not run
+- OpenCode launch/start result:
+- OpenCode input/render result:
+- OpenCode stop result:
+- OpenCode quit cleanup result:
+- OpenCode optional external-change result:
 - Notes or follow-up:
 
 ## Workspace Tree And Tabs
@@ -363,17 +386,19 @@ Record:
 ## External Change Conflict
 
 1. Open a throwaway Markdown file.
-2. Edit it in the app without saving.
-3. Modify the same file outside the app.
-4. Click Save in the app.
-5. Confirm the app shows a save-conflict message.
-6. Confirm the file on disk still contains the external change, not the app's unsaved text.
-7. Click Keep editing and confirm the local editor text remains.
-8. Trigger the conflict again and click Reopen from disk.
-9. Confirm the editor, preview, and status all show the external disk content.
-10. Trigger the conflict once more if needed and confirm Close without saving closes the tab without overwriting disk.
-11. Repeat by modifying the file outside the app, then switch away and back to the tab or refocus the app before pressing Save.
-12. Confirm the app detects the external change and stops with the same recovery choices before the user relies on Save.
+2. While the app tab is clean, modify the same file outside the app.
+3. Switch away and back to the tab, refocus the app, or use an active Agent Workbench session, and confirm the editor refreshes to the on-disk content with an external refresh status.
+4. Edit the file in the app without saving.
+5. Modify the same file outside the app.
+6. Click Save in the app.
+7. Confirm the app shows an outside-hazakura change message with Reopen from disk / Close without saving / Keep editing.
+8. Confirm the file on disk still contains the external change, not the app's unsaved text.
+9. Click Keep editing and confirm the local editor text remains.
+10. Trigger the conflict again and click Reopen from disk.
+11. Confirm the editor, preview, and status all show the external disk content.
+12. Trigger the conflict once more if needed and confirm Close without saving closes the tab without overwriting disk.
+13. Repeat by modifying the file outside the app, then switch away and back to the tab or refocus the app before pressing Save.
+14. Confirm the app detects the external change and stops with the same recovery choices before the user relies on Save.
 
 ## Save Failure Recovery
 

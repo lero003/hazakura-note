@@ -338,10 +338,16 @@ fn open_workspace_image(root: String, path: String) -> Result<ImagePreviewDocume
 #[tauri::command]
 fn start_agent_workbench_session(
     agent_workbench_enabled: bool,
+    consent_acknowledged: bool,
     provider: String,
     workspace_root: String,
 ) -> Result<(), String> {
-    validate_agent_workbench_launch(agent_workbench_enabled, &provider, &workspace_root)?;
+    validate_agent_workbench_launch(
+        agent_workbench_enabled,
+        consent_acknowledged,
+        &provider,
+        &workspace_root,
+    )?;
 
     Err("Agent Workbench launch is not implemented in this foundation build.".to_string())
 }
@@ -426,6 +432,7 @@ fn ensure_workspace_root(root_path: &Path) -> Result<PathBuf, String> {
 
 fn validate_agent_workbench_launch(
     agent_workbench_enabled: bool,
+    consent_acknowledged: bool,
     provider: &str,
     workspace_root: &str,
 ) -> Result<(), String> {
@@ -434,6 +441,10 @@ fn validate_agent_workbench_launch(
             "Agent Workbench is disabled. Enable it in Preferences and restart before launching an agent."
                 .to_string(),
         );
+    }
+
+    if !consent_acknowledged {
+        return Err("Agent Workbench consent is required before launching an agent.".to_string());
     }
 
     if !matches!(provider, AGENT_PROVIDER_CODEX | AGENT_PROVIDER_OPENCODE) {
@@ -969,9 +980,26 @@ mod tests {
     #[test]
     fn agent_workbench_launch_rejects_disabled_mode() {
         let error =
-            validate_agent_workbench_launch(false, AGENT_PROVIDER_CODEX, "/tmp").unwrap_err();
+            validate_agent_workbench_launch(false, true, AGENT_PROVIDER_CODEX, "/tmp").unwrap_err();
 
         assert!(error.contains("disabled"));
+    }
+
+    #[test]
+    fn agent_workbench_launch_rejects_unacknowledged_consent() {
+        let dir = unique_test_dir("agent_consent");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let error = validate_agent_workbench_launch(
+            true,
+            false,
+            AGENT_PROVIDER_CODEX,
+            dir.to_str().unwrap(),
+        )
+        .unwrap_err();
+
+        assert!(error.contains("consent"));
+
+        let _ = fs::remove_dir_all(dir);
     }
 
     #[test]
@@ -979,7 +1007,7 @@ mod tests {
         let dir = unique_test_dir("agent_provider");
         fs::create_dir_all(&dir).expect("create test dir");
         let error =
-            validate_agent_workbench_launch(true, "zsh", dir.to_str().unwrap()).unwrap_err();
+            validate_agent_workbench_launch(true, true, "zsh", dir.to_str().unwrap()).unwrap_err();
 
         assert!(error.contains("allowlisted"));
 
@@ -987,14 +1015,31 @@ mod tests {
     }
 
     #[test]
+    fn agent_workbench_launch_rejects_invalid_workspace_root() {
+        let dir = unique_test_dir("agent_invalid_workspace");
+        let error = validate_agent_workbench_launch(
+            true,
+            true,
+            AGENT_PROVIDER_CODEX,
+            dir.to_str().unwrap(),
+        )
+        .unwrap_err();
+
+        assert!(error.contains("workspace"));
+    }
+
+    #[test]
     fn agent_workbench_launch_validates_workspace_root_before_future_launch() {
         let dir = unique_test_dir("agent_workspace");
         fs::create_dir_all(&dir).expect("create test dir");
 
-        assert!(
-            validate_agent_workbench_launch(true, AGENT_PROVIDER_CODEX, dir.to_str().unwrap())
-                .is_ok()
-        );
+        assert!(validate_agent_workbench_launch(
+            true,
+            true,
+            AGENT_PROVIDER_CODEX,
+            dir.to_str().unwrap()
+        )
+        .is_ok());
 
         let _ = fs::remove_dir_all(dir);
     }
@@ -1004,6 +1049,7 @@ mod tests {
         let dir = unique_test_dir("agent_command");
         fs::create_dir_all(&dir).expect("create test dir");
         let error = start_agent_workbench_session(
+            true,
             true,
             AGENT_PROVIDER_OPENCODE.to_string(),
             dir.to_str().unwrap().to_string(),

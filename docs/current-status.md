@@ -16,6 +16,7 @@ Last reviewed: 2026-05-28
 - New File, Open, Open Folder, Save, Save As, and Recent file/folder actions are available from the native File menu instead of occupying the top toolbar.
 - Preview, Wrap, Invisibles, Theme, Font, and Tab display settings now live in the native View menu and Preferences dialog, leaving the always-visible editor chrome minimal.
 - Preferences includes an Agent Workbench developer-mode gate. Changing it stores the requested mode and requires restart before Agent UI or backend launch-command availability changes.
+- When Agent Workbench mode is active for the current app session, Preferences shows only allowlisted provider choices (`codex` / `opencode`) and requires explicit responsibility-boundary consent before the backend launch gate can pass.
 - The app window title follows the active file and marks unsaved state, so the redundant in-app title header is no longer shown.
 - The workspace header includes a small open-folder action for switching workspace without returning to the native menu.
 - Save writes the editor text without adding or removing a final trailing newline by policy; Rust tests cover LF and CRLF final-newline presence.
@@ -95,7 +96,8 @@ Last reviewed: 2026-05-28
 - Native View menu actions for Preview, Wrap, Invisibles, Theme, and Preferences
 - Preferences dialog for display settings that were previously exposed in the top toolbar
 - Agent Workbench mode gate in Preferences, with requested mode stored separately from the active app-session mode
-- Rust-side Agent Workbench launch gate that rejects disabled mode, non-allowlisted providers, and invalid workspace roots before any future launch path
+- Agent Workbench provider/consent gate in Preferences, visible only when Agent Workbench is active for the current app session
+- Rust-side Agent Workbench launch gate that rejects disabled mode, unacknowledged consent, non-allowlisted providers, and invalid workspace roots before any future launch path
 - Dynamic window title for active file and unsaved state
 - Keyboard shortcuts for New File, Open, Open Folder, Save, Find, active-tab close, and window close
 - Conflict recovery actions for reloading, closing, or continuing with local edits
@@ -137,6 +139,16 @@ Agent Workbench Mode Gate Foundation on 2026-05-28:
 - `cargo test --manifest-path src-tauri/Cargo.toml` passed with 28 Rust tests, including disabled-mode rejection, non-allowlisted provider rejection, workspace-root validation, and foundation-build no-launch behavior.
 - Browser smoke at `http://127.0.0.1:1421/` confirmed the app loads and Agent Workbench UI is not visible during normal Safe Editor startup.
 - `git diff --check` passed.
+
+Agent Workbench Provider/Consent Gate on 2026-05-28:
+
+- Preferences now shows provider selection and responsibility-boundary consent only when Agent Workbench is active for the current app session.
+- Provider selection is fixed to the allowlist `codex` / `opencode`; no arbitrary command, shell, path, PTY, xterm, or process-spawn UI was added.
+- Consent is stored in `localStorage` and passed to the Rust launch gate.
+- The Rust `start_agent_workbench_session` gate now validates active mode, acknowledged consent, allowlisted provider, and workspace root before stopping with the existing not-implemented message.
+- `npm run build:vite` passed.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check` passed.
+- `cargo test --manifest-path src-tauri/Cargo.toml` passed with 30 Rust tests, including disabled-mode rejection, unacknowledged-consent rejection, non-allowlisted provider rejection, invalid-workspace rejection, and foundation-build no-launch behavior.
 
 Pre-release stabilization review intake on 2026-05-28:
 

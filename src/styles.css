@@ -1604,6 +1604,20 @@ button:disabled {
   font-weight: 650;
 }
 
+.agent-consent-list {
+  background: var(--surface-muted);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0;
+  padding: 10px 12px 10px 24px;
+}
+
+.agent-consent-list li + li {
+  margin-top: 5px;
+}
+
 .close-dialog h2 {
   font-size: 18px;
   margin: 0 0 10px;

@@ -33,6 +33,7 @@ import {
   setCurrentWindowTitle,
   updateAppMenuState,
   type AppMenuRecentItem,
+  type AgentWorkbenchProvider,
   type SavedFileState,
   type TextFileDocument,
   type WorkspaceTreeEntry,
@@ -48,6 +49,17 @@ const RECENT_FILES_STORAGE_KEY = "hazakura-note-recent-files";
 const RECENT_FOLDERS_STORAGE_KEY = "hazakura-note-recent-folders";
 const AGENT_WORKBENCH_ENABLED_STORAGE_KEY =
   "hazakura-note-agent-workbench-enabled";
+const AGENT_WORKBENCH_CONSENT_STORAGE_KEY =
+  "hazakura-note-agent-workbench-consent";
+const AGENT_WORKBENCH_PROVIDER_STORAGE_KEY =
+  "hazakura-note-agent-workbench-provider";
+const AGENT_WORKBENCH_PROVIDERS: Array<{
+  id: AgentWorkbenchProvider;
+  label: string;
+}> = [
+  { id: "codex", label: "Codex CLI" },
+  { id: "opencode", label: "OpenCode CLI" },
+];
 const MAX_RESTORED_TABS = 12;
 const MAX_STORED_DRAFTS = 20;
 const MAX_RECENT_ITEMS = 8;
@@ -185,6 +197,11 @@ export default function App() {
   const [agentWorkbenchPreference, setAgentWorkbenchPreference] = useState(
     () => readStoredAgentWorkbenchEnabled(),
   );
+  const [agentWorkbenchConsent, setAgentWorkbenchConsent] = useState(() =>
+    readStoredAgentWorkbenchConsent(),
+  );
+  const [agentWorkbenchProvider, setAgentWorkbenchProvider] =
+    useState<AgentWorkbenchProvider>(() => readStoredAgentWorkbenchProvider());
   const [findQuery, setFindQuery] = useState("");
   const [findVisible, setFindVisible] = useState(false);
   const [searchOptions, setSearchOptions] = useState<SearchOptions>({
@@ -1518,6 +1535,23 @@ export default function App() {
     [agentWorkbenchActive],
   );
 
+  const updateAgentWorkbenchConsent = useCallback((acknowledged: boolean) => {
+    setAgentWorkbenchConsent(acknowledged);
+    setStatus(
+      acknowledged
+        ? "Agent Workbench responsibility acknowledged"
+        : "Agent Workbench consent cleared",
+    );
+  }, []);
+
+  const updateAgentWorkbenchProvider = useCallback(
+    (provider: AgentWorkbenchProvider) => {
+      setAgentWorkbenchProvider(provider);
+      setStatus(`Agent provider selected: ${provider}`);
+    },
+    [],
+  );
+
   useEffect(() => {
     tabsRef.current = tabs;
   }, [tabs]);
@@ -1807,6 +1841,20 @@ export default function App() {
       agentWorkbenchPreference ? "true" : "false",
     );
   }, [agentWorkbenchPreference]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      AGENT_WORKBENCH_CONSENT_STORAGE_KEY,
+      agentWorkbenchConsent ? "true" : "false",
+    );
+  }, [agentWorkbenchConsent]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      AGENT_WORKBENCH_PROVIDER_STORAGE_KEY,
+      agentWorkbenchProvider,
+    );
+  }, [agentWorkbenchProvider]);
 
   useEffect(() => {
     if (!activeTabId) {
@@ -2703,6 +2751,46 @@ export default function App() {
                     launch commands change.
                   </p>
                 ) : null}
+                {agentWorkbenchActive ? (
+                  <>
+                    <label className="field-control">
+                      <span>Provider</span>
+                      <select
+                        aria-label="Agent Workbench provider"
+                        value={agentWorkbenchProvider}
+                        onChange={(event) =>
+                          updateAgentWorkbenchProvider(
+                            event.target.value as AgentWorkbenchProvider,
+                          )
+                        }
+                      >
+                        {AGENT_WORKBENCH_PROVIDERS.map((provider) => (
+                          <option key={provider.id} value={provider.id}>
+                            {provider.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <ul className="agent-consent-list">
+                      <li>hazakura does not provide a general-purpose shell prompt.</li>
+                      <li>hazakura can directly launch only allowlisted agent CLIs.</li>
+                      <li>The launched CLI behavior depends on the CLI and your actions inside it.</li>
+                      <li>Use Agent Workbench only in trusted workspaces.</li>
+                      <li>You review and decide what to do with CLI-made changes.</li>
+                    </ul>
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={agentWorkbenchConsent}
+                        onChange={(event) =>
+                          updateAgentWorkbenchConsent(event.target.checked)
+                        }
+                      />
+                      <span className="slider"></span>
+                      <span>I understand the Agent Workbench responsibility boundary.</span>
+                    </label>
+                  </>
+                ) : null}
               </section>
             </div>
           </section>
@@ -3231,6 +3319,18 @@ function readStoredAgentWorkbenchEnabled(): boolean {
   return (
     window.localStorage.getItem(AGENT_WORKBENCH_ENABLED_STORAGE_KEY) === "true"
   );
+}
+
+function readStoredAgentWorkbenchConsent(): boolean {
+  return (
+    window.localStorage.getItem(AGENT_WORKBENCH_CONSENT_STORAGE_KEY) === "true"
+  );
+}
+
+function readStoredAgentWorkbenchProvider(): AgentWorkbenchProvider {
+  const value = window.localStorage.getItem(AGENT_WORKBENCH_PROVIDER_STORAGE_KEY);
+
+  return value === "opencode" ? "opencode" : "codex";
 }
 
 function readStoredDrafts(): DraftRecord[] {

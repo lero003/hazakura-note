@@ -238,11 +238,13 @@ export async function saveTextFileAs(
 
 export async function startAgentWorkbenchSession(
   agentWorkbenchEnabled: boolean,
+  consentAcknowledged: boolean,
   provider: AgentWorkbenchProvider,
   workspaceRoot: string,
 ): Promise<void> {
   await invoke("start_agent_workbench_session", {
     agentWorkbenchEnabled,
+    consentAcknowledged,
     provider,
     workspaceRoot,
   });

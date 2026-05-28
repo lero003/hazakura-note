@@ -74,6 +74,8 @@ Requirements:
 - Enabling Agent Workbench mode requires restart before agent UI or backend launch commands become available.
 - The initial mode gate stores the requested mode separately from the active app-session mode.
 - The backend launch entry rejects while the active app-session mode is off, even if a caller bypasses hidden UI.
+- Provider selection is limited to `codex` and `opencode` in both UI and backend validation.
+- First-use consent is stored locally and required before the backend launch entry can pass its gate.
 - User explicitly starts the session.
 - Exactly one TUI agent session may run at a time.
 - Session starts with `cwd` set to the selected workspace root.
@@ -104,6 +106,7 @@ The app is responsible for:
 - Not accepting arbitrary launch commands.
 - Making the active workspace root visible before launch.
 - Making the warning visible before the first launch and after configuration changes.
+- Requiring explicit consent before any launch gate can pass.
 - Detecting relevant on-disk changes through the existing external-change path where practical.
 
 ## MVP Non-goals

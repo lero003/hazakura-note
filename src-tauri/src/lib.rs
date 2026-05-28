@@ -2727,6 +2727,49 @@ mod tests {
     }
 
     #[test]
+    fn agent_workbench_stop_after_exit_does_not_call_runtime_adapter() {
+        let store = AgentWorkbenchSessionStore::default();
+        let start_adapter = RealAgentRuntimeAdapter::new_piped_for_tests(&store);
+        let stop_adapter = RecordingRuntimeAdapter::default();
+        let provider = fake_provider_fixture(
+            "agent_stop_after_exit",
+            AGENT_PROVIDER_CODEX,
+            b"#!/bin/sh\nexit 0\n",
+        );
+
+        start_agent_workbench_session_with_store(
+            &store,
+            &start_adapter,
+            true,
+            true,
+            AGENT_PROVIDER_CODEX.to_string(),
+            provider.workspace_root(),
+            Some(provider.path_var()),
+            None,
+            None,
+        )
+        .expect("start fake provider");
+        let exited_state = wait_for_agent_state(&store, |state| {
+            state
+                .session
+                .as_ref()
+                .is_some_and(|session| session.status == AgentWorkbenchSessionStatus::Exited)
+        });
+        let output_len_before = exited_state.output.len();
+
+        let state = stop_agent_workbench_session_with_store(&store, &stop_adapter)
+            .expect("stop exited session");
+        let session = state.session.as_ref().expect("exited session");
+
+        assert_eq!(session.status, AgentWorkbenchSessionStatus::Exited);
+        assert_eq!(session.runtime.status, AgentRuntimeStatus::Exited);
+        assert_eq!(state.output.len(), output_len_before);
+        assert!(stop_adapter.stop_calls().is_empty());
+
+        provider.cleanup();
+    }
+
+    #[test]
     fn agent_workbench_stop_adapter_failure_keeps_session_active() {
         let store = AgentWorkbenchSessionStore::default();
         let adapter = RecordingRuntimeAdapter::failing_stop();

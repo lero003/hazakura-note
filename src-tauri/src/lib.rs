@@ -1422,6 +1422,26 @@ mod tests {
     }
 
     #[test]
+    fn open_workspace_image_rejects_oversized_image_before_preview() {
+        let dir = unique_test_dir("workspace_image_oversized");
+        fs::create_dir_all(&dir).expect("create test dir");
+        let path = dir.join("oversized.png");
+        let file = File::create(&path).expect("create oversized image fixture");
+        file.set_len(MAX_IMAGE_PREVIEW_BYTES + 1)
+            .expect("resize oversized image fixture");
+
+        let err = open_workspace_image(
+            dir.to_string_lossy().to_string(),
+            path.to_string_lossy().to_string(),
+        )
+        .expect_err("oversized image should be rejected");
+
+        assert!(err.contains("preview limit of 20 MB"), "{err}");
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn workspace_tree_rejects_file_root() {
         let dir = unique_test_dir("workspace_file_root");
         fs::create_dir_all(&dir).expect("create test dir");

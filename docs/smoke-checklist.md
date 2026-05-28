@@ -25,6 +25,8 @@ Latest Find Close Polish checks: 2026-05-28 automated gates passed after making 
 
 Latest Workspace Image Signature Coverage checks: 2026-05-28 automated gates passed after expanding Rust coverage for PNG/JPEG/GIF/WebP content signatures and extension/signature mismatch rejection. No fresh built-app manual smoke was claimed.
 
+Latest Workspace Image Size Limit Coverage checks: 2026-05-28 automated gates passed after adding Rust coverage for rejecting workspace image previews above 20 MB. No fresh built-app manual smoke was claimed.
+
 Latest Workspace Image Close Return checks: 2026-05-28 automated gates passed after restoring the prior text tab when Cmd+W closes a selected workspace image preview. `open -n` still returned `kLSNoExecutableErr` in the automation session, so no fresh built-app manual smoke was claimed.
 
 Latest Local Bundle Launch Metadata Polish checks: 2026-05-28 build output confirmed `LSRequiresCarbon => false`, `CFBundleExecutable => "hazakura-note"`, and valid ad-hoc signing. No fresh built-app manual UI smoke was claimed because `open -n` still returned `kLSNoExecutableErr` in this automation session.
@@ -140,8 +142,9 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 4. Confirm the image file is highlighted in the workspace tree and the status bar identifies the selected image.
 5. Press Cmd+W and confirm the image preview closes without closing the app, returning to the text tab that was active before opening the image when one is still open.
 6. Add a text file renamed with a supported image extension such as `not-image.png`, select it from the tree, and confirm it is rejected instead of previewed.
-7. Open the Markdown file from the same tree and confirm text editing, tabs, and Markdown preview still work normally.
-8. Add a Markdown local image reference to the text file and confirm the Markdown preview still shows an image-blocked note instead of loading it.
+7. Add a supported image file above 20 MB, select it from the tree, and confirm it is rejected instead of previewed.
+8. Open the Markdown file from the same tree and confirm text editing, tabs, and Markdown preview still work normally.
+9. Add a Markdown local image reference to the text file and confirm the Markdown preview still shows an image-blocked note instead of loading it.
 
 ## Large Workspace Tree
 

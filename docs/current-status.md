@@ -20,7 +20,7 @@ Last reviewed: 2026-05-28
 - Save writes the editor text without adding or removing a final trailing newline by policy; Rust tests cover LF and CRLF final-newline presence.
 - Markdown preview shows embedded `data:image` PNG/JPEG/GIF/WebP images and blocks external or local image references with an in-preview note.
 - Markdown preview wraps GFM tables in a scrollable table frame with clearer headers, grid lines, row striping, and alignment support.
-- Selecting a PNG/JPEG/GIF/WebP file in the workspace tree opens a read-only local image preview in the work area after a lightweight content-signature check, without adding Markdown local-image loading. Closing that image preview returns to the prior text tab when one is still open.
+- Selecting a PNG/JPEG/GIF/WebP file up to 20 MB in the workspace tree opens a read-only local image preview in the work area after a lightweight content-signature check, without adding Markdown local-image loading. Closing that image preview returns to the prior text tab when one is still open.
 - Markdown preview and editor panes use lightweight bidirectional scroll synchronization with a small tolerance to avoid jitter while preview is visible.
 - The editor / preview split can be resized with a draggable vertical divider while preview is visible.
 - Recent workspace, open tabs, active tab, and theme preference are restored after restart.
@@ -68,7 +68,7 @@ Last reviewed: 2026-05-28
 - Preview visibility toggle through View / Preferences with `localStorage` persistence
 - Safe embedded-image preview policy for Markdown preview
 - GFM table preview styling with a bounded horizontal scroll frame
-- Read-only local workspace image preview for PNG/JPEG/GIF/WebP files, with extension and content-signature validation
+- Read-only local workspace image preview for PNG/JPEG/GIF/WebP files up to 20 MB, with extension and content-signature validation
 - Lightweight bidirectional editor/preview scroll synchronization while Markdown preview is visible
 - Resizable editor / preview columns while Markdown preview is visible
 - Multiple open file tabs
@@ -288,8 +288,15 @@ Workspace Image Preview / Quality Automation checks on 2026-05-28:
 Workspace Image Content Validation checks on 2026-05-28:
 
 - Workspace image preview now requires the selected PNG/JPEG/GIF/WebP extension to match a lightweight file-content signature before returning a `data:` URL.
-- Rust tests cover accepting supported PNG/JPEG/GIF/WebP previews, rejecting paths outside the workspace root, rejecting a `.png` file whose bytes are not image content, and rejecting extension/signature mismatches.
+- Rust tests cover accepting supported PNG/JPEG/GIF/WebP previews, rejecting paths outside the workspace root, rejecting a `.png` file whose bytes are not image content, rejecting extension/signature mismatches, and rejecting images above the 20 MB preview limit.
 - Automated local gates passed after this change; no fresh built-app manual smoke was claimed.
+
+Workspace Image Size Limit Coverage checks on 2026-05-28:
+
+- Added a Rust regression test that rejects workspace image previews above the 20 MB preview limit before producing a preview `data:` URL.
+- `README.md`, `docs/roadmap.md`, and `docs/smoke-checklist.md` now state the same 20 MB workspace image preview boundary.
+- `npm run build:vite`, `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`, `cargo test --manifest-path src-tauri/Cargo.toml`, `npm run build`, and `git diff --check` passed.
+- No fresh built-app manual smoke was claimed.
 
 Workspace Image Close Return Polish checks on 2026-05-28:
 
@@ -307,7 +314,7 @@ Known verification note:
 - The Editor Keyboard Editing Polish used Vite browser smoke only; repeat the new editor keyboard checklist in the built app before treating this path as distribution-grade.
 - The UI Brush-up Search Overlay checks used Vite browser smoke only; repeat active-file search in the built app before treating this path as distribution-grade.
 - The Find Close Polish did not include a fresh built-app manual active-file search pass; use the updated close-button check before treating this path as distribution-grade.
-- The Workspace Image Preview / Quality Automation, content-validation, and close-return checks did not include a fresh built-app image-selection smoke pass; use the updated workspace image checklist before treating this path as distribution-grade.
+- The Workspace Image Preview / Quality Automation, content-validation, size-limit coverage, and close-return checks did not include a fresh built-app image-selection smoke pass; use the updated workspace image checklist before treating this path as distribution-grade.
 - The Local Bundle Launch Metadata Polish verified generated bundle metadata and ad-hoc signing, but the current automation session could not complete `open -n`; repeat built-app launch and native File menu smoke outside this automation environment before treating this path as distribution-grade.
 - Long file name clipping was re-smoked in the workspace tree during Source Preview Quality Polish. A narrower-window pass is still useful before binary distribution readiness.
 

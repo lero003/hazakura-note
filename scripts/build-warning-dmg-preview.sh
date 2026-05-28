@@ -68,8 +68,13 @@ hdiutil create \
   "$dmg_path"
 
 hdiutil verify "$dmg_path"
-shasum -a 256 "$dmg_path" > "$checksum_path"
-shasum -c "$checksum_path"
+(
+  cd "$dmg_dir"
+  dmg_name="$(basename "$dmg_path")"
+  checksum_name="$(basename "$checksum_path")"
+  shasum -a 256 "$dmg_name" > "$checksum_name"
+  shasum -c "$checksum_name"
+)
 
 echo "DMG: $dmg_path"
 echo "SHA256: $(awk '{print $1}' "$checksum_path")"

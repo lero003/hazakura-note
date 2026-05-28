@@ -128,6 +128,7 @@ export default function App() {
   const [selectedImage, setSelectedImage] = useState<ImagePreviewState | null>(
     null,
   );
+  const [imageReturnTabId, setImageReturnTabId] = useState<string | null>(null);
   const [workspaceTree, setWorkspaceTree] =
     useState<WorkspaceTreeEntry | null>(null);
   const [workspaceRootPath, setWorkspaceRootPath] = useState<string | null>(
@@ -459,6 +460,7 @@ export default function App() {
       if (existingTab) {
         setActiveTabId(existingTab.id);
         setSelectedImage(null);
+        setImageReturnTabId(null);
         rememberRecentFile(path);
         setStatus("Tab focused");
         return;
@@ -488,6 +490,7 @@ export default function App() {
         }
         setActiveTabId(path);
         setSelectedImage(null);
+        setImageReturnTabId(null);
         rememberRecentFile(path);
         setStatus(
           draft
@@ -518,6 +521,7 @@ export default function App() {
 
         try {
           const image = await openWorkspaceImage(workspaceRootPath, path);
+          setImageReturnTabId(activeTabId);
           setActiveTabId(null);
           setSelectedImage({
             path: image.path,
@@ -535,7 +539,7 @@ export default function App() {
 
       await openFilePath(path);
     },
-    [openFilePath, workspaceRootPath],
+    [activeTabId, openFilePath, workspaceRootPath],
   );
 
   const createNewFile = useCallback(async () => {
@@ -557,6 +561,7 @@ export default function App() {
       if (existingTab) {
         setActiveTabId(existingTab.id);
         setSelectedImage(null);
+        setImageReturnTabId(null);
         rememberRecentFile(path);
         setStatus("Tab focused");
         return;
@@ -574,6 +579,7 @@ export default function App() {
       );
       setActiveTabId(path);
       setSelectedImage(null);
+      setImageReturnTabId(null);
       rememberRecentFile(path);
 
       if (workspaceRootPath) {
@@ -622,6 +628,7 @@ export default function App() {
         setWorkspaceTree(tree);
         setWorkspaceRootPath(path);
         setSelectedImage(null);
+        setImageReturnTabId(null);
         rememberRecentFolder(path);
         setStatus("Folder opened");
       } catch (err) {
@@ -985,6 +992,18 @@ export default function App() {
     },
     [activeTab],
   );
+
+  const closeSelectedImagePreview = useCallback(() => {
+    const returnTab =
+      imageReturnTabId !== null
+        ? tabs.find((tab) => tab.id === imageReturnTabId)
+        : null;
+
+    setSelectedImage(null);
+    setImageReturnTabId(null);
+    setActiveTabId(returnTab?.id ?? tabs[0]?.id ?? null);
+    setStatus("Image preview closed");
+  }, [imageReturnTabId, tabs]);
 
   const closeTabNow = useCallback(
     (tabId: string) => {
@@ -1806,8 +1825,7 @@ export default function App() {
         event.preventDefault();
 
         if (selectedImage) {
-          setSelectedImage(null);
-          setStatus("Image preview closed");
+          closeSelectedImagePreview();
         } else if (activeTabId) {
           requestCloseTab(activeTabId);
         } else {
@@ -1831,6 +1849,7 @@ export default function App() {
     createNewFile,
     findVisible,
     closeFindAndFocusEditor,
+    closeSelectedImagePreview,
     modalOpen,
     openFile,
     openWorkspace,
@@ -1881,6 +1900,7 @@ export default function App() {
                     className="tab-button"
                     onClick={() => {
                       setSelectedImage(null);
+                      setImageReturnTabId(null);
                       setActiveTabId(tab.id);
                     }}
                     role="tab"

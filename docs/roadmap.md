@@ -165,6 +165,7 @@ Status: In progress from 2026-05-27
 - 2026-05-28のworkspace image polishでは、対応拡張子の画像previewでも軽量content signatureが合わないファイルを拒否するように修正済み
 - 2026-05-28のworkspace image test polishでは、PNG/JPEG/GIF/WebPの対応signatureと拡張子不一致拒否をRust回帰テストで固定済み
 - 2026-05-28のlocal bundle metadata polishでは、生成 `.app` の `LSRequiresCarbon` を明示的に `false` にして、legacy Carbon要求をbundle metadataから外すように修正済み
+- 2026-05-28のworkspace image close polishでは、画像previewをCmd+Wで閉じた後に、直前のtext tabへ戻るように修正済み
 - このフェーズでは、Git連携、LSP、terminal、AI支援、project indexing、署名済みbinary配布、課金導線は扱わない
 
 ## v0.4: Markdown Workspace

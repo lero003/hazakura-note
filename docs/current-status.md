@@ -20,7 +20,7 @@ Last reviewed: 2026-05-28
 - Save writes the editor text without adding or removing a final trailing newline by policy; Rust tests cover LF and CRLF final-newline presence.
 - Markdown preview shows embedded `data:image` PNG/JPEG/GIF/WebP images and blocks external or local image references with an in-preview note.
 - Markdown preview wraps GFM tables in a scrollable table frame with clearer headers, grid lines, row striping, and alignment support.
-- Selecting a PNG/JPEG/GIF/WebP file in the workspace tree opens a read-only local image preview in the work area after a lightweight content-signature check, without adding Markdown local-image loading.
+- Selecting a PNG/JPEG/GIF/WebP file in the workspace tree opens a read-only local image preview in the work area after a lightweight content-signature check, without adding Markdown local-image loading. Closing that image preview returns to the prior text tab when one is still open.
 - Markdown preview and editor panes use lightweight bidirectional scroll synchronization with a small tolerance to avoid jitter while preview is visible.
 - The editor / preview split can be resized with a draggable vertical divider while preview is visible.
 - Recent workspace, open tabs, active tab, and theme preference are restored after restart.
@@ -291,6 +291,12 @@ Workspace Image Content Validation checks on 2026-05-28:
 - Rust tests cover accepting supported PNG/JPEG/GIF/WebP previews, rejecting paths outside the workspace root, rejecting a `.png` file whose bytes are not image content, and rejecting extension/signature mismatches.
 - Automated local gates passed after this change; no fresh built-app manual smoke was claimed.
 
+Workspace Image Close Return Polish checks on 2026-05-28:
+
+- Closing a selected workspace image preview now restores the text tab that was active before the image was opened when that tab is still open, falling back to the first open text tab if needed.
+- `docs/smoke-checklist.md` now asks the image-preview smoke to confirm Cmd+W returns to the prior text tab.
+- Automated local gates passed after this change. `open -n src-tauri/target/release/bundle/macos/hazakura-note.app` still returned `kLSNoExecutableErr` in this automation session, so no fresh built-app manual smoke was claimed.
+
 Known verification note:
 
 - Vite reports a production chunk-size warning because CodeMirror and preview libraries are bundled together. This is acceptable for the prototype; revisit before distribution readiness.
@@ -301,7 +307,7 @@ Known verification note:
 - The Editor Keyboard Editing Polish used Vite browser smoke only; repeat the new editor keyboard checklist in the built app before treating this path as distribution-grade.
 - The UI Brush-up Search Overlay checks used Vite browser smoke only; repeat active-file search in the built app before treating this path as distribution-grade.
 - The Find Close Polish did not include a fresh built-app manual active-file search pass; use the updated close-button check before treating this path as distribution-grade.
-- The Workspace Image Preview / Quality Automation and content-validation checks did not include a fresh built-app image-selection smoke pass; use the updated workspace image checklist before treating this path as distribution-grade.
+- The Workspace Image Preview / Quality Automation, content-validation, and close-return checks did not include a fresh built-app image-selection smoke pass; use the updated workspace image checklist before treating this path as distribution-grade.
 - The Local Bundle Launch Metadata Polish verified generated bundle metadata and ad-hoc signing, but the current automation session could not complete `open -n`; repeat built-app launch and native File menu smoke outside this automation environment before treating this path as distribution-grade.
 - Long file name clipping was re-smoked in the workspace tree during Source Preview Quality Polish. A narrower-window pass is still useful before binary distribution readiness.
 

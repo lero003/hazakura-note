@@ -3,7 +3,7 @@
 Status: Operational
 Scope: Current release sequence and planning boundaries
 Authority: Medium
-Last reviewed: 2026-05-29
+Last reviewed: 2026-05-30
 
 ## Current Position
 
@@ -106,9 +106,37 @@ Candidate work:
 
 This phase should prefer navigation, visibility, and manual review over prediction. Avoid strong autocomplete, automatic lint fixes, broad formatting rewrites, workspace-wide indexing, or project-level symbol search unless a later boundary review explicitly approves them.
 
-## 0.5: Release And Maintenance Quality
+## 0.5: Pi CLI Provider And App Stability
 
-Goal: make the project easier to test, maintain, and distribute honestly.
+Goal: add Pi as a first-class Agent Workbench CLI provider while improving app stability in small, verifiable slices.
+
+Candidate work:
+
+- add `pi` as an allowlisted local CLI provider, after updating `docs/agent-workbench-boundary.md`
+- keep Pi launch behavior inside the existing Agent Workbench gate: explicit mode, restart boundary, responsibility consent, selected workspace root, one active session, no restore
+- run trusted-workspace manual smoke for Pi CLI usage alongside existing `codex` / `opencode` provider checks
+- improve app stability and responsiveness found during normal editor and Agent Workbench smoke
+- keep Safe Editor Mode visually and conceptually primary while the provider list grows
+
+Do not use this phase to add Pi SDK integration, RPC integration, arbitrary provider configuration, multi-agent orchestration, auto-apply, auto-commit, a general terminal, or a Git client.
+
+## 0.6: Agent Workbench Hardening
+
+Goal: reduce friction and risk found through real Agent Workbench usage before treating the agent surface as release-quality.
+
+Candidate work:
+
+- tighten start, stop, exit, resize, output-buffer, and app-close behavior from real-provider smoke findings
+- improve provider availability, launch failure, and consent-state messaging
+- verify that provider-made file changes continue to surface through existing external-change and conflict handling
+- document known provider-specific limitations without claiming control over provider internals
+- evaluate whether Pi RPC should become the next experiment lane, while keeping it out of the app until a boundary review approves it
+
+Do not use this phase to add SDK integration, background sessions, session restore, provider plugins, arbitrary command execution, or automated approval of provider actions.
+
+## 0.7: Release And Maintenance Quality
+
+Goal: make the preview line easier to test, maintain, and distribute honestly without treating it as a formally signed production app.
 
 Candidate work:
 
@@ -120,7 +148,7 @@ Candidate work:
 - README and release-note polish based on external tester feedback
 - evaluate whether a Safe Editor-only build variant would make review and distribution easier
 
-Notarization remains a separate future decision. Do not imply production distribution quality until Developer ID signing, hardened runtime review, notarization, stapling, Gatekeeper verification, and installation guidance are actually implemented.
+Developer ID signing, hardened runtime review, notarization, stapling, and production installation guidance remain separate future decisions. 0.7 should improve release hygiene for the existing preview lanes without implying formal macOS distribution quality.
 
 ## Future
 
@@ -130,7 +158,8 @@ Possible later work, only after a fresh boundary review:
 - Markdown lint or manual formatting checks
 - heading-level or paragraph-level Markdown diff
 - carefully scoped Git-adjacent review helpers
-- Agent Workbench reliability hardening and real-provider smoke evidence, kept as boundary maintenance rather than feature expansion
+- Pi RPC integration, only after Pi CLI usage proves useful and a fresh Agent Workbench boundary review approves the wider integration shape
+- Pi SDK integration, only as a separate product-level decision if `hazakura-note` intentionally moves beyond a safe editor with an optional agent pane
 
 These are not approval to add a general terminal, arbitrary command execution, Git client behavior, plugin execution, auto-apply, auto-commit, or multi-agent orchestration.
 
@@ -142,4 +171,6 @@ Use these when asking for external review:
 2. Is Safe Editor Mode still visually and conceptually primary?
 3. Does 0.3 complete the "check with diff" promise without becoming Git-aware?
 4. Does 0.4 improve Markdown review/navigation without over-predicting or auto-rewriting user text?
-5. Does Agent Workbench still read as a separate optional trust boundary rather than the default app mode?
+5. Does 0.5 add Pi as a bounded CLI provider without making Agent Workbench feel like the default app mode?
+6. Does 0.6 harden Agent Workbench from real usage without hiding provider-internal responsibility from the user?
+7. Does 0.7 improve release quality without implying production distribution before signing and notarization are actually implemented?

@@ -1331,14 +1331,17 @@ button:disabled {
 .agent-compact-title {
   align-items: baseline;
   display: flex;
+  flex: 1 1 auto;
   gap: 8px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .agent-compact-title strong {
   color: var(--accent);
+  flex: 0 0 auto;
   font-size: 14px;
-  min-width: 0;
+  max-width: 10rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1346,7 +1349,10 @@ button:disabled {
 
 .agent-compact-title span {
   color: var(--text-muted);
+  min-width: 0;
+  overflow: hidden;
   font-size: 12px;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -1404,6 +1410,7 @@ button:disabled {
 
 .agent-actions {
   display: flex;
+  flex: 0 0 auto;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-start;

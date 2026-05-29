@@ -74,6 +74,7 @@ Example use case:
 - Workspace tree directory expansion loads direct children on demand, keeps heavy / hidden directory exclusions, and shows a partial-listing note instead of failing the whole workspace when one folder exceeds the entry cap
 - In-file search for the active tab, with visible match highlights, active-match selection, and keyboard next / previous / return-to-editor flow
 - Search options for case-sensitive, whole-word, and regex matching with invalid-regex reporting
+- Explicit file-to-file comparison for existing common text documents from the workspace tree, without inspecting Git repository state
 - Go to Line, cursor line/column status, and approximate selected character/line count
 - Editor display settings for line wrap, invisible characters, font size, and tab size, with persisted preference
 - Find-field and global shortcut handling ignores active IME composition so Japanese text conversion is not mistaken for editor commands
@@ -165,7 +166,7 @@ Developer preview release boundary:
 - Unsaved draft restore is explicit and fingerprint-bound; it is not autosave and does not merge with changed disk content.
 - The file tree is a workspace browser, not an index. Very large directories are capped per folder and may show only the first visible entries.
 - Workspace image preview is intentionally bounded to local PNG/JPEG/GIF/WebP files up to 20 MB.
-- Save conflicts are recoverable by reopening, closing, or keeping local edits, but there is no merge editor or advanced diff.
+- Save conflicts are recoverable by reopening, closing, or keeping local edits, and workspace text files can be explicitly compared, but there is no merge editor, advanced diff, or Git status view.
 - The app is not signed or notarized with an Apple Developer ID.
 - Agent Workbench is optional and explicit. It does not provide a general shell prompt, arbitrary command input UI, arbitrary path input UI, provider-add UI, multiple sessions, session restore, auto-apply, auto-commit, or Git integration.
 - CLI provider internals are outside hazakura's safety boundary. What happens inside `codex` or `opencode` depends on the provider and the user's choices.

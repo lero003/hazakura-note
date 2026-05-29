@@ -4668,7 +4668,7 @@ function WorkspaceContextMenu({
       ? {
           clearCompareSource: "比較元を解除",
           close: "メニューを閉じる",
-          compare: "比較する",
+          compare: "比較元と比較",
           copyFullPath: "フルパスをコピー",
           menu: "ワークスペース項目の操作",
           open: "開く",
@@ -4678,7 +4678,7 @@ function WorkspaceContextMenu({
       : {
           clearCompareSource: "Clear compare source",
           close: "Close menu",
-          compare: "Compare",
+          compare: "Compare with source",
           copyFullPath: "Copy full path",
           menu: "Workspace item actions",
           open: "Open",

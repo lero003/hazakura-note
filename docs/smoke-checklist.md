@@ -59,7 +59,9 @@ Latest Non-Git file comparison label polish checks: 2026-05-29 built-app Safe Ed
 
 Latest file comparison column readability checks: 2026-05-29 built-app launch was attempted, but Computer Use could not inspect the window in this run. Automated gates passed after adding source/target/content column headers to the existing file-comparison view. No fresh file-comparison interaction smoke was claimed.
 
-Latest file comparison target gating checks: 2026-05-30 automated gates passed after limiting Set as compare source / Compare actions to common text-document filenames while leaving Open and Copy full path available for other workspace files. No fresh file-comparison interaction smoke was claimed.
+Latest file comparison target gating checks: 2026-05-30 automated gates passed after limiting Set as compare source / Compare with source actions to common text-document filenames while leaving Open and Copy full path available for other workspace files. No fresh file-comparison interaction smoke was claimed.
+
+Latest file comparison wording alignment checks: 2026-05-30 automated gates passed after clarifying the second context-menu action as Compare with source / 比較元と比較 and aligning the README feature/limit wording with the existing explicit non-Git file-comparison behavior. No fresh file-comparison interaction smoke was claimed.
 
 ## Build First
 
@@ -115,11 +117,11 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 
 1. Open a throwaway folder outside the repo with at least two small text or Markdown files.
 2. Right-click the first file and choose Set as compare source / 比較元にする.
-3. Right-click the second file and choose Compare / 比較する.
+3. Right-click the second file and choose Compare with source / 比較元と比較.
 4. Confirm the side pane opens a file-comparison view with added/removed line counts.
 5. Confirm the line-number columns are labeled Source / Target or 比較元 / 比較先, with a Text / 内容 column for the changed text.
 6. Confirm the labels say Comparison / File comparison or 比較 / ファイル比較, and do not mention Git status, branch, staging, commit, or repository state.
-7. Right-click an image or obvious non-text file such as `.DS_Store` if present and confirm Set as compare source / Compare are disabled while Open and Copy full path remain available.
+7. Right-click an image or obvious non-text file such as `.DS_Store` if present and confirm Set as compare source / Compare with source are disabled while Open and Copy full path remain available.
 8. Close the comparison view and confirm the editor, workspace tree, and active tab remain usable.
 
 ## Markdown Preview Sync

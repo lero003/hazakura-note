@@ -450,6 +450,45 @@ export default function App() {
           strongTitle: "Bold (Command+B)",
           word: "Word",
         };
+  const recoveryCopy =
+    menuLanguage === "ja"
+      ? {
+          closeWithoutSaving: "保存せず閉じる",
+          conflictActions: "外部変更の操作",
+          conflictDetail:
+            "ディスク上のファイルが別のアプリまたは Agent provider によって変更された可能性があります。続行方法を選ぶまで保存は停止されます。",
+          conflictHeading: "ファイルが外部で変更されました",
+          discardDraft: "下書きを破棄",
+          draftActions: "下書きの操作",
+          draftAvailable: (name: string) => `${name} の未保存下書きがあります。`,
+          keepEditing: "編集を続ける",
+          reopenFromDisk: "ディスクから再読み込み",
+          restoreDraft: "下書きを復元",
+          saveErrorActions: "保存エラーの操作",
+          saveFailure:
+            "保存に失敗しました。編集内容はエディタ内に残っています。ファイルやフォルダの問題を確認してから、もう一度保存してください。",
+          savedLocally: (timestamp: number) =>
+            `ローカル保存: ${formatTimestamp(timestamp)}`,
+          trySaveAgain: "もう一度保存",
+        }
+      : {
+          closeWithoutSaving: "Close without saving",
+          conflictActions: "Conflict actions",
+          conflictDetail: EXTERNAL_CHANGE_CONFLICT_MESSAGE,
+          conflictHeading: "File changed outside hazakura",
+          discardDraft: "Discard draft",
+          draftActions: "Draft actions",
+          draftAvailable: (name: string) =>
+            `Unsaved draft available for ${name}.`,
+          keepEditing: "Keep editing",
+          reopenFromDisk: "Reopen from disk",
+          restoreDraft: "Restore draft",
+          saveErrorActions: "Save error actions",
+          saveFailure: formatSaveFailureMessage(),
+          savedLocally: (timestamp: number) =>
+            `Saved locally ${formatTimestamp(timestamp)}.`,
+          trySaveAgain: "Try save again",
+        };
   const preferencesCopy =
     menuLanguage === "ja"
       ? {
@@ -3195,20 +3234,23 @@ export default function App() {
         {activeDraft && activeTab ? (
           <div className="draft-banner">
             <span className="message-copy">
-              Unsaved draft available for {activeTab.name}.
+              {recoveryCopy.draftAvailable(activeTab.name)}
               <span className="message-detail">
-                Saved locally {formatTimestamp(activeDraft.updatedAt)}.
+                {recoveryCopy.savedLocally(activeDraft.updatedAt)}
               </span>
             </span>
-            <div className="message-actions" aria-label="Draft actions">
+            <div
+              className="message-actions"
+              aria-label={recoveryCopy.draftActions}
+            >
               <button type="button" onClick={() => restoreDraft(activeDraft)}>
-                Restore draft
+                {recoveryCopy.restoreDraft}
               </button>
               <button
                 type="button"
                 onClick={() => discardDraft(activeDraft.path)}
               >
-                Discard draft
+                {recoveryCopy.discardDraft}
               </button>
             </div>
           </div>
@@ -3219,45 +3261,53 @@ export default function App() {
           >
             <span className="message-copy">
               {activeConflict
-                ? "File changed outside hazakura"
+                ? recoveryCopy.conflictHeading
                 : activeSaveError
-                  ? formatSaveFailureMessage()
+                  ? recoveryCopy.saveFailure
                   : activeError}
               {activeConflict || activeSaveError ? (
-                <span className="message-detail">{activeError}</span>
+                <span className="message-detail">
+                  {activeConflict ? recoveryCopy.conflictDetail : activeError}
+                </span>
               ) : null}
             </span>
             {activeConflict && activeTab ? (
-              <div className="message-actions" aria-label="Conflict actions">
+              <div
+                className="message-actions"
+                aria-label={recoveryCopy.conflictActions}
+              >
                 <button
                   type="button"
                   onClick={() => reopenTabFromDisk(activeTab.id)}
                 >
-                  Reopen from disk
+                  {recoveryCopy.reopenFromDisk}
                 </button>
                 <button type="button" onClick={() => closeTabNow(activeTab.id)}>
-                  Close without saving
+                  {recoveryCopy.closeWithoutSaving}
                 </button>
                 <button
                   type="button"
                   onClick={() => keepEditingAfterConflict(activeTab.id)}
                 >
-                  Keep editing
+                  {recoveryCopy.keepEditing}
                 </button>
               </div>
             ) : activeSaveError && activeTab ? (
-              <div className="message-actions" aria-label="Save error actions">
+              <div
+                className="message-actions"
+                aria-label={recoveryCopy.saveErrorActions}
+              >
                 <button
                   type="button"
                   onClick={() => void saveTabById(activeTab.id)}
                 >
-                  Try save again
+                  {recoveryCopy.trySaveAgain}
                 </button>
                 <button
                   type="button"
                   onClick={() => clearSaveError(activeTab.id)}
                 >
-                  Keep editing
+                  {recoveryCopy.keepEditing}
                 </button>
               </div>
             ) : null}

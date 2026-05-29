@@ -53,6 +53,8 @@ Latest Agent pane Japanese copy polish checks: 2026-05-29 automated gates passed
 
 Latest Japanese editor chrome localization checks: 2026-05-29 built-app smoke confirmed Japanese menu mode localizes Markdown helper accessibility labels/tooltips, the line-ending control, Find row labels/options, Go to Line controls, Markdown helper status messages, and active-document status metadata.
 
+Latest Japanese recovery banner copy checks: 2026-05-29 automated gates passed after localizing Japanese-mode unsaved draft, external-change conflict, and non-conflict save-error recovery banner copy/actions. No fresh external-change scenario smoke was claimed.
+
 ## Build First
 
 ```bash

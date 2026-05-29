@@ -337,19 +337,27 @@ export default function App() {
           emptyTabs: "ファイル未選択",
           newFile: "新規ファイル",
           noFileOpen: "ファイル未選択",
+          noFolderOpen: "フォルダ未選択",
           openFile: "ファイルを開く",
           openFolder: "フォルダを開く",
+          openWorkspaceFolder: "ワークスペースフォルダを開く",
           recentFiles: "最近使ったファイル",
           startActions: "開始操作",
+          workspace: "ワークスペース",
+          workspaceFileTree: "ワークスペースのファイルツリー",
         }
       : {
           emptyTabs: "No open files",
           newFile: "New File",
           noFileOpen: "No file open",
+          noFolderOpen: "No folder open",
           openFile: "Open File",
           openFolder: "Open Folder",
+          openWorkspaceFolder: "Open workspace folder",
           recentFiles: "Recent files",
           startActions: "Start actions",
+          workspace: "Workspace",
+          workspaceFileTree: "Workspace file tree",
         };
   const preferencesCopy =
     menuLanguage === "ja"
@@ -3113,22 +3121,27 @@ export default function App() {
       </div>
 
       <section className="workspace">
-        <aside className="file-tree-pane" aria-label="Workspace file tree">
+        <aside
+          className="file-tree-pane"
+          aria-label={safeEditorCopy.workspaceFileTree}
+        >
           <div className="workspace-header">
             <div className="workspace-heading">
               <div className="workspace-labels">
-                <span className="workspace-kicker">Workspace</span>
+                <span className="workspace-kicker">
+                  {safeEditorCopy.workspace}
+                </span>
                 <span className="workspace-title" title={workspaceRootPath ?? ""}>
                   {workspaceRootPath
                     ? folderLabelFromPath(workspaceRootPath)
-                    : "None"}
+                    : safeEditorCopy.noFolderOpen}
                 </span>
               </div>
               <button
-                aria-label="Open workspace folder"
+                aria-label={safeEditorCopy.openWorkspaceFolder}
                 className="workspace-open-button"
                 onClick={openWorkspace}
-                title="Open workspace folder"
+                title={safeEditorCopy.openWorkspaceFolder}
                 type="button"
               >
                 <PlusIcon />
@@ -3146,9 +3159,9 @@ export default function App() {
             />
           ) : (
             <div className="workspace-empty">
-              <span>No folder open</span>
+              <span>{safeEditorCopy.noFolderOpen}</span>
               <button type="button" onClick={openWorkspace}>
-                Open Folder
+                {safeEditorCopy.openFolder}
               </button>
             </div>
           )}

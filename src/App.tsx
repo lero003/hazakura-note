@@ -351,6 +351,44 @@ export default function App() {
           recentFiles: "Recent files",
           startActions: "Start actions",
         };
+  const preferencesCopy =
+    menuLanguage === "ja"
+      ? {
+          application: "アプリケーション",
+          dark: "ダーク",
+          editor: "エディタ",
+          editorDisplay: "エディタ表示",
+          fontSize: "フォントサイズ",
+          fontSizeControl: "エディタのフォントサイズ",
+          light: "ライト",
+          menuLanguage: "メニュー言語",
+          previewPane: "プレビュー表示",
+          sakura: "桜",
+          settingsTitle: "設定",
+          showInvisibles: "不可視文字を表示",
+          system: "システム",
+          tabSize: "タブ幅",
+          theme: "テーマ",
+          wrapLines: "行を折り返す",
+        }
+      : {
+          application: "Application",
+          dark: "Dark",
+          editor: "Editor",
+          editorDisplay: "Editor display",
+          fontSize: "Font size",
+          fontSizeControl: "Editor font size",
+          light: "Light",
+          menuLanguage: "Menu language",
+          previewPane: "Preview pane",
+          sakura: "Sakura",
+          settingsTitle: "Preferences",
+          showInvisibles: "Show invisibles",
+          system: "System",
+          tabSize: "Tab size",
+          theme: "Theme",
+          wrapLines: "Wrap lines",
+        };
   const agentWorkbenchCopy =
     menuLanguage === "ja"
       ? {
@@ -3308,7 +3346,7 @@ export default function App() {
               <h2 id="preferences-title">
                 {preferencesDialogMode === "agent"
                   ? agentWorkbenchCopy.title
-                  : "Preferences"}
+                  : preferencesCopy.settingsTitle}
               </h2>
               <button
                 aria-label="Close dialog"
@@ -3417,8 +3455,11 @@ export default function App() {
               </div>
             ) : (
               <div className="preferences-sections">
-                <section className="preference-section" aria-label="Editor display">
-                  <h3>Editor</h3>
+                <section
+                  className="preference-section"
+                  aria-label={preferencesCopy.editorDisplay}
+                >
+                  <h3>{preferencesCopy.editor}</h3>
                   <label className="toggle-switch">
                     <input
                       type="checkbox"
@@ -3431,7 +3472,7 @@ export default function App() {
                       }
                     />
                     <span className="slider"></span>
-                    <span>Wrap lines</span>
+                    <span>{preferencesCopy.wrapLines}</span>
                   </label>
                   <label className="toggle-switch">
                     <input
@@ -3445,12 +3486,12 @@ export default function App() {
                       }
                     />
                     <span className="slider"></span>
-                    <span>Show invisibles</span>
+                    <span>{preferencesCopy.showInvisibles}</span>
                   </label>
                   <label className="field-control">
-                    <span>Font size</span>
+                    <span>{preferencesCopy.fontSize}</span>
                     <input
-                      aria-label="Editor font size"
+                      aria-label={preferencesCopy.fontSizeControl}
                       type="number"
                       min="12"
                       max="22"
@@ -3469,9 +3510,9 @@ export default function App() {
                     />
                   </label>
                   <label className="field-control">
-                    <span>Tab size</span>
+                    <span>{preferencesCopy.tabSize}</span>
                     <select
-                      aria-label="Tab size"
+                      aria-label={preferencesCopy.tabSize}
                       value={editorSettings.tabSize}
                       onChange={(event) =>
                         setEditorSettings((current) => ({
@@ -3491,8 +3532,11 @@ export default function App() {
                     </select>
                   </label>
                 </section>
-                <section className="preference-section" aria-label="Application">
-                  <h3>Application</h3>
+                <section
+                  className="preference-section"
+                  aria-label={preferencesCopy.application}
+                >
+                  <h3>{preferencesCopy.application}</h3>
                   <label className="toggle-switch">
                     <input
                       type="checkbox"
@@ -3500,27 +3544,27 @@ export default function App() {
                       onChange={(event) => setPreviewVisible(event.target.checked)}
                     />
                     <span className="slider"></span>
-                    <span>Preview pane</span>
+                    <span>{preferencesCopy.previewPane}</span>
                   </label>
                   <label className="field-control">
-                    <span>Theme</span>
+                    <span>{preferencesCopy.theme}</span>
                     <select
-                      aria-label="Theme"
+                      aria-label={preferencesCopy.theme}
                       value={themePreference}
                       onChange={(event) =>
                         setThemePreference(event.target.value as ThemePreference)
                       }
                     >
-                      <option value="system">System</option>
-                      <option value="light">Light</option>
-                      <option value="dark">Dark</option>
-                      <option value="sakura">Sakura</option>
+                      <option value="system">{preferencesCopy.system}</option>
+                      <option value="light">{preferencesCopy.light}</option>
+                      <option value="dark">{preferencesCopy.dark}</option>
+                      <option value="sakura">{preferencesCopy.sakura}</option>
                     </select>
                   </label>
                   <label className="field-control">
-                    <span>Menu language</span>
+                    <span>{preferencesCopy.menuLanguage}</span>
                     <select
-                      aria-label="Menu language"
+                      aria-label={preferencesCopy.menuLanguage}
                       value={menuLanguage}
                       onChange={(event) =>
                         setMenuLanguage(event.target.value as MenuLanguage)

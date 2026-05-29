@@ -231,6 +231,10 @@ export async function openTextFile(path: string): Promise<TextFileDocument> {
 }
 
 export async function drainOpenedFiles(): Promise<string[]> {
+  if (!isTauriRuntime()) {
+    return [];
+  }
+
   return invoke<string[]>("drain_opened_files");
 }
 
@@ -368,7 +372,7 @@ function normalizeSelectedTextFilePath(path: string): string {
   return path;
 }
 
-function isTauriRuntime(): boolean {
+export function isTauriRuntime(): boolean {
   return Boolean(
     (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__,
   );

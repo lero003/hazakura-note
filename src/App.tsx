@@ -38,6 +38,7 @@ import {
   saveTextFileAs,
   setCurrentWindowTitle,
   getAgentWorkbenchSessionState,
+  isTauriRuntime,
   resizeAgentWorkbenchTerminal,
   startAgentWorkbenchSession,
   stopAgentWorkbenchSession,
@@ -1129,6 +1130,10 @@ export default function App() {
   ]);
 
   useEffect(() => {
+    if (!isTauriRuntime()) {
+      return;
+    }
+
     let disposed = false;
     let unlisten: UnlistenFn | null = null;
 
@@ -2203,6 +2208,10 @@ export default function App() {
 
   useEffect(() => {
     if (!restoreComplete) {
+      return;
+    }
+
+    if (!isTauriRuntime()) {
       return;
     }
 

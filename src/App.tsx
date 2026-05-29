@@ -343,6 +343,7 @@ export default function App() {
           openFolder: "フォルダを開く",
           openWorkspaceFolder: "ワークスペースフォルダを開く",
           recentFiles: "最近使ったファイル",
+          startHeading: "静かに書き始める",
           startActions: "開始操作",
           workspace: "ワークスペース",
           workspaceFileTree: "ワークスペースのファイルツリー",
@@ -356,6 +357,7 @@ export default function App() {
           openFolder: "Open Folder",
           openWorkspaceFolder: "Open workspace folder",
           recentFiles: "Recent files",
+          startHeading: "Start writing quietly",
           startActions: "Start actions",
           workspace: "Workspace",
           workspaceFileTree: "Workspace file tree",
@@ -3867,6 +3869,7 @@ function StartPanel({
     openFile: string;
     openFolder: string;
     recentFiles: string;
+    startHeading: string;
     startActions: string;
   };
   onNewFile: () => void | Promise<void>;
@@ -3881,7 +3884,7 @@ function StartPanel({
     <div className="start-panel">
       <div className="start-panel-main">
         <span className="start-kicker">hazakura-note</span>
-        <h1>静かに書き始める</h1>
+        <h1>{copy.startHeading}</h1>
         <div className="start-actions" aria-label={copy.startActions}>
           <button type="button" onClick={() => void onOpenFile()}>
             {copy.openFile}

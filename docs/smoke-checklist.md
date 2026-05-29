@@ -73,6 +73,8 @@ Latest Japanese Agent Workbench mode-gate copy checks: 2026-05-30 built-app surf
 
 Latest Japanese Agent Workbench accessibility copy checks: 2026-05-30 automated gates passed after localizing the Japanese side-pane Agent Workbench label, Agent Workbench dialog close button label, mode/session/boundary section labels, consent status messages, and launch-gate status text. Built-app smoke confirmed the app menu and Agent Workbench dialog accessibility tree use the Japanese labels. No Agent provider session was started.
 
+Latest start panel language alignment checks: 2026-05-30 Vite browser smoke confirmed the English no-file start surface now shows `Start writing quietly` instead of the Japanese heading. The Japanese heading remains `静かに書き始める` through the shared start-surface copy path.
+
 ## Build First
 
 ```bash

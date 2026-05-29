@@ -3655,6 +3655,7 @@ function AgentTerminalView({
     const terminal = new Terminal({
       convertEol: false,
       cursorBlink: true,
+      disableStdin: !activeSessionRef.current,
       fontFamily:
         '"SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", monospace',
       fontSize: 13,
@@ -3768,6 +3769,10 @@ function AgentTerminalView({
   }, [output]);
 
   useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.options.disableStdin = !activeSession;
+    }
+
     if (activeSession) {
       terminalRef.current?.focus();
     }

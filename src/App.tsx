@@ -3397,6 +3397,7 @@ export default function App() {
           anchor={workspaceContextMenu}
           canSendToAgent={activeAgentSession}
           compareSource={compareAnchor}
+          menuLanguage={menuLanguage}
           onClearCompareSource={clearCompareSource}
           onClose={closeWorkspaceContextMenu}
           onCompare={() => void compareWorkspaceFiles(workspaceContextMenu)}
@@ -3912,6 +3913,7 @@ function WorkspaceContextMenu({
   anchor,
   canSendToAgent,
   compareSource,
+  menuLanguage,
   onClearCompareSource,
   onClose,
   onCompare,
@@ -3923,6 +3925,7 @@ function WorkspaceContextMenu({
   anchor: WorkspaceContextMenuState;
   canSendToAgent: boolean;
   compareSource: CompareAnchor | null;
+  menuLanguage: MenuLanguage;
   onClearCompareSource: () => void;
   onClose: () => void;
   onCompare: () => void;
@@ -3933,6 +3936,26 @@ function WorkspaceContextMenu({
 }) {
   const hasDifferentCompareSource =
     compareSource !== null && compareSource.path !== anchor.path;
+  const labels =
+    menuLanguage === "ja"
+      ? {
+          clearCompareSource: "比較元を解除",
+          close: "メニューを閉じる",
+          compare: "比較する",
+          copyFullPath: "フルパスをコピー",
+          open: "開く",
+          sendFullPathToAgent: "Agent にフルパスを送る",
+          setCompareSource: "比較元にする",
+        }
+      : {
+          clearCompareSource: "Clear compare source",
+          close: "Close menu",
+          compare: "Compare",
+          copyFullPath: "Copy full path",
+          open: "Open",
+          sendFullPathToAgent: "Send full path to Agent",
+          setCompareSource: "Set as compare source",
+        };
 
   return (
     <div
@@ -3943,14 +3966,14 @@ function WorkspaceContextMenu({
       onContextMenu={(event) => event.preventDefault()}
     >
       <button type="button" role="menuitem" onClick={onOpen}>
-        Open
+        {labels.open}
       </button>
       <button type="button" role="menuitem" onClick={onCopyFullPath}>
-        Copy full path
+        {labels.copyFullPath}
       </button>
       {canSendToAgent ? (
         <button type="button" role="menuitem" onClick={onSendFullPathToAgent}>
-          Send full path to Agent
+          {labels.sendFullPathToAgent}
         </button>
       ) : null}
       <button
@@ -3959,7 +3982,7 @@ function WorkspaceContextMenu({
         disabled={!anchor.canCompare}
         onClick={onSetCompareSource}
       >
-        比較元にする
+        {labels.setCompareSource}
       </button>
       <button
         type="button"
@@ -3967,15 +3990,15 @@ function WorkspaceContextMenu({
         disabled={!anchor.canCompare || !hasDifferentCompareSource}
         onClick={onCompare}
       >
-        比較する
+        {labels.compare}
       </button>
       {compareSource ? (
         <button type="button" role="menuitem" onClick={onClearCompareSource}>
-          比較元を解除
+          {labels.clearCompareSource}
         </button>
       ) : null}
       <button type="button" role="menuitem" onClick={onClose}>
-        Close menu
+        {labels.close}
       </button>
     </div>
   );

@@ -1,7 +1,9 @@
 :root {
   --bg: #f3f6f4;
   --surface: #ffffff;
+  --surface-rgb: 255, 255, 255;
   --surface-strong: #ffffff;
+  --surface-strong-rgb: 255, 255, 255;
   --surface-muted: #e9f0eb;
   --border: #e0e6e2;
   --border-strong: #c2cfc7;
@@ -32,7 +34,9 @@
 :root[data-theme="dark"] {
   --bg: #0f1412;
   --surface: #151b18;
+  --surface-rgb: 21, 27, 24;
   --surface-strong: #1a221f;
+  --surface-strong-rgb: 26, 34, 31;
   --surface-muted: #111714;
   --border: #232c28;
   --border-strong: #33423b;
@@ -54,7 +58,9 @@
 :root[data-theme="sakura"] {
   --bg: #f8f1f3;
   --surface: #fffafa;
+  --surface-rgb: 255, 250, 250;
   --surface-strong: #fffdfb;
+  --surface-strong-rgb: 255, 253, 251;
   --surface-muted: #f4e7eb;
   --border: #ead5db;
   --border-strong: #d7aeb9;
@@ -70,6 +76,30 @@
   --shadow-sm: 0 1px 2px rgba(110, 54, 72, 0.08);
   --shadow-md: 0 4px 12px rgba(110, 54, 72, 0.1), 0 1px 3px rgba(110, 54, 72, 0.06);
   --shadow-lg: 0 12px 32px rgba(110, 54, 72, 0.16), 0 2px 8px rgba(110, 54, 72, 0.08);
+}
+
+:root[data-theme="hazakura-nexus"] {
+  --bg: linear-gradient(135deg, #e5f5ec 0%, #faedf0 100%);
+  --surface: #f6faf7;
+  --surface-rgb: 246, 250, 247;
+  --surface-strong: #ffffff;
+  --surface-strong-rgb: 255, 255, 255;
+  --surface-muted: #e2ede5;
+  --border: #d7e4db;
+  --border-strong: #b6caba;
+  --text: #162a1d;
+  --text-muted: #4e6a57;
+  --accent: #23804d;
+  --accent-gradient: linear-gradient(135deg, #2b8255 0%, #d87093 100%);
+  --accent-soft: #e3f2ea;
+  --danger: #9e3f43;
+  --conflict: #997838;
+  --status-bg: #162d20;
+  --status-text: #f0faf4;
+
+  --shadow-sm: 0 1px 2px rgba(22, 42, 29, 0.05);
+  --shadow-md: 0 4px 12px rgba(22, 42, 29, 0.08), 0 1px 3px rgba(22, 42, 29, 0.04);
+  --shadow-lg: 0 12px 32px rgba(22, 42, 29, 0.12), 0 2px 8px rgba(22, 42, 29, 0.06);
 }
 
 * {
@@ -124,7 +154,7 @@ input {
   font: inherit;
   font-size: 13px;
   box-shadow: var(--shadow-sm);
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 button {
@@ -139,7 +169,13 @@ select,
   padding: 0 8px;
 }
 
-button:hover:not(:disabled),
+button:hover:not(:disabled) {
+  background: var(--surface-strong);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
 select:hover,
 input:hover {
   background: var(--surface-strong);
@@ -155,7 +191,7 @@ input:focus-visible {
 }
 
 button:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: scale(0.96) translateY(0);
 }
 
 button:disabled {
@@ -206,8 +242,23 @@ button:disabled {
 .sakura-petal:nth-child(9) { left: 92%; animation-delay: -10s; animation-duration: 20s; }
 .sakura-petal:nth-child(10) { left: 4%; animation-delay: -15s; animation-duration: 18s; }
 
+.hazakura-leaf {
+  animation: petalFall 14s linear infinite;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.9), transparent 26%),
+    linear-gradient(135deg, rgba(162, 222, 178, 0.86), rgba(43, 130, 85, 0.6));
+  border-radius: 70% 30% 70% 30%;
+  display: block;
+  height: 14px;
+  position: absolute;
+  top: -24px;
+  transform-origin: 50% 80%;
+  width: 9px;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .sakura-petal {
+  .sakura-petal,
+  .hazakura-leaf {
     animation: none;
     display: none;
   }
@@ -281,6 +332,10 @@ button:disabled {
   background-color: var(--accent);
 }
 
+:root[data-theme="hazakura-nexus"] .toggle-switch input:checked + .slider {
+  background: var(--accent-gradient);
+}
+
 .toggle-switch input:checked + .slider::before {
   transform: translateX(12px);
 }
@@ -342,6 +397,21 @@ button:disabled {
   background: var(--surface);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
+}
+
+.tab-item.active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+:root[data-theme="hazakura-nexus"] .tab-item.active::before {
+  background: var(--accent-gradient);
 }
 
 .tab-item:not(.active):hover {
@@ -740,6 +810,11 @@ button:disabled {
   backdrop-filter: blur(16px);
 }
 
+:root[data-theme="hazakura-nexus"] .file-tree-pane {
+  background: rgba(226, 237, 229, 0.65);
+  backdrop-filter: blur(16px);
+}
+
 .workspace-empty {
   align-items: center;
   justify-content: center;
@@ -1050,6 +1125,12 @@ button:disabled {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--surface);
+}
+
+:root[data-theme="hazakura-nexus"] .start-actions button:first-child {
+  background: var(--accent-gradient);
+  border: 0;
+  padding: 7px 13px;
 }
 
 .start-recent {
@@ -1706,8 +1787,8 @@ button:disabled {
 /* モーダルダイアログのアニメーション化 / Modals */
 .modal-backdrop {
   align-items: center;
-  background: rgba(10, 14, 12, 0.4);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 20, 0.5);
+  backdrop-filter: blur(12px);
   display: flex;
   inset: 0;
   justify-content: center;
@@ -1717,7 +1798,8 @@ button:disabled {
 }
 
 .close-dialog {
-  background: var(--surface-strong);
+  background: rgba(var(--surface-strong-rgb), 0.85);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
@@ -1729,7 +1811,8 @@ button:disabled {
 }
 
 .preferences-dialog {
-  background: var(--surface-strong);
+  background: rgba(var(--surface-strong-rgb), 0.85);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: var(--shadow-lg);
@@ -1761,6 +1844,13 @@ button:disabled {
 
 .preferences-header h2 {
   font-size: 17px;
+}
+
+:root[data-theme="hazakura-nexus"] .preferences-header h2 {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
 }
 
 .icon-button {
@@ -1935,6 +2025,25 @@ button:disabled {
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+}
+
+.dialog-actions button:first-child {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--status-text);
+}
+
+.dialog-actions button:first-child:hover {
+  background: var(--accent);
+  opacity: 0.9;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+:root[data-theme="hazakura-nexus"] .dialog-actions button:first-child {
+  background: var(--accent-gradient);
+  border: 0;
+  padding: 7px 13px;
 }
 
 @media (max-width: 1040px) {

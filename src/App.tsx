@@ -363,7 +363,7 @@ export default function App() {
   const sidePaneCopy =
     menuLanguage === "ja"
       ? {
-          agentWorkbench: "Agent Workbench",
+          agentWorkbench: "エージェントワークベンチ",
           agentTab: "エージェント",
           fileComparison: "ファイル比較",
           imagePreview: "画像プレビュー",
@@ -501,6 +501,7 @@ export default function App() {
           fontSize: "フォントサイズ",
           fontSizeControl: "エディタのフォントサイズ",
           light: "ライト",
+          closeDialog: "ダイアログを閉じる",
           menuLanguage: "メニュー言語",
           previewPane: "プレビュー表示",
           sakura: "桜",
@@ -521,6 +522,7 @@ export default function App() {
           fontSize: "Font size",
           fontSizeControl: "Editor font size",
           light: "Light",
+          closeDialog: "Close dialog",
           menuLanguage: "Menu language",
           previewPane: "Preview pane",
           sakura: "Sakura",
@@ -538,8 +540,11 @@ export default function App() {
       ? {
           title: "エージェントワークベンチ",
           modeHeading: "モード",
+          modeSectionLabel: "エージェントモード",
           sessionHeading: "セッション",
+          sessionSectionLabel: "エージェントセッション",
           boundaryHeading: "責任境界",
+          boundarySectionLabel: "エージェントの責任境界",
           enableAfterRestart: "再起動後にエージェントワークベンチを有効化",
           activeSessionMode: "このアプリセッションではエージェントワークベンチが有効です。",
           safeSessionMode: "このアプリセッションでは Safe Editor モードが有効です。",
@@ -569,8 +574,11 @@ export default function App() {
       : {
           title: "Agent Workbench",
           modeHeading: "Mode",
+          modeSectionLabel: "Agent mode",
           sessionHeading: "Session",
+          sessionSectionLabel: "Agent session",
           boundaryHeading: "Boundary",
+          boundarySectionLabel: "Agent responsibility boundary",
           enableAfterRestart: "Enable Agent Workbench after restart",
           activeSessionMode: "Agent Workbench mode is active for this app session.",
           safeSessionMode: "Safe Editor Mode is active for this app session.",
@@ -2007,11 +2015,11 @@ export default function App() {
         setStatus(
           enabled === agentWorkbenchActive
             ? enabled
-              ? "Agent Workbench は有効です"
-              : "Safe Editor Mode です"
+              ? "エージェントワークベンチは有効です"
+              : "Safe Editor モードです"
             : enabled
-              ? "再起動後に Agent Workbench が有効になります"
-              : "再起動後に Agent Workbench が無効になります",
+              ? "再起動後にエージェントワークベンチが有効になります"
+              : "再起動後にエージェントワークベンチが無効になります",
         );
         return;
       }
@@ -2042,19 +2050,26 @@ export default function App() {
     }
   }, [menuLanguage]);
 
-  const updateAgentWorkbenchConsent = useCallback((acknowledged: boolean) => {
-    setAgentWorkbenchConsent(acknowledged);
-    setAgentLaunchGate({
-      kind: "idle",
-      message: "Launch gate not checked.",
-      preflight: null,
-    });
-    setStatus(
-      acknowledged
-        ? "Agent Workbench responsibility acknowledged"
-        : "Agent Workbench consent cleared",
-    );
-  }, []);
+  const updateAgentWorkbenchConsent = useCallback(
+    (acknowledged: boolean) => {
+      setAgentWorkbenchConsent(acknowledged);
+      setAgentLaunchGate({
+        kind: "idle",
+        message: "Launch gate not checked.",
+        preflight: null,
+      });
+      setStatus(
+        menuLanguage === "ja"
+          ? acknowledged
+            ? "エージェントワークベンチの責任境界を確認しました"
+            : "エージェントワークベンチの同意を解除しました"
+          : acknowledged
+            ? "Agent Workbench responsibility acknowledged"
+            : "Agent Workbench consent cleared",
+      );
+    },
+    [menuLanguage],
+  );
 
   const updateAgentWorkbenchProvider = useCallback(
     (provider: AgentWorkbenchProvider) => {
@@ -3572,7 +3587,7 @@ export default function App() {
                   : preferencesCopy.settingsTitle}
               </h2>
               <button
-                aria-label="Close dialog"
+                aria-label={preferencesCopy.closeDialog}
                 className="icon-button"
                 onClick={() => {
                   setPreferencesDialogMode(null);
@@ -3588,7 +3603,10 @@ export default function App() {
             </div>
             {preferencesDialogMode === "agent" ? (
               <div className="agent-workbench-settings">
-                <section className="preference-section" aria-label="Agent mode">
+                <section
+                  aria-label={agentWorkbenchCopy.modeSectionLabel}
+                  className="preference-section"
+                >
                   <h3>{agentWorkbenchCopy.modeHeading}</h3>
                   <label className="toggle-switch">
                     <input
@@ -3621,7 +3639,10 @@ export default function App() {
                     </div>
                   ) : null}
                 </section>
-                <section className="preference-section" aria-label="Agent session">
+                <section
+                  aria-label={agentWorkbenchCopy.sessionSectionLabel}
+                  className="preference-section"
+                >
                   <h3>{agentWorkbenchCopy.sessionHeading}</h3>
                   <div className="preference-status-grid">
                     <span>{agentWorkbenchCopy.provider}</span>
@@ -3655,7 +3676,10 @@ export default function App() {
                     </label>
                   ) : null}
                 </section>
-                <section className="preference-section" aria-label="Agent responsibility boundary">
+                <section
+                  aria-label={agentWorkbenchCopy.boundarySectionLabel}
+                  className="preference-section"
+                >
                   <h3>{agentWorkbenchCopy.boundaryHeading}</h3>
                   <ul className="agent-consent-list">
                     {agentWorkbenchCopy.boundaryItems.map((item) => (
@@ -4376,7 +4400,7 @@ function localizeAgentGateMessage(
     case "Launch gate not checked.":
       return "起動ゲートはまだ確認されていません。";
     case "Checking Agent Workbench launch gate...":
-      return "Agent Workbench の起動ゲートを確認中です...";
+      return "エージェントワークベンチの起動ゲートを確認中です...";
     case "Agent session exited.":
       return "Agent セッションは終了しました。";
     case "Agent session stopped.":
@@ -4421,7 +4445,7 @@ function localizeStatusMessage(
     "Agent terminal resize failed": "Agent ターミナルのリサイズに失敗しました",
     "Bold markup applied": "太字の Markdown を適用しました",
     "Checking Agent Workbench launch gate...":
-      "Agent Workbench の起動ゲートを確認中です...",
+      "エージェントワークベンチの起動ゲートを確認中です...",
     "Choosing file...": "ファイルを選択中...",
     "Choosing folder...": "フォルダを選択中...",
     "Choosing new file path...": "新規ファイルの保存先を選択中...",

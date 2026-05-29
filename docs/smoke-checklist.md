@@ -71,6 +71,8 @@ Latest Japanese Agent mode badge copy checks: 2026-05-30 built-app surface inspe
 
 Latest Japanese Agent Workbench mode-gate copy checks: 2026-05-30 built-app surface inspection confirmed Japanese Agent mode was active, the top badge was localized, and the app menu still showed `Agent Workbench...` in Japanese mode. Automated gates passed after smoothing the Japanese Agent Workbench dialog title, mode toggle, restart-required wording, provider control label, responsibility-boundary consent, badge tooltip, and native app-menu Agent Workbench label. No Agent provider session was started.
 
+Latest Japanese Agent Workbench accessibility copy checks: 2026-05-30 automated gates passed after localizing the Japanese side-pane Agent Workbench label, Agent Workbench dialog close button label, mode/session/boundary section labels, consent status messages, and launch-gate status text. Built-app smoke confirmed the app menu and Agent Workbench dialog accessibility tree use the Japanese labels. No Agent provider session was started.
+
 ## Build First
 
 ```bash

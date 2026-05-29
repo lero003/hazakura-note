@@ -3833,7 +3833,7 @@ function AgentPaneShell({
           unavailable:
             "起動できません: 先にワークスペースフォルダを開いてください。",
           placeholderReady:
-            "選択中の Agent provider に接続するにはセッションを開始してください。",
+            "選択中の Agent プロバイダーに接続するにはセッションを開始してください。",
           placeholderNoWorkspace:
             "Agent セッションを開始する前にワークスペースフォルダを開いてください。",
           alreadyActive: "Agent セッションはすでに実行中です。",
@@ -3845,8 +3845,8 @@ function AgentPaneShell({
           stop: "セッション停止",
           stopping: "停止中...",
           terminal: "Agent ターミナル",
-          running: "Agent 実行中",
-          inactive: "Agent 停止中",
+          running: "Agent は実行中",
+          inactive: "Agent は停止中",
         }
       : {
           noWorkspace: "No workspace selected",
@@ -4223,10 +4223,19 @@ function localizeAgentGateMessage(
     case "Agent session stopped.":
       return "Agent セッションは停止しました。";
     case "Provider not found; no Agent session was started.":
-      return "Provider が見つからないため、Agent セッションは開始されませんでした。";
+      return "プロバイダーが見つからないため、Agent セッションは開始されませんでした。";
     case "Agent session running in the selected workspace. Only the selected allowlisted CLI was launched.":
       return "選択中のワークスペースで Agent セッションが実行中です。起動されたのは選択された allowlist 済み CLI だけです。";
     default:
+      if (message.startsWith("Provider not found: ")) {
+        return message
+          .replace("Provider not found:", "プロバイダーが見つかりません:")
+          .replace(
+            " was not found in the app search path, including common Homebrew and user bin locations.",
+            " はアプリの検索パス（一般的な Homebrew と user bin を含む）で見つかりませんでした。",
+          );
+      }
+
       return message;
   }
 }
@@ -4244,7 +4253,7 @@ function localizeStatusMessage(
     "Agent launch gate passed": "Agent 起動ゲートを通過しました",
     "Agent launch rejected": "Agent 起動が拒否されました",
     "Agent launch unavailable": "Agent 起動は利用できません",
-    "Agent provider not found": "Agent provider が見つかりません",
+    "Agent provider not found": "Agent プロバイダーが見つかりません",
     "Agent session exited": "Agent セッションは終了しました",
     "Agent session running": "Agent セッション実行中",
     "Agent session state unavailable": "Agent セッション状態を取得できません",
@@ -4314,7 +4323,7 @@ function localizeStatusMessage(
     "Saving before close...": "閉じる前に保存中...",
     "Saving...": "保存中...",
     "Stop Agent session before changing provider":
-      "Provider 変更前に Agent セッションを停止してください",
+      "プロバイダー変更前に Agent セッションを停止してください",
     "Stopping Agent session...": "Agent セッションを停止中...",
     "Tab closed": "タブを閉じました",
     "Tab focused": "タブにフォーカスしました",
@@ -4328,7 +4337,16 @@ function localizeStatusMessage(
   }
 
   if (message.startsWith("Agent provider selected: ")) {
-    return `Agent provider を選択: ${message.slice("Agent provider selected: ".length)}`;
+    return `Agent プロバイダーを選択: ${message.slice("Agent provider selected: ".length)}`;
+  }
+
+  if (message.startsWith("Provider not found: ")) {
+    return message
+      .replace("Provider not found:", "プロバイダーが見つかりません:")
+      .replace(
+        " was not found in the app search path, including common Homebrew and user bin locations.",
+        " はアプリの検索パス（一般的な Homebrew と user bin を含む）で見つかりませんでした。",
+      );
   }
 
   if (message.startsWith("Line endings set to ")) {

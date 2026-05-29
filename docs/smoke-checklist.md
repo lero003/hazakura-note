@@ -49,6 +49,8 @@ Latest Finder text document open checks: 2026-05-29 built-app smoke confirmed a 
 
 Latest Japanese status bar localization checks: 2026-05-29 built-app smoke confirmed Japanese menu mode shows the idle status as `準備完了` instead of `Ready` on the no-file start surface.
 
+Latest Agent pane Japanese copy polish checks: 2026-05-29 automated gates passed after replacing visible Japanese-mode `Agent provider` wording with `Agent プロバイダー` and smoothing the idle/running Agent state copy.
+
 ## Build First
 
 ```bash

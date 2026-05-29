@@ -359,6 +359,36 @@ export default function App() {
           workspace: "Workspace",
           workspaceFileTree: "Workspace file tree",
         };
+  const sidePaneCopy =
+    menuLanguage === "ja"
+      ? {
+          agentWorkbench: "Agent Workbench",
+          agentTab: "Agent",
+          fileComparison: "ファイル比較",
+          markdownPreview: "Markdown プレビュー",
+          openTextFileToPreview:
+            "Markdown プレビューを表示するにはテキストファイルを開いてください。",
+          previewDisabled: "プレビューは設定で無効です。",
+          previewTab: "プレビュー",
+          previewUnavailable: "プレビューを表示できません",
+          resizeColumns: "エディタとサイドペインの幅を変更",
+          resizeColumnsTitle:
+            "ドラッグしてエディタとサイドペインの幅を変更",
+          sidePaneMode: "サイドペイン表示",
+        }
+      : {
+          agentWorkbench: "Agent Workbench",
+          agentTab: "Agent",
+          fileComparison: "File comparison",
+          markdownPreview: "Markdown preview",
+          openTextFileToPreview: "Open a text file to show Markdown preview.",
+          previewDisabled: "Preview pane is disabled in Preferences.",
+          previewTab: "Preview",
+          previewUnavailable: "Preview unavailable",
+          resizeColumns: "Resize editor and side pane columns",
+          resizeColumnsTitle: "Drag to resize editor and side pane",
+          sidePaneMode: "Side pane mode",
+        };
   const preferencesCopy =
     menuLanguage === "ja"
       ? {
@@ -3203,7 +3233,7 @@ export default function App() {
           </div>
           {sidePaneVisible ? (
             <div
-              aria-label="Resize editor and side pane columns"
+              aria-label={sidePaneCopy.resizeColumns}
               aria-orientation="vertical"
               aria-valuemax={MAX_PREVIEW_COLUMN_PERCENT}
               aria-valuemin={MIN_PREVIEW_COLUMN_PERCENT}
@@ -3214,7 +3244,7 @@ export default function App() {
               onPointerMove={handlePreviewResizePointerMove}
               role="separator"
               tabIndex={0}
-              title="Drag to resize editor and side pane"
+              title={sidePaneCopy.resizeColumnsTitle}
             />
           ) : null}
           {sidePaneVisible ? (
@@ -3223,10 +3253,10 @@ export default function App() {
               ref={sidePaneMode === "preview" ? previewPaneRef : null}
               aria-label={
                 sidePaneMode === "compare"
-                  ? "File comparison"
+                  ? sidePaneCopy.fileComparison
                   : sidePaneMode === "agent"
-                    ? "Agent Workbench"
-                    : "Markdown preview"
+                    ? sidePaneCopy.agentWorkbench
+                    : sidePaneCopy.markdownPreview
               }
               onScroll={
                 sidePaneMode === "preview" ? syncEditorScroll : undefined
@@ -3234,7 +3264,7 @@ export default function App() {
             >
               {agentWorkbenchAvailable && !compareView ? (
                 <RightPaneModeSwitch
-                  menuLanguage={menuLanguage}
+                  copy={sidePaneCopy}
                   mode={effectiveRightPaneMode}
                   onModeChange={setRightPaneMode}
                 />
@@ -3259,10 +3289,11 @@ export default function App() {
                 <PreviewPane source={activeContents} />
               ) : (
                 <PreviewUnavailablePane
+                  ariaLabel={sidePaneCopy.previewUnavailable}
                   reason={
                     activeTab
-                      ? "Preview pane is disabled in Preferences."
-                      : "Open a text file to show Markdown preview."
+                      ? sidePaneCopy.previewDisabled
+                      : sidePaneCopy.openTextFileToPreview
                   }
                 />
               )}
@@ -3692,23 +3723,27 @@ function ImagePreviewPane({ image }: { image: ImagePreviewState }) {
 }
 
 function RightPaneModeSwitch({
-  menuLanguage,
+  copy,
   mode,
   onModeChange,
 }: {
-  menuLanguage: MenuLanguage;
+  copy: {
+    agentTab: string;
+    previewTab: string;
+    sidePaneMode: string;
+  };
   mode: RightPaneMode;
   onModeChange: (mode: RightPaneMode) => void;
 }) {
   return (
-    <div className="side-pane-tabs" aria-label="Side pane mode">
+    <div className="side-pane-tabs" aria-label={copy.sidePaneMode}>
       <button
         aria-pressed={mode === "preview"}
         className="side-pane-tab"
         onClick={() => onModeChange("preview")}
         type="button"
       >
-        {menuLanguage === "ja" ? "プレビュー" : "Preview"}
+        {copy.previewTab}
       </button>
       <button
         aria-pressed={mode === "agent"}
@@ -3716,15 +3751,21 @@ function RightPaneModeSwitch({
         onClick={() => onModeChange("agent")}
         type="button"
       >
-        Agent
+        {copy.agentTab}
       </button>
     </div>
   );
 }
 
-function PreviewUnavailablePane({ reason }: { reason: string }) {
+function PreviewUnavailablePane({
+  ariaLabel,
+  reason,
+}: {
+  ariaLabel: string;
+  reason: string;
+}) {
   return (
-    <div className="preview-unavailable" aria-label="Preview unavailable">
+    <div className="preview-unavailable" aria-label={ariaLabel}>
       {reason}
     </div>
   );

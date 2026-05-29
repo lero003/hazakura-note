@@ -331,6 +331,26 @@ export default function App() {
   const activeConflict = activeTab?.saveStatus === "conflict";
   const activeSaveError = isSaveFailureError(activeTab);
   const agentWorkbenchAvailable = agentWorkbenchActive && agentWorkbenchConsent;
+  const safeEditorCopy =
+    menuLanguage === "ja"
+      ? {
+          emptyTabs: "ファイル未選択",
+          newFile: "新規ファイル",
+          noFileOpen: "ファイル未選択",
+          openFile: "ファイルを開く",
+          openFolder: "フォルダを開く",
+          recentFiles: "最近使ったファイル",
+          startActions: "開始操作",
+        }
+      : {
+          emptyTabs: "No open files",
+          newFile: "New File",
+          noFileOpen: "No file open",
+          openFile: "Open File",
+          openFolder: "Open Folder",
+          recentFiles: "Recent files",
+          startActions: "Start actions",
+        };
   const agentWorkbenchCopy =
     menuLanguage === "ja"
       ? {
@@ -433,7 +453,7 @@ export default function App() {
     ? formatActiveDocumentMeta(activeDocumentStats, activeTab, activeDirty)
     : selectedImage
       ? `Image · ${formatBytes(selectedImage.size)} · ${selectedImage.name}`
-      : "No file open";
+      : safeEditorCopy.noFileOpen;
   const activeStatusDetail = compareDocumentMeta
     ? compareDocumentMeta
     : activeTab
@@ -2760,7 +2780,7 @@ export default function App() {
             </span>
           ) : null}
           {tabs.length === 0 ? (
-            <span className="empty-tabs">No open files</span>
+            <span className="empty-tabs">{safeEditorCopy.emptyTabs}</span>
           ) : (
             tabs.map((tab) => {
               const dirty = isDirty(tab);
@@ -3121,6 +3141,7 @@ export default function App() {
               <ImagePreviewPane image={selectedImage} />
             ) : (
               <StartPanel
+                copy={safeEditorCopy}
                 onNewFile={createNewFile}
                 onOpenFile={openFile}
                 onOpenFolder={openWorkspace}
@@ -3541,12 +3562,20 @@ export default function App() {
 }
 
 function StartPanel({
+  copy,
   onNewFile,
   onOpenFile,
   onOpenFolder,
   onOpenRecentFile,
   recentFiles,
 }: {
+  copy: {
+    newFile: string;
+    openFile: string;
+    openFolder: string;
+    recentFiles: string;
+    startActions: string;
+  };
   onNewFile: () => void | Promise<void>;
   onOpenFile: () => void | Promise<void>;
   onOpenFolder: () => void | Promise<void>;
@@ -3560,21 +3589,21 @@ function StartPanel({
       <div className="start-panel-main">
         <span className="start-kicker">hazakura-note</span>
         <h1>静かに書き始める</h1>
-        <div className="start-actions" aria-label="Start actions">
+        <div className="start-actions" aria-label={copy.startActions}>
           <button type="button" onClick={() => void onOpenFile()}>
-            Open File
+            {copy.openFile}
           </button>
           <button type="button" onClick={() => void onOpenFolder()}>
-            Open Folder
+            {copy.openFolder}
           </button>
           <button type="button" onClick={() => void onNewFile()}>
-            New File
+            {copy.newFile}
           </button>
         </div>
       </div>
       {recentFiles.length > 0 ? (
-        <div className="start-recent" aria-label="Recent files">
-          <span>Recent</span>
+        <div className="start-recent" aria-label={copy.recentFiles}>
+          <span>{copy.recentFiles}</span>
           {visibleRecentFiles.map((entry) => (
             <button
               key={entry.path}

@@ -147,7 +147,7 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 6. Toggle View > Preview, View > Wrap Lines, and View > Show Invisibles and confirm each setting changes the editor or preview.
 7. Confirm Preferences and Agent Workbench are not in the File or View menu.
 8. Open hazakura-note > Settings and confirm Font size, Tab size, Theme, Preview, Wrap, Invisibles, and Menu language persist after restart.
-9. Change Menu language to Japanese and confirm the native File/View menu labels update along with the Agent Workbench mode-gate copy.
+9. Change Menu language to Japanese and confirm the native File/View menu labels, empty start surface, and Agent Workbench mode-gate copy update.
 10. Open hazakura-note > Agent Workbench and confirm it shows Agent mode, provider/session summary, and responsibility-boundary controls separately from Preferences.
 11. Toggle Agent Workbench mode and confirm the restart-required state includes an explicit restart button.
 12. Relaunch with Agent Workbench mode active and confirm the top toolbar shows an Agent Mode badge.

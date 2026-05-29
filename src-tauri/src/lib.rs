@@ -55,6 +55,9 @@ const MENU_THEME_SYSTEM: &str = "theme-system";
 const MENU_THEME_LIGHT: &str = "theme-light";
 const MENU_THEME_DARK: &str = "theme-dark";
 const MENU_THEME_SAKURA: &str = "theme-sakura";
+const MENU_THEME_HAZAKURA_NEXUS: &str = "theme-hazakura-nexus";
+const MENU_THEME_YAKOU: &str = "theme-yakou";
+const MENU_THEME_SHOKOU: &str = "theme-shokou";
 const MENU_PREFERENCES: &str = "preferences";
 const MENU_AGENT_WORKBENCH: &str = "agent-workbench";
 const MENU_RECENT_FILE_PREFIX: &str = "recent-file-";
@@ -1804,6 +1807,30 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
                         theme_preference == "sakura",
                         None::<&str>,
                     )?,
+                    &CheckMenuItem::with_id(
+                        app,
+                        MENU_THEME_HAZAKURA_NEXUS,
+                        label("Hazakura Nexus", "葉桜ネクサス"),
+                        true,
+                        theme_preference == "hazakura-nexus",
+                        None::<&str>,
+                    )?,
+                    &CheckMenuItem::with_id(
+                        app,
+                        MENU_THEME_YAKOU,
+                        label("Yakou", "夜光"),
+                        true,
+                        theme_preference == "yakou",
+                        None::<&str>,
+                    )?,
+                    &CheckMenuItem::with_id(
+                        app,
+                        MENU_THEME_SHOKOU,
+                        label("Shokou", "曙光"),
+                        true,
+                        theme_preference == "shokou",
+                        None::<&str>,
+                    )?,
                 ],
             )?,
             &PredefinedMenuItem::separator(app)?,
@@ -2008,6 +2035,9 @@ fn emit_app_menu_event<R: tauri::Runtime>(
                 | MENU_THEME_LIGHT
                 | MENU_THEME_DARK
                 | MENU_THEME_SAKURA
+                | MENU_THEME_HAZAKURA_NEXUS
+                | MENU_THEME_YAKOU
+                | MENU_THEME_SHOKOU
                 | MENU_PREFERENCES
                 | MENU_AGENT_WORKBENCH
         )

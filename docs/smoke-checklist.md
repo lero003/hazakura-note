@@ -51,6 +51,8 @@ Latest Japanese status bar localization checks: 2026-05-29 built-app smoke confi
 
 Latest Agent pane Japanese copy polish checks: 2026-05-29 automated gates passed after replacing visible Japanese-mode `Agent provider` wording with `Agent プロバイダー` and smoothing the idle/running Agent state copy.
 
+Latest Japanese editor chrome localization checks: 2026-05-29 built-app smoke confirmed Japanese menu mode localizes Markdown helper accessibility labels/tooltips, the line-ending control, Find row labels/options, Go to Line controls, Markdown helper status messages, and active-document status metadata.
+
 ## Build First
 
 ```bash

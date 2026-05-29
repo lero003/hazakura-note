@@ -390,6 +390,66 @@ export default function App() {
           resizeColumnsTitle: "Drag to resize editor and side pane",
           sidePaneMode: "Side pane mode",
         };
+  const editorChromeCopy =
+    menuLanguage === "ja"
+      ? {
+          caseSensitive: "大文字",
+          closeSearch: "検索を閉じる",
+          find: "検索",
+          findInActiveFile: "アクティブファイル内を検索",
+          findOptions: "検索オプション",
+          go: "移動",
+          goToLine: "指定行へ移動",
+          inlineCode: "インラインコード",
+          inlineCodeTitle: "インラインコード (Command+E)",
+          invalidRegex: "正規表現が無効です",
+          italic: "斜体",
+          italicTitle: "斜体 (Command+I)",
+          line: "行",
+          lineEnding: "改行",
+          lineEndings: "改行コード",
+          link: "リンク",
+          linkTitle: "リンク (Command+K)",
+          markdownHelpers: "Markdown 補助",
+          next: "次へ",
+          noMatches: "一致なし",
+          noSearch: "検索なし",
+          previous: "前へ",
+          regex: "正規表現",
+          searchActiveFile: "アクティブファイルを検索",
+          strong: "太字",
+          strongTitle: "太字 (Command+B)",
+          word: "単語",
+        }
+      : {
+          caseSensitive: "Case",
+          closeSearch: "Close search",
+          find: "Find",
+          findInActiveFile: "Find in active file",
+          findOptions: "Find options",
+          go: "Go",
+          goToLine: "Go to line",
+          inlineCode: "Inline code",
+          inlineCodeTitle: "Inline code (Command+E)",
+          invalidRegex: "Invalid regex",
+          italic: "Italic",
+          italicTitle: "Italic (Command+I)",
+          line: "Line",
+          lineEnding: "Line",
+          lineEndings: "Line endings",
+          link: "Link",
+          linkTitle: "Link (Command+K)",
+          markdownHelpers: "Markdown helpers",
+          next: "Next",
+          noMatches: "No matches",
+          noSearch: "No search",
+          previous: "Prev",
+          regex: "Regex",
+          searchActiveFile: "Search active file",
+          strong: "Bold",
+          strongTitle: "Bold (Command+B)",
+          word: "Word",
+        };
   const preferencesCopy =
     menuLanguage === "ja"
       ? {
@@ -528,17 +588,26 @@ export default function App() {
     [activeContents, activeTab?.line_ending],
   );
   const compareDocumentMeta = compareView
-    ? `Diff · ${compareView.additions} added · ${compareView.removals} removed`
+    ? menuLanguage === "ja"
+      ? `比較 · ${compareView.additions} 追加 · ${compareView.removals} 削除`
+      : `Diff · ${compareView.additions} added · ${compareView.removals} removed`
     : null;
   const activeDocumentMeta = activeTab
-    ? formatActiveDocumentMeta(activeDocumentStats, activeTab, activeDirty)
+    ? formatActiveDocumentMeta(
+        activeDocumentStats,
+        activeTab,
+        activeDirty,
+        menuLanguage,
+      )
     : selectedImage
-      ? `Image · ${formatBytes(selectedImage.size)} · ${selectedImage.name}`
+      ? menuLanguage === "ja"
+        ? `画像 · ${formatBytes(selectedImage.size)} · ${selectedImage.name}`
+        : `Image · ${formatBytes(selectedImage.size)} · ${selectedImage.name}`
       : safeEditorCopy.noFileOpen;
   const activeStatusDetail = compareDocumentMeta
     ? compareDocumentMeta
     : activeTab
-    ? `${activeDocumentMeta} · ${formatSelectionInfo(selectionInfo)}`
+    ? `${activeDocumentMeta} · ${formatSelectionInfo(selectionInfo, menuLanguage)}`
     : activeDocumentMeta;
   const documentKey = activeTab?.path ?? selectedImage?.path ?? "welcome";
   const findMatches = useMemo(
@@ -2941,48 +3010,51 @@ export default function App() {
         <div className="document-meta">
           {activeTab ? (
             <>
-              <div className="markdown-assist" aria-label="Markdown helpers">
+              <div
+                className="markdown-assist"
+                aria-label={editorChromeCopy.markdownHelpers}
+              >
                 <button
-                  aria-label="Bold"
+                  aria-label={editorChromeCopy.strong}
                   className="markdown-assist-button strong"
                   onClick={() => applyActiveMarkdownFormat("bold")}
-                  title="Bold (Command+B)"
+                  title={editorChromeCopy.strongTitle}
                   type="button"
                 >
                   B
                 </button>
                 <button
-                  aria-label="Italic"
+                  aria-label={editorChromeCopy.italic}
                   className="markdown-assist-button italic"
                   onClick={() => applyActiveMarkdownFormat("italic")}
-                  title="Italic (Command+I)"
+                  title={editorChromeCopy.italicTitle}
                   type="button"
                 >
                   I
                 </button>
                 <button
-                  aria-label="Inline code"
+                  aria-label={editorChromeCopy.inlineCode}
                   className="markdown-assist-button code"
                   onClick={() => applyActiveMarkdownFormat("code")}
-                  title="Inline code (Command+E)"
+                  title={editorChromeCopy.inlineCodeTitle}
                   type="button"
                 >
                   `
                 </button>
                 <button
-                  aria-label="Link"
+                  aria-label={editorChromeCopy.link}
                   className="markdown-assist-button"
                   onClick={() => applyActiveMarkdownFormat("link")}
-                  title="Link (Command+K)"
+                  title={editorChromeCopy.linkTitle}
                   type="button"
                 >
                   <LinkIcon />
                 </button>
               </div>
               <label className="line-ending-compact">
-                <span>Line</span>
+                <span>{editorChromeCopy.lineEnding}</span>
                 <select
-                  aria-label="Line endings"
+                  aria-label={editorChromeCopy.lineEndings}
                   value={activeTab.line_ending}
                   onChange={(event) =>
                     convertActiveLineEnding(
@@ -3000,16 +3072,16 @@ export default function App() {
       </section>
 
       {findVisible ? (
-        <section className="find-row" aria-label="Find in active file">
+        <section className="find-row" aria-label={editorChromeCopy.findInActiveFile}>
           <label className="find-control">
-            <span>Find</span>
+            <span>{editorChromeCopy.find}</span>
             <input
               ref={findInputRef}
               type="search"
               value={findQuery}
               onChange={(event) => setFindQuery(event.target.value)}
               onKeyDown={handleFindKeyDown}
-              placeholder="Search active file"
+              placeholder={editorChromeCopy.searchActiveFile}
             />
           </label>
           <div className="find-actions">
@@ -3018,26 +3090,26 @@ export default function App() {
               onClick={showPreviousMatch}
               disabled={findMatches.length === 0}
             >
-              Prev
+              {editorChromeCopy.previous}
             </button>
             <button
               type="button"
               onClick={showNextMatch}
               disabled={findMatches.length === 0}
             >
-              Next
+              {editorChromeCopy.next}
             </button>
             <span className="find-count">
               {findQuery
                 ? invalidRegex
-                  ? "Invalid regex"
+                  ? editorChromeCopy.invalidRegex
                   : findMatches.length > 0
                   ? `${activeMatchIndex + 1} / ${findMatches.length}`
-                  : "No matches"
-                : "No search"}
+                  : editorChromeCopy.noMatches
+                : editorChromeCopy.noSearch}
             </span>
           </div>
-          <div className="find-options" aria-label="Find options">
+          <div className="find-options" aria-label={editorChromeCopy.findOptions}>
             <label className="toggle-control">
               <input
                 type="checkbox"
@@ -3049,7 +3121,7 @@ export default function App() {
                   }))
                 }
               />
-              <span>Case</span>
+              <span>{editorChromeCopy.caseSensitive}</span>
             </label>
             <label className="toggle-control">
               <input
@@ -3062,7 +3134,7 @@ export default function App() {
                   }))
                 }
               />
-              <span>Word</span>
+              <span>{editorChromeCopy.word}</span>
             </label>
             <label className="toggle-control">
               <input
@@ -3075,13 +3147,13 @@ export default function App() {
                   }))
                 }
               />
-              <span>Regex</span>
+              <span>{editorChromeCopy.regex}</span>
             </label>
           </div>
           <div className="goto-control">
-            <label htmlFor="go-to-line-input">Line</label>
+            <label htmlFor="go-to-line-input">{editorChromeCopy.line}</label>
             <input
-              aria-label="Go to line"
+              aria-label={editorChromeCopy.goToLine}
               id="go-to-line-input"
               type="number"
               min="1"
@@ -3098,15 +3170,19 @@ export default function App() {
                 }
               }}
             />
-            <button aria-label="Go to line" type="button" onClick={goToLine}>
-              Go
+            <button
+              aria-label={editorChromeCopy.goToLine}
+              type="button"
+              onClick={goToLine}
+            >
+              {editorChromeCopy.go}
             </button>
           </div>
           <button
             type="button"
             className="find-close"
             onClick={closeFindAndFocusEditor}
-            aria-label="Close search"
+            aria-label={editorChromeCopy.closeSearch}
           >
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M1 1L7 7M7 1L1 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
@@ -4273,6 +4349,7 @@ function localizeStatusMessage(
     "Agent session stop failed": "Agent セッションの停止に失敗しました",
     "Agent session stopped": "Agent セッションを停止しました",
     "Agent terminal resize failed": "Agent ターミナルのリサイズに失敗しました",
+    "Bold markup applied": "太字の Markdown を適用しました",
     "Checking Agent Workbench launch gate...":
       "Agent Workbench の起動ゲートを確認中です...",
     "Choosing file...": "ファイルを選択中...",
@@ -4302,7 +4379,10 @@ function localizeStatusMessage(
     "Image preview closed": "画像プレビューを閉じました",
     "Image preview failed": "画像プレビューに失敗しました",
     "Image preview opened": "画像プレビューを開きました",
+    "Inline code markup applied": "インラインコードの Markdown を適用しました",
+    "Italic markup applied": "斜体の Markdown を適用しました",
     "Keeping local edits": "ローカル編集を保持します",
+    "Link markup inserted": "リンクの Markdown を挿入しました",
     "Metadata check failed": "メタデータ確認に失敗しました",
     "New file cancelled": "新規ファイル作成をキャンセルしました",
     "New file created": "新規ファイルを作成しました",
@@ -5443,11 +5523,22 @@ function formatActiveDocumentMeta(
   stats: TextDocumentStats,
   tab: EditorTab,
   dirty: boolean,
+  menuLanguage: MenuLanguage,
 ): string {
   return [
-    ...formatDocumentMetaParts(stats, tab.name),
-    tab.large_file_warning ? "large file" : null,
-    dirty ? "unsaved" : "clean",
+    ...formatDocumentMetaParts(stats, tab.name, menuLanguage),
+    tab.large_file_warning
+      ? menuLanguage === "ja"
+        ? "大きなファイル"
+        : "large file"
+      : null,
+    dirty
+      ? menuLanguage === "ja"
+        ? "未保存"
+        : "unsaved"
+      : menuLanguage === "ja"
+        ? "保存済み"
+        : "clean",
   ]
     .filter((part): part is string => Boolean(part))
     .join(" · ");
@@ -5456,17 +5547,26 @@ function formatActiveDocumentMeta(
 function formatDocumentMetaParts(
   stats: TextDocumentStats,
   fileName: string,
+  menuLanguage: MenuLanguage,
 ): string[] {
   return [
-    formatFileType(fileName),
+    formatFileType(fileName, menuLanguage),
     formatBytes(stats.bytes),
-    `${stats.characters.toLocaleString()} chars`,
-    formatLineEndingKind(stats.lineEnding),
-    stats.hasFinalNewline ? "final newline" : "no final newline",
+    menuLanguage === "ja"
+      ? `${stats.characters.toLocaleString()} 文字`
+      : `${stats.characters.toLocaleString()} chars`,
+    formatLineEndingKind(stats.lineEnding, menuLanguage),
+    stats.hasFinalNewline
+      ? menuLanguage === "ja"
+        ? "末尾改行あり"
+        : "final newline"
+      : menuLanguage === "ja"
+        ? "末尾改行なし"
+        : "no final newline",
   ];
 }
 
-function formatFileType(fileName: string): string {
+function formatFileType(fileName: string, menuLanguage: MenuLanguage): string {
   const extension = fileName.split(".").at(-1)?.toLowerCase() ?? "";
 
   switch (extension) {
@@ -5488,17 +5588,21 @@ function formatFileType(fileName: string): string {
       return "TOML";
     case "csv":
     case "tsv":
-      return "Delimited text";
+      return menuLanguage === "ja" ? "区切りテキスト" : "Delimited text";
     case "html":
     case "xml":
-      return "Markup";
+      return menuLanguage === "ja" ? "マークアップ" : "Markup";
     case "css":
       return "CSS";
     case "ini":
     case "conf":
-      return "Config";
+      return menuLanguage === "ja" ? "設定" : "Config";
     default:
-      return extension ? extension.toUpperCase() : "Plain text";
+      return extension
+        ? extension.toUpperCase()
+        : menuLanguage === "ja"
+          ? "プレーンテキスト"
+          : "Plain text";
   }
 }
 
@@ -5508,17 +5612,20 @@ function isSupportedImageFile(path: string): boolean {
   return ["png", "jpg", "jpeg", "gif", "webp"].includes(extension);
 }
 
-function formatLineEndingKind(lineEnding: LineEndingKind): string {
+function formatLineEndingKind(
+  lineEnding: LineEndingKind,
+  menuLanguage: MenuLanguage = "en",
+): string {
   if (lineEnding === "crlf") {
     return "CRLF";
   }
 
   if (lineEnding === "mixed") {
-    return "Mixed";
+    return menuLanguage === "ja" ? "混在" : "Mixed";
   }
 
   if (lineEnding === "none") {
-    return "No line endings";
+    return menuLanguage === "ja" ? "改行なし" : "No line endings";
   }
 
   return "LF";
@@ -5553,13 +5660,20 @@ function formatDirtyTabCount(count: number): string {
   return count === 1 ? "1 unsaved tab" : `${count} unsaved tabs`;
 }
 
-function formatSelectionInfo(selection: EditorSelectionInfo): string {
+function formatSelectionInfo(
+  selection: EditorSelectionInfo,
+  menuLanguage: MenuLanguage,
+): string {
   const selectionText =
     selection.selectedCharacters > 0
-      ? ` · ${selection.selectedCharacters.toLocaleString()} selected / ${selection.selectedLines.toLocaleString()} lines`
+      ? menuLanguage === "ja"
+        ? ` · ${selection.selectedCharacters.toLocaleString()} 文字選択 / ${selection.selectedLines.toLocaleString()} 行`
+        : ` · ${selection.selectedCharacters.toLocaleString()} selected / ${selection.selectedLines.toLocaleString()} lines`
       : "";
 
-  return `Ln ${selection.line.toLocaleString()}, Col ${selection.column.toLocaleString()}${selectionText}`;
+  return menuLanguage === "ja"
+    ? `${selection.line.toLocaleString()} 行, ${selection.column.toLocaleString()} 列${selectionText}`
+    : `Ln ${selection.line.toLocaleString()}, Col ${selection.column.toLocaleString()}${selectionText}`;
 }
 
 function formatTimestamp(timestamp: number): string {

@@ -3781,6 +3781,7 @@ export default function App() {
                   onClearTarget={clearCompareTarget}
                   onCompare={runSelectedFileCompare}
                   menuLanguage={menuLanguage}
+                  workspaceRootPath={workspaceRootPath}
                 />
               ) : sidePaneMode === "agent" ? (
                 <AgentPaneShell
@@ -4700,6 +4701,7 @@ function DiffSetupPane({
   onClearSource,
   onClearTarget,
   onCompare,
+  workspaceRootPath,
 }: {
   compareSource: CompareAnchor | null;
   compareTarget: CompareAnchor | null;
@@ -4707,6 +4709,7 @@ function DiffSetupPane({
   onClearSource: () => void;
   onClearTarget: () => void;
   onCompare: () => void;
+  workspaceRootPath: string | null;
 }) {
   const labels =
     menuLanguage === "ja"
@@ -4718,6 +4721,9 @@ function DiffSetupPane({
           introText:
             "ワークスペースから2つのテキストファイルを選んで比較します。",
           heading: "Diff",
+          noWorkspace:
+            "ワークスペースを開くと、左のファイル一覧から比較元と比較先を選べます。",
+          openWorkspaceHint: "先にワークスペースフォルダを開いてください",
           sourceHint: "左のファイル一覧をクリックして比較元を選択",
           targetHint: "次のクリックで比較先を選択",
           ready:
@@ -4733,6 +4739,9 @@ function DiffSetupPane({
           introText:
             "Choose two workspace text files and compare them.",
           heading: "Diff",
+          noWorkspace:
+            "Open a workspace folder to choose the source and target from the left file list.",
+          openWorkspaceHint: "Open a workspace folder first",
           sourceHint: "Click a file in the left list to choose the source",
           targetHint: "The next click chooses the target",
           ready:
@@ -4740,6 +4749,7 @@ function DiffSetupPane({
           sourceUnset: "No compare source selected",
           targetUnset: "No compare target selected",
         };
+  const workspaceAvailable = workspaceRootPath !== null;
   const sourceName = compareSource?.name ?? null;
   const sourcePath = compareSource?.path ?? null;
   const targetName = compareTarget?.name ?? null;
@@ -4748,12 +4758,21 @@ function DiffSetupPane({
     compareSource !== null &&
     compareTarget !== null &&
     compareSource.path !== compareTarget.path;
+  const sourcePrompt = workspaceAvailable
+    ? labels.sourceHint
+    : labels.openWorkspaceHint;
+  const targetPrompt = workspaceAvailable
+    ? labels.targetHint
+    : labels.openWorkspaceHint;
 
   return (
     <div className="diff-setup-pane">
       <div className="diff-setup-card">
         <span>{labels.heading}</span>
         <strong>{labels.introText}</strong>
+        {!workspaceAvailable ? (
+          <p className="diff-setup-note">{labels.noWorkspace}</p>
+        ) : null}
         <div className="diff-slots">
           <DiffSelectionSlot
             clearLabel={labels.clear}
@@ -4762,7 +4781,7 @@ function DiffSetupPane({
             filePath={sourcePath}
             label={labels.compareSource}
             onClear={onClearSource}
-            prompt={labels.sourceHint}
+            prompt={sourcePrompt}
           />
           <DiffSelectionSlot
             clearLabel={labels.clear}
@@ -4771,7 +4790,7 @@ function DiffSetupPane({
             filePath={targetPath}
             label={labels.compareTarget}
             onClear={onClearTarget}
-            prompt={labels.targetHint}
+            prompt={targetPrompt}
           />
         </div>
         <div className="diff-setup-actions">

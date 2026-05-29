@@ -1375,6 +1375,13 @@ button:disabled {
   margin: 0;
 }
 
+.diff-setup-note {
+  background: var(--accent-soft);
+  border-radius: 6px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
 .diff-slots {
   display: grid;
   gap: 12px;

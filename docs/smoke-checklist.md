@@ -81,6 +81,8 @@ Latest Agent Workbench macOS menu-bar stability check: 2026-05-30 user smoke con
 
 Latest Non-Git diff/review readiness checks: 2026-05-30 automated gates passed after shifting file comparison toward a dedicated GitHub-PR-like split Diff workbench mode, then tightening setup into explicit source and target slots with a Compare button. The slots can be filled by Diff-mode workspace row clicks or side-specific context-menu actions; drag selection is intentionally out of scope for this flow. Active buffer-versus-disk, draft-versus-disk, and conflict local-edits-versus-disk review entry points use the same non-Git comparison surface. No fresh built-app diff/review interaction smoke was claimed.
 
+Latest Diff empty-state polish checks: 2026-05-30 Vite browser smoke confirmed the no-file / no-workspace surface loads, Diff opens as a main workbench, the center editor area is hidden, Compare remains disabled, and the setup copy now asks the user to open a workspace folder before choosing source/target files. No fresh built-app file-comparison interaction smoke was claimed.
+
 ## Build First
 
 ```bash

@@ -67,6 +67,8 @@ Latest Japanese side-pane tab copy checks: 2026-05-30 built-app surface inspecti
 
 Latest Japanese image preview header copy checks: 2026-05-30 automated gates passed after making the workspace image preview header follow the menu language, using `画像プレビュー` in Japanese mode. No fresh image-selection interaction smoke was claimed.
 
+Latest Japanese Agent mode badge copy checks: 2026-05-30 built-app surface inspection confirmed Japanese mode still showed the top toolbar badge as `Agent モード`; automated gates passed after changing it to `エージェントモード` / `エージェントモード: 再起動待ち`. No Agent provider session was started.
+
 ## Build First
 
 ```bash
@@ -181,7 +183,7 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 9. Change Menu language to Japanese and confirm the native app/File/Edit/View/Window/Help menu labels, empty start surface, workspace labels and workspace context menu, side-pane tabs, workspace image preview header, common status bar messages, preview unavailable messages, Preferences labels, and Agent Workbench pane/mode-gate copy update.
 10. Open hazakura-note > Agent Workbench and confirm it shows Agent mode, provider/session summary, and responsibility-boundary controls separately from Preferences.
 11. Toggle Agent Workbench mode and confirm the restart-required state includes an explicit restart button.
-12. Relaunch with Agent Workbench mode active and confirm the top toolbar shows the Agent Mode / Agent モード badge.
+12. Relaunch with Agent Workbench mode active and confirm the top toolbar shows the Agent Mode / エージェントモード badge.
 
 ## Agent Workbench Trusted Workspace Manual Smoke
 

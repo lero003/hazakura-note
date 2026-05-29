@@ -561,8 +561,8 @@ export default function App() {
           ],
           consent:
             "Agent Workbench の責任境界を理解しました。",
-          modeBadgeActive: "Agent モード",
-          modeBadgePending: "Agent モード: 再起動待ち",
+          modeBadgeActive: "エージェントモード",
+          modeBadgePending: "エージェントモード: 再起動待ち",
           modeBadgeTitle:
             "Agent Workbench は Safe Editor Mode とは別の trust boundary です。",
         }

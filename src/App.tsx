@@ -366,6 +366,7 @@ export default function App() {
           agentWorkbench: "Agent Workbench",
           agentTab: "エージェント",
           fileComparison: "ファイル比較",
+          imagePreview: "画像プレビュー",
           markdownPreview: "Markdown プレビュー",
           openTextFileToPreview:
             "Markdown プレビューを表示するにはテキストファイルを開いてください。",
@@ -381,6 +382,7 @@ export default function App() {
           agentWorkbench: "Agent Workbench",
           agentTab: "Agent",
           fileComparison: "File comparison",
+          imagePreview: "Image Preview",
           markdownPreview: "Markdown preview",
           openTextFileToPreview: "Open a text file to show Markdown preview.",
           previewDisabled: "Preview pane is disabled in Preferences.",
@@ -3389,7 +3391,10 @@ export default function App() {
                 wrapLines={editorSettings.wrapLines}
               />
             ) : selectedImage ? (
-              <ImagePreviewPane image={selectedImage} />
+              <ImagePreviewPane
+                image={selectedImage}
+                title={sidePaneCopy.imagePreview}
+              />
             ) : (
               <StartPanel
                 copy={safeEditorCopy}
@@ -3884,11 +3889,17 @@ function StartPanel({
   );
 }
 
-function ImagePreviewPane({ image }: { image: ImagePreviewState }) {
+function ImagePreviewPane({
+  image,
+  title,
+}: {
+  image: ImagePreviewState;
+  title: string;
+}) {
   return (
     <div className="image-preview-pane">
       <div className="image-preview-header">
-        <span>Image Preview</span>
+        <span>{title}</span>
         <strong title={image.path}>{image.name}</strong>
       </div>
       <div className="image-preview-stage">

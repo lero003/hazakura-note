@@ -63,6 +63,8 @@ Latest file comparison target gating checks: 2026-05-30 automated gates passed a
 
 Latest file comparison wording alignment checks: 2026-05-30 automated gates passed after clarifying the second context-menu action as Compare with source / 比較元と比較 and aligning the README feature/limit wording with the existing explicit non-Git file-comparison behavior. No fresh file-comparison interaction smoke was claimed.
 
+Latest Japanese side-pane tab copy checks: 2026-05-30 built-app surface inspection confirmed Japanese mode still showed the right-pane tabs as `プレビュー` / `Agent`; automated gates passed after changing the Japanese Agent tab label to `エージェント`. No Agent provider session was started.
+
 ## Build First
 
 ```bash
@@ -174,7 +176,7 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 6. Toggle View > Preview, View > Wrap Lines, and View > Show Invisibles and confirm each setting changes the editor or preview.
 7. Confirm Preferences and Agent Workbench are not in the File or View menu.
 8. Open hazakura-note > Settings and confirm Font size, Tab size, Theme, Preview, Wrap, Invisibles, and Menu language persist after restart.
-9. Change Menu language to Japanese and confirm the native app/File/Edit/View/Window/Help menu labels, empty start surface, workspace labels and workspace context menu, common status bar messages, preview unavailable messages, Preferences labels, and Agent Workbench pane/mode-gate copy update.
+9. Change Menu language to Japanese and confirm the native app/File/Edit/View/Window/Help menu labels, empty start surface, workspace labels and workspace context menu, side-pane tabs, common status bar messages, preview unavailable messages, Preferences labels, and Agent Workbench pane/mode-gate copy update.
 10. Open hazakura-note > Agent Workbench and confirm it shows Agent mode, provider/session summary, and responsibility-boundary controls separately from Preferences.
 11. Toggle Agent Workbench mode and confirm the restart-required state includes an explicit restart button.
 12. Relaunch with Agent Workbench mode active and confirm the top toolbar shows the Agent Mode / Agent モード badge.

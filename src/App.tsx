@@ -364,7 +364,7 @@ export default function App() {
     menuLanguage === "ja"
       ? {
           agentWorkbench: "Agent Workbench",
-          agentTab: "Agent",
+          agentTab: "エージェント",
           fileComparison: "ファイル比較",
           markdownPreview: "Markdown プレビュー",
           openTextFileToPreview:

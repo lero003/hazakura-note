@@ -8,7 +8,10 @@ use std::process::{Child, Command, Stdio};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tauri::menu::{AboutMetadata, CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
+use tauri::menu::{
+    AboutMetadata, CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu, HELP_SUBMENU_ID,
+    WINDOW_SUBMENU_ID,
+};
 use tauri::{Emitter, Manager};
 
 #[cfg(unix)]
@@ -1804,9 +1807,44 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
                 ],
             )?,
             &PredefinedMenuItem::separator(app)?,
-            &PredefinedMenuItem::fullscreen(app, None)?,
+            &PredefinedMenuItem::fullscreen(
+                app,
+                Some(label("Enter Full Screen", "フルスクリーンにする")),
+            )?,
         ],
     )?;
+    let edit_menu = Submenu::with_items(
+        app,
+        label("Edit", "編集"),
+        true,
+        &[
+            &PredefinedMenuItem::undo(app, Some(label("Undo", "取り消す")))?,
+            &PredefinedMenuItem::redo(app, Some(label("Redo", "やり直す")))?,
+            &PredefinedMenuItem::separator(app)?,
+            &PredefinedMenuItem::cut(app, Some(label("Cut", "カット")))?,
+            &PredefinedMenuItem::copy(app, Some(label("Copy", "コピー")))?,
+            &PredefinedMenuItem::paste(app, Some(label("Paste", "ペースト")))?,
+            &PredefinedMenuItem::select_all(app, Some(label("Select All", "すべて選択")))?,
+        ],
+    )?;
+    let window_menu = Submenu::with_id_and_items(
+        app,
+        WINDOW_SUBMENU_ID,
+        label("Window", "ウィンドウ"),
+        true,
+        &[
+            &PredefinedMenuItem::minimize(app, Some(label("Minimize", "しまう")))?,
+            &PredefinedMenuItem::maximize(app, Some(label("Zoom", "拡大/縮小")))?,
+            #[cfg(target_os = "macos")]
+            &PredefinedMenuItem::separator(app)?,
+            &PredefinedMenuItem::close_window(
+                app,
+                Some(label("Close Window", "ウィンドウを閉じる")),
+            )?,
+        ],
+    )?;
+    let help_menu =
+        Submenu::with_id_and_items(app, HELP_SUBMENU_ID, label("Help", "ヘルプ"), true, &[])?;
 
     #[cfg(target_os = "macos")]
     {
@@ -1828,7 +1866,11 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
             package_info.name.clone(),
             true,
             &[
-                &PredefinedMenuItem::about(app, None, Some(about_metadata))?,
+                &PredefinedMenuItem::about(
+                    app,
+                    Some(label("About hazakura-note", "hazakura-note について")),
+                    Some(about_metadata),
+                )?,
                 &PredefinedMenuItem::separator(app)?,
                 &MenuItem::with_id(
                     app,
@@ -1845,12 +1887,18 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
                     None::<&str>,
                 )?,
                 &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::services(app, None)?,
+                &PredefinedMenuItem::services(app, Some(label("Services", "サービス")))?,
                 &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::hide(app, None)?,
-                &PredefinedMenuItem::hide_others(app, None)?,
+                &PredefinedMenuItem::hide(
+                    app,
+                    Some(label("Hide hazakura-note", "hazakura-note を隠す")),
+                )?,
+                &PredefinedMenuItem::hide_others(app, Some(label("Hide Others", "ほかを隠す")))?,
                 &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::quit(app, None)?,
+                &PredefinedMenuItem::quit(
+                    app,
+                    Some(label("Quit hazakura-note", "hazakura-note を終了")),
+                )?,
             ],
         )?;
 
@@ -1858,8 +1906,14 @@ fn build_app_menu_with_state<R: tauri::Runtime>(
         menu.insert(&app_menu, 0)?;
         menu.remove_at(1)?;
         menu.insert(&file_menu, 1)?;
+        menu.remove_at(2)?;
+        menu.insert(&edit_menu, 2)?;
         menu.remove_at(3)?;
         menu.insert(&view_menu, 3)?;
+        menu.remove_at(4)?;
+        menu.insert(&window_menu, 4)?;
+        menu.remove_at(5)?;
+        menu.insert(&help_menu, 5)?;
     }
 
     #[cfg(not(any(

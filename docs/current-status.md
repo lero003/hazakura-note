@@ -178,10 +178,12 @@ pre0.2 follow-up warning-expected DMG preview on 2026-05-29:
 - `spctl -a -vv -t open` rejected the app with `source=Insufficient Context`, which is expected for this ad-hoc signed, not-notarized preview lane.
 - Remote verification downloaded the published GitHub Release assets, confirmed `shasum -c` passed, `hdiutil verify` passed, and the mounted app reported version `0.2.0-pre.1` / bundle identifier `lab.hazakura.note` with `codesign --verify --deep --strict --verbose=2` passing.
 
-v0.2 warning-expected DMG preview release preparation on 2026-05-29:
+v0.2 warning-expected DMG preview release on 2026-05-29:
 
 - Version surfaces were aligned to `0.2.0` in `package.json`, `package-lock.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, and `src-tauri/Cargo.lock`.
 - Release notes were prepared at `docs/releases/0.2.0-warning-expected-dmg-preview.release.md`.
+- GitHub prerelease published at `https://github.com/lero003/hazakura-note/releases/tag/v0.2.0`.
+- Public release tag `v0.2.0` is the fresh tag for this release; older public tags were left immutable.
 - Roadmap priority moved `Safe Editor Non-Git Diff And Review` to v0.3 and placed `Markdown Review Navigation` at v0.4.
 - Recurring automation guidance now uses the `hazakura-note-safe-editor-review-loop` lane and prioritizes v0.3 diff/review preparation before Agent Workbench maintenance.
 - Built DMG asset: `hazakura-note_0.2.0_aarch64-warning-expected.dmg`.
@@ -197,6 +199,7 @@ v0.2 warning-expected DMG preview release preparation on 2026-05-29:
 - The DMG mounted read-only; the contained `hazakura-note.app` reported `CFBundleShortVersionString` `0.2.0`, bundle identifier `lab.hazakura.note`, and passed `codesign --verify --deep --strict --verbose=2`.
 - The built app launched locally from `src-tauri/target/release/bundle/macos/hazakura-note.app` and was then quit with no `hazakura-note` process left running.
 - `spctl -a -vv -t open` rejected the app with `source=Insufficient Context`, which is expected for this ad-hoc signed, not-notarized preview lane.
+- Remote verification downloaded the published GitHub Release assets, confirmed `shasum -c` passed, `hdiutil verify` passed, and the mounted app reported version `0.2.0` / bundle identifier `lab.hazakura.note` with `codesign --verify --deep --strict --verbose=2` passing.
 
 Agent Workbench Trusted Provider Smoke Readiness on 2026-05-29:
 

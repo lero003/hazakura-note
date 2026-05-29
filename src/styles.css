@@ -896,6 +896,7 @@ button:disabled {
   min-width: 172px;
   padding: 6px;
   position: fixed;
+  width: min(240px, calc(100vw - 16px));
   z-index: 120;
 }
 
@@ -907,8 +908,12 @@ button:disabled {
   color: var(--text);
   justify-content: flex-start;
   min-height: 28px;
+  min-width: 0;
+  overflow: hidden;
   padding: 5px 8px;
   text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .workspace-context-menu button:hover:not(:disabled),

@@ -3940,6 +3940,17 @@ function WorkspaceContextMenu({
 }) {
   const hasDifferentCompareSource =
     compareSource !== null && compareSource.path !== anchor.path;
+  const itemCount = 5 + (canSendToAgent ? 1 : 0) + (compareSource ? 1 : 0);
+  const estimatedWidth = 240;
+  const estimatedHeight = 12 + itemCount * 34;
+  const menuLeft = Math.min(
+    Math.max(anchor.x, 8),
+    Math.max(8, window.innerWidth - estimatedWidth),
+  );
+  const menuTop = Math.min(
+    Math.max(anchor.y, 8),
+    Math.max(8, window.innerHeight - estimatedHeight),
+  );
   const labels =
     menuLanguage === "ja"
       ? {
@@ -3965,7 +3976,7 @@ function WorkspaceContextMenu({
     <div
       className="workspace-context-menu"
       role="menu"
-      style={{ left: anchor.x, top: anchor.y }}
+      style={{ left: menuLeft, top: menuTop }}
       onClick={(event) => event.stopPropagation()}
       onContextMenu={(event) => event.preventDefault()}
     >

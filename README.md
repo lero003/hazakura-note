@@ -17,7 +17,7 @@ Last reviewed: 2026-05-30
 
 ![hazakura-note Agent Workbench mode](docs/images/pre0.2-agent-mode.png)
 
-## 0.2 Preview Summary
+## 0.3 Preview Summary
 
 Use this when you want to:
 
@@ -25,6 +25,7 @@ Use this when you want to:
 - read and edit Markdown or text files
 - preview sanitized Markdown
 - preserve LF / CRLF and final-newline behavior
+- compare text files and review local changes without Git awareness
 - notice save conflicts and external changes before overwriting
 
 Do not use this as:
@@ -41,8 +42,9 @@ Example use case:
 2. Read README, docs, or notes through the file tree.
 3. Edit a Markdown or text file.
 4. Preview sanitized Markdown.
-5. Save only after conflict checks.
-6. Use another tool for Git, terminal, build, test, or commit.
+5. Compare files or review local changes before deciding what to keep.
+6. Save only after conflict checks.
+7. Use another tool for Git, terminal, build, test, or commit.
 
 ## Current Decision
 
@@ -155,10 +157,10 @@ Use `npm ci` when evaluating the source preview from the committed lockfile. Use
 
 Developer preview release boundary:
 
-- Current intended preview version is `0.2.0` across npm, Tauri, and Cargo metadata.
+- Current intended preview version is `0.3.0` across npm, Tauri, and Cargo metadata.
 - Source users build locally with `npm ci` and `npm run build`.
 - The generated local `.app` declares macOS 11.0 or later, matching the Rust binary's minimum deployment target, and is ad-hoc signed for local build validation. It is not Developer ID signed or notarized.
-- The v0.2 warning-expected DMG preview notes are prepared in [0.2.0 Warning-expected DMG Preview](docs/releases/0.2.0-warning-expected-dmg-preview.release.md).
+- The v0.3 warning-expected DMG preview notes are prepared in [0.3.0 Warning-expected DMG Preview](docs/releases/0.3.0-warning-expected-dmg-preview.release.md).
 - Tag creation, push, and GitHub Release publication require explicit user approval.
 
 ## Known Limits

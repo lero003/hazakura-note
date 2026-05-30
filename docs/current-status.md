@@ -8,7 +8,7 @@ Last reviewed: 2026-05-30
 ## Current State
 
 - A touchable Tauri desktop prototype exists.
-- Current intended preview release is `v0.2.0` as a warning-expected DMG preview.
+- Current intended preview release is `v0.3.0` as a warning-expected DMG preview.
 - The prototype creates user-selected text/Markdown files, opens common UTF-8 text documents from File > Open or Finder/app-icon open events, opens a user-selected folder, shows a lazy bounded file tree, opens multiple files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, searches with visible match highlights and keyboard/navigation options, renders a toggleable sanitized Markdown preview, and shows selected workspace images in a read-only preview.
 - Existing LF / CRLF line endings are detected when a file is opened and preserved through save.
 - The status bar shows file type, UTF-8 encoding, approximate byte count, character count, saved line-ending mode, final-newline state, and clean/unsaved state.
@@ -249,6 +249,24 @@ Dependency audit triage on 2026-05-30:
 - `cargo tree --manifest-path src-tauri/Cargo.toml --target aarch64-apple-darwin -i glib` and `--target x86_64-apple-darwin -i glib` showed no `glib` dependency path.
 - `cargo update --manifest-path src-tauri/Cargo.toml -p glib --precise 0.20.0 --dry-run` cannot resolve because `gtk 0.18.2` requires `glib ^0.18`; compatible `tauri` / `wry` / `gtk` dry-run updates did not offer a patched path.
 - This is not treated as a v0.3 macOS blocker. Recheck before Linux support, before a Tauri/wry dependency refresh lane, before distribution-readiness dependency sign-off, or sooner if the alert severity increases or a compatible patched upstream path becomes available.
+
+v0.3 warning-expected DMG preview release preparation on 2026-05-30:
+
+- Version surfaces were aligned to `0.3.0` in `package.json`, `package-lock.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, and `src-tauri/Cargo.lock`.
+- Release notes were prepared at `docs/releases/0.3.0-warning-expected-dmg-preview.release.md`.
+- Built DMG asset: `hazakura-note_0.3.0_aarch64-warning-expected.dmg`.
+- SHA-256: `7cc28ae82b5d913382eaf25a90de3eaa3155141200e3d3f3849cc68e50005f10`.
+- `npm ci` passed.
+- `npm run build:vite` passed with the known production chunk-size warning.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check` passed.
+- `cargo test --manifest-path src-tauri/Cargo.toml` passed with 70 Rust tests.
+- `npm audit --audit-level=moderate` passed with 0 vulnerabilities.
+- `cargo audit --file src-tauri/Cargo.lock` completed with the known Tauri/wry transitive warnings for GTK3/gtk-rs, `glib`, `proc-macro-error`, and `unic-*`; no new macOS release blocker was identified in this pass.
+- `npm run build` passed and regenerated the local macOS `.app` bundle.
+- `SKIP_BUILD=1 npm run build:dmg-preview` created and verified the warning-expected DMG plus checksum.
+- `cd src-tauri/target/release/bundle/dmg && shasum -c hazakura-note_0.3.0_aarch64-warning-expected.dmg.sha256` passed.
+- The DMG mounted read-only; the contained `hazakura-note.app` reported `CFBundleShortVersionString` `0.3.0`, `CFBundleVersion` `0.3.0`, bundle identifier `lab.hazakura.note`, and passed `codesign --verify --deep --strict --verbose=2`.
+- `spctl -a -vv -t open` rejected the app with `source=Insufficient Context`, which is expected for this ad-hoc signed and not-notarized preview.
 
 Cherry blossom app icon update on 2026-05-29:
 

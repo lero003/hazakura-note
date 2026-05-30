@@ -16,6 +16,7 @@ The current public line is:
 - `v0.2.0-pre.0`: pre0.2 warning-expected DMG preview with normal-mode and Agent Workbench screenshots in README
 - `v0.2.0-pre.1`: pre0.2 warning-expected DMG preview with Finder/app-icon text document open support
 - `v0.2.0`: Safe Editor preview warning-expected DMG release with theme/Japanese UI polish and the current Agent Workbench boundary kept optional
+- `v0.3.0`: Safe Editor non-Git diff / change-review warning-expected DMG release
 
 The old `v0.1` / `v0.3.x` phase map is archived in `docs/roadmap-v0.1-archived.md`.
 
@@ -56,6 +57,8 @@ Do not use 0.2 to add broad new features.
 ## 0.3: Safe Editor Non-Git Diff And Review
 
 Goal: complete the core product promise of checking text changes without turning the app into a Git client, merge tool, IDE, or project analyzer.
+
+Status: Ready for `v0.3.0` warning-expected DMG release.
 
 Priority work:
 

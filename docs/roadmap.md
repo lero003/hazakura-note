@@ -101,7 +101,7 @@ Candidate work:
 
 - current-file heading outline with click-to-jump (started)
 - current heading or section context in the editor/review surface (started)
-- diff hunk heading context for Markdown files
+- diff hunk heading context for Markdown files (started)
 - local Markdown link navigation limited to explicitly selected workspace files
 - open-tabs and recent-files navigator
 - display/readability polish for Markdown preview and review

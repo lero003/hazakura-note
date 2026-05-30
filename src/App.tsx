@@ -212,6 +212,18 @@ type DiffSplitRow = {
   right: DiffSplitCell;
 };
 
+type DiffDisplayRow =
+  | {
+      kind: "section";
+      key: string;
+      label: string;
+    }
+  | {
+      kind: "line";
+      key: string;
+      row: DiffSplitRow;
+    };
+
 type CompareViewState = {
   kind: "file" | "changes";
   leftPath: string;
@@ -5214,7 +5226,11 @@ function DiffPane({
   onClose: () => void;
   view: CompareViewState;
 }) {
-  const rows = buildSplitDiffRows(view.lines);
+  const rows = buildDiffDisplayRows(
+    view,
+    buildSplitDiffRows(view.lines),
+    menuLanguage,
+  );
   const labels =
     menuLanguage === "ja"
       ? {
@@ -5285,36 +5301,46 @@ function DiffPane({
         {rows.length === 0 ? (
           <div className="diff-empty">{labels.empty}</div>
         ) : (
-          rows.map((row, index) => (
-            <div
-              className={`diff-split-row ${row.kind}`}
-              key={`${row.kind}-${index}-${row.left.line ?? "x"}-${row.right.line ?? "x"}`}
-              role="row"
-            >
-              <span className={`diff-line-number ${row.left.kind}`}>
-                {row.left.line ?? ""}
-              </span>
-              <code className={`diff-cell ${row.left.kind}`}>
-                {row.left.kind === "removed" ? (
-                  <span className="diff-cell-marker" aria-hidden="true">
-                    -
-                  </span>
-                ) : null}
-                {row.left.text || " "}
-              </code>
-              <span className={`diff-line-number ${row.right.kind}`}>
-                {row.right.line ?? ""}
-              </span>
-              <code className={`diff-cell ${row.right.kind}`}>
-                {row.right.kind === "added" ? (
-                  <span className="diff-cell-marker" aria-hidden="true">
-                    +
-                  </span>
-                ) : null}
-                {row.right.text || " "}
-              </code>
-            </div>
-          ))
+          rows.map((displayRow) =>
+            displayRow.kind === "section" ? (
+              <div
+                className="diff-section-row"
+                key={displayRow.key}
+                role="row"
+              >
+                <span role="cell">{displayRow.label}</span>
+              </div>
+            ) : (
+              <div
+                className={`diff-split-row ${displayRow.row.kind}`}
+                key={displayRow.key}
+                role="row"
+              >
+                <span className={`diff-line-number ${displayRow.row.left.kind}`}>
+                  {displayRow.row.left.line ?? ""}
+                </span>
+                <code className={`diff-cell ${displayRow.row.left.kind}`}>
+                  {displayRow.row.left.kind === "removed" ? (
+                    <span className="diff-cell-marker" aria-hidden="true">
+                      -
+                    </span>
+                  ) : null}
+                  {displayRow.row.left.text || " "}
+                </code>
+                <span className={`diff-line-number ${displayRow.row.right.kind}`}>
+                  {displayRow.row.right.line ?? ""}
+                </span>
+                <code className={`diff-cell ${displayRow.row.right.kind}`}>
+                  {displayRow.row.right.kind === "added" ? (
+                    <span className="diff-cell-marker" aria-hidden="true">
+                      +
+                    </span>
+                  ) : null}
+                  {displayRow.row.right.text || " "}
+                </code>
+              </div>
+            ),
+          )
         )}
       </div>
     </div>
@@ -5398,6 +5424,145 @@ function buildSplitDiffRows(lines: DiffLine[]): DiffSplitRow[] {
   }
 
   return rows;
+}
+
+function buildDiffDisplayRows(
+  view: CompareViewState,
+  rows: DiffSplitRow[],
+  menuLanguage: MenuLanguage,
+): DiffDisplayRow[] {
+  if (
+    !isMarkdownDocumentPath(view.leftPath) &&
+    !isMarkdownDocumentPath(view.rightPath)
+  ) {
+    return rows.map((row, index) => ({
+      kind: "line",
+      key: diffRowKey(row, index),
+      row,
+    }));
+  }
+
+  const leftHeadings = collectDiffSideMarkdownHeadings(view.lines, "left");
+  const rightHeadings = collectDiffSideMarkdownHeadings(view.lines, "right");
+  const displayRows: DiffDisplayRow[] = [];
+  let inChangedBlock = false;
+
+  rows.forEach((row, index) => {
+    if (row.kind === "equal") {
+      inChangedBlock = false;
+      displayRows.push({
+        kind: "line",
+        key: diffRowKey(row, index),
+        row,
+      });
+      return;
+    }
+
+    if (!inChangedBlock) {
+      const label = formatDiffSectionContext(
+        row,
+        leftHeadings,
+        rightHeadings,
+        menuLanguage,
+      );
+
+      if (label) {
+        displayRows.push({
+          kind: "section",
+          key: `section-${index}-${row.left.line ?? "x"}-${row.right.line ?? "x"}`,
+          label,
+        });
+      }
+
+      inChangedBlock = true;
+    }
+
+    displayRows.push({
+      kind: "line",
+      key: diffRowKey(row, index),
+      row,
+    });
+  });
+
+  return displayRows;
+}
+
+function diffRowKey(row: DiffSplitRow, index: number): string {
+  return `${row.kind}-${index}-${row.left.line ?? "x"}-${row.right.line ?? "x"}`;
+}
+
+function collectDiffSideMarkdownHeadings(
+  lines: DiffLine[],
+  side: "left" | "right",
+): MarkdownHeading[] {
+  const headings: MarkdownHeading[] = [];
+  let fenceMarker: "`" | "~" | null = null;
+
+  for (const line of lines) {
+    const lineNumber = side === "left" ? line.leftLine : line.rightLine;
+
+    if (lineNumber === null) {
+      continue;
+    }
+
+    const trimmedStart = line.text.trimStart();
+    const fenceMatch = trimmedStart.match(/^(```+|~~~+)/);
+
+    if (fenceMatch) {
+      const marker = fenceMatch[1].startsWith("`") ? "`" : "~";
+
+      if (fenceMarker === marker) {
+        fenceMarker = null;
+      } else if (fenceMarker === null) {
+        fenceMarker = marker;
+      }
+
+      continue;
+    }
+
+    if (fenceMarker !== null) {
+      continue;
+    }
+
+    const heading = parseMarkdownHeadingLine(line.text, lineNumber);
+
+    if (heading) {
+      headings.push(heading);
+    }
+  }
+
+  return headings;
+}
+
+function formatDiffSectionContext(
+  row: DiffSplitRow,
+  leftHeadings: MarkdownHeading[],
+  rightHeadings: MarkdownHeading[],
+  menuLanguage: MenuLanguage,
+): string | null {
+  const leftHeading = row.left.line
+    ? findCurrentMarkdownHeading(leftHeadings, row.left.line)
+    : null;
+  const rightHeading = row.right.line
+    ? findCurrentMarkdownHeading(rightHeadings, row.right.line)
+    : null;
+
+  if (!leftHeading && !rightHeading) {
+    return null;
+  }
+
+  const leftText = leftHeading?.text ?? null;
+  const rightText = rightHeading?.text ?? null;
+
+  if (leftText && rightText && leftText !== rightText) {
+    return menuLanguage === "ja"
+      ? `見出し: 比較元 ${leftText} / 比較先 ${rightText}`
+      : `Section: source ${leftText} / target ${rightText}`;
+  }
+
+  return menuLanguage === "ja"
+    ? `見出し: ${leftText ?? rightText}`
+    : `Section: ${leftText ?? rightText}`;
 }
 
 function localizeCompareError(message: string): string {
@@ -6220,23 +6385,11 @@ function extractMarkdownHeadings(source: string): MarkdownHeading[] {
       continue;
     }
 
-    const headingMatch = line.match(/^(#{1,6})[ \t]+(.+?)\s*$/);
+    const heading = parseMarkdownHeadingLine(line, index + 1);
 
-    if (!headingMatch) {
-      continue;
+    if (heading) {
+      headings.push(heading);
     }
-
-    const text = headingMatch[2].replace(/[ \t]+#+[ \t]*$/, "").trim();
-
-    if (!text) {
-      continue;
-    }
-
-    headings.push({
-      level: headingMatch[1].length,
-      line: index + 1,
-      text,
-    });
 
     if (headings.length >= MARKDOWN_OUTLINE_MAX_HEADINGS) {
       break;
@@ -6244,6 +6397,29 @@ function extractMarkdownHeadings(source: string): MarkdownHeading[] {
   }
 
   return headings;
+}
+
+function parseMarkdownHeadingLine(
+  line: string,
+  lineNumber: number,
+): MarkdownHeading | null {
+  const headingMatch = line.match(/^(#{1,6})[ \t]+(.+?)\s*$/);
+
+  if (!headingMatch) {
+    return null;
+  }
+
+  const text = headingMatch[2].replace(/[ \t]+#+[ \t]*$/, "").trim();
+
+  if (!text) {
+    return null;
+  }
+
+  return {
+    level: headingMatch[1].length,
+    line: lineNumber,
+    text,
+  };
 }
 
 function findCurrentMarkdownHeading(
@@ -6680,6 +6856,15 @@ function isComparableTextFile(path: string): boolean {
     "readme",
     "todo",
   ].includes(lowerName);
+}
+
+function isMarkdownDocumentPath(path: string): boolean {
+  const lowerName = fileNameFromPath(path).toLowerCase();
+  const extension = lowerName.includes(".")
+    ? lowerName.split(".").at(-1) ?? ""
+    : "";
+
+  return ["md", "markdown", "mdown"].includes(extension);
 }
 
 function formatLineEndingKind(

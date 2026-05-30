@@ -1596,6 +1596,28 @@ button:disabled {
   background: var(--surface-strong);
 }
 
+.diff-section-row {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  display: grid;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  grid-template-columns: 52px minmax(180px, 1fr) 52px minmax(180px, 1fr);
+  margin-top: 4px;
+  min-width: 720px;
+}
+
+.diff-section-row span {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  padding: 5px 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .diff-cell {
   color: var(--text);
   font: inherit;

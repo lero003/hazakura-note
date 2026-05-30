@@ -89,6 +89,8 @@ Latest Markdown outline navigation checks: 2026-05-30 Vite browser smoke confirm
 
 Latest Markdown current-section context checks: 2026-05-30 Vite browser smoke confirmed the no-file Safe Editor surface still loads with Outline disabled, and automated gates passed after adding current-section status-bar context from the cursor line and highlighting the matching heading in the Outline pane. No fresh built-app outline interaction smoke was claimed.
 
+Latest Markdown diff heading-context checks: 2026-05-30 automated gates passed after adding Markdown heading context rows before changed Diff blocks when the compared Markdown files have an ATX heading available. No fresh built-app file-comparison interaction smoke was claimed.
+
 ## Build First
 
 ```bash
@@ -150,9 +152,10 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 7. Right-click comparable files and choose Set as compare source / 比較元にする or Set as compare target / 比較先にする to confirm context-menu side selection still works.
 8. Confirm dragging is not required for the Diff setup flow; click and context-menu selection are the supported paths.
 9. Confirm additions are shown on the right, removals on the left, and changed lines appear aligned when practical.
-10. Confirm the labels say Diff or non-Git file/workspace comparison language, and do not mention Git status, branch, staging, commit, or repository state.
-11. Right-click an image or obvious non-text file such as `.DS_Store` if present and confirm compare actions are disabled while Open and Copy full path remain available.
-12. Toggle Diff off and confirm the editor, workspace tree, and active tab remain usable.
+10. For Markdown files with headings, confirm changed blocks show the nearest heading context row when a heading exists before the changed lines.
+11. Confirm the labels say Diff or non-Git file/workspace comparison language, and do not mention Git status, branch, staging, commit, or repository state.
+12. Right-click an image or obvious non-text file such as `.DS_Store` if present and confirm compare actions are disabled while Open and Copy full path remain available.
+13. Toggle Diff off and confirm the editor, workspace tree, and active tab remain usable.
 
 ## Change Review
 

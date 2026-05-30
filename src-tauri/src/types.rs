@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::Write;
@@ -244,6 +244,24 @@ pub(crate) enum WorkspaceEntryKind {
     File,
 }
 
+
+#[derive(Debug, Serialize, Deserialize)]
+pub(crate) struct AppMenuState {
+    pub(crate) has_active_tab: bool,
+    pub(crate) active_dirty: bool,
+    pub(crate) preview_visible: bool,
+    pub(crate) wrap_lines: bool,
+    pub(crate) show_invisibles: bool,
+    pub(crate) theme_preference: String,
+    pub(crate) menu_language: String,
+    pub(crate) recent_files: Vec<AppMenuRecentItem>,
+    pub(crate) recent_folders: Vec<AppMenuRecentItem>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub(crate) struct AppMenuRecentItem {
+    pub(crate) label: String,
+}
 
 pub(crate) trait AgentRuntimeAdapter {
     fn start(&self, request: AgentRuntimeLaunchRequest<'_>) -> Result<AgentRuntimeHandle, String>;

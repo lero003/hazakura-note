@@ -85,6 +85,8 @@ Latest Diff empty-state polish checks: 2026-05-30 Vite browser smoke confirmed t
 
 Latest narrow viewport containment polish checks: 2026-05-30 Vite browser smoke confirmed the app root stays at the viewport left edge with document horizontal scroll held at `0` on the no-file and Diff empty-state surfaces. No fresh built-app narrow-window smoke was claimed.
 
+Latest Markdown outline navigation checks: 2026-05-30 Vite browser smoke confirmed the no-file Safe Editor surface loads with a disabled Outline toggle, and automated gates passed after adding a current-file Outline toggle that lists ATX Markdown headings outside fenced code blocks and jumps the editor to the selected heading line. No fresh built-app outline interaction smoke was claimed.
+
 ## Build First
 
 ```bash
@@ -161,6 +163,15 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 7. Trigger an external-change conflict on a dirty tab and confirm the conflict banner offers Review changes / 変更を確認 before Reopen from disk / Close without saving / Keep editing.
 8. Click the conflict Review changes action and confirm Disk / ディスク is compared to Editor / エディタ while the recovery choices remain explicit and no overwrite happens automatically.
 
+## Markdown Outline Navigation
+
+1. Open a Markdown file with several ATX headings such as `#`, `##`, and `###`.
+2. Click Outline / 見出し in the top editor chrome and confirm a right-side document outline opens.
+3. Confirm headings inside fenced code blocks are not listed.
+4. Click a heading in the outline and confirm the editor jumps to that heading line.
+5. Toggle Outline off and confirm the editor remains active and the tab contents are unchanged.
+6. Open a Markdown file without headings and confirm the Outline pane shows the empty-heading message instead of stale headings from the prior file.
+
 ## Markdown Preview Sync
 
 1. Open a Markdown file long enough for both editor and preview to scroll.
@@ -216,7 +227,7 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 11. Toggle Agent Workbench mode and confirm the restart-required state includes an explicit restart button.
 12. Relaunch with Agent Workbench mode active and confirm the top toolbar shows the Agent Mode / エージェントモード badge.
 13. Open a text file and confirm the status metadata includes UTF-8.
-14. Use the Preview, Diff, and Agent controls in the top editor chrome and confirm each button opens and closes its pane/workbench without requiring a tab strip inside the right pane.
+14. Use the Preview, Diff, Outline, and Agent controls in the top editor chrome and confirm each button opens and closes its pane/workbench without requiring a tab strip inside the right pane.
 
 ## Agent Workbench Trusted Workspace Manual Smoke
 

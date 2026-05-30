@@ -99,7 +99,7 @@ Goal: make Markdown documents easier to read, navigate, and review after the v0.
 
 Candidate work:
 
-- current-file heading outline with click-to-jump
+- current-file heading outline with click-to-jump (started)
 - current heading or section context in the editor/review surface
 - diff hunk heading context for Markdown files
 - local Markdown link navigation limited to explicitly selected workspace files

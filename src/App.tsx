@@ -90,6 +90,7 @@ const DEFAULT_PREVIEW_COLUMN_PERCENT = 42;
 const MIN_PREVIEW_COLUMN_PERCENT = 25;
 const MAX_PREVIEW_COLUMN_PERCENT = 75;
 const DIFF_MAX_LINE_PRODUCT = 1_000_000;
+const MARKDOWN_OUTLINE_MAX_HEADINGS = 200;
 
 type SaveStatus = "idle" | "saving" | "saved" | "error" | "conflict";
 type BaseTheme = "light" | "dark";
@@ -97,9 +98,15 @@ type ThemePreference = "system" | BaseTheme | "sakura" | "yakou" | "shokou";
 type ResolvedTheme = BaseTheme | "sakura" | "yakou" | "shokou";
 type EditableLineEnding = "lf" | "crlf";
 type LineEndingKind = EditableLineEnding | "mixed" | "none";
-type RightPaneMode = "preview" | "compare" | "agent";
+type RightPaneMode = "preview" | "compare" | "outline" | "agent";
 type MenuLanguage = "en" | "ja";
 type PreferencesDialogMode = "settings" | "agent";
+
+type MarkdownHeading = {
+  level: number;
+  line: number;
+  text: string;
+};
 
 type AgentLaunchGateState = {
   kind: "idle" | "checking" | "passed" | "rejected";
@@ -388,6 +395,9 @@ export default function App() {
           fileComparison: "ファイル比較",
           imagePreview: "画像プレビュー",
           markdownPreview: "Markdown プレビュー",
+          outlineEmpty: "このファイルに Markdown 見出しはありません。",
+          outlineTab: "見出し",
+          documentOutline: "文書アウトライン",
           openTextFileToPreview:
             "Markdown プレビューを表示するにはテキストファイルを開いてください。",
           previewDisabled: "プレビューは設定で無効です。",
@@ -405,6 +415,9 @@ export default function App() {
           fileComparison: "File comparison",
           imagePreview: "Image Preview",
           markdownPreview: "Markdown preview",
+          outlineEmpty: "This file has no Markdown headings.",
+          outlineTab: "Outline",
+          documentOutline: "Document outline",
           openTextFileToPreview: "Open a text file to show Markdown preview.",
           previewDisabled: "Preview pane is disabled in Preferences.",
           previewTab: "Preview",
@@ -640,6 +653,8 @@ export default function App() {
       : rightPaneMode;
   const agentPaneVisible =
     agentWorkbenchAvailable && effectiveRightPaneMode === "agent";
+  const outlinePaneVisible =
+    effectiveRightPaneMode === "outline" && activeTab !== null;
   const previewPaneVisible =
     effectiveRightPaneMode === "preview" &&
     previewVisible &&
@@ -648,12 +663,18 @@ export default function App() {
     ? "compare"
     : agentPaneVisible
       ? "agent"
-      : previewPaneVisible
-        ? "preview"
-        : null;
+      : outlinePaneVisible
+        ? "outline"
+        : previewPaneVisible
+          ? "preview"
+          : null;
   const sidePaneVisible = sidePaneMode !== null;
   const hasWorkspaceSelection = Boolean(
     activeTab || selectedImage || compareView || agentPaneVisible,
+  );
+  const documentOutline = useMemo(
+    () => (activeTab ? extractMarkdownHeadings(activeContents) : []),
+    [activeContents, activeTab],
   );
   const activeDocumentStats = useMemo(
     () => analyzeTextDocument(activeContents, activeTab?.line_ending),
@@ -771,6 +792,19 @@ export default function App() {
 
     setRightPaneMode("compare");
   }, [sidePaneMode]);
+
+  const toggleOutlinePane = useCallback(() => {
+    if (!activeTab) {
+      return;
+    }
+
+    if (sidePaneMode === "outline") {
+      setRightPaneMode("preview");
+      return;
+    }
+
+    setRightPaneMode("outline");
+  }, [activeTab, sidePaneMode]);
 
   const toggleAgentPane = useCallback(() => {
     if (sidePaneMode === "agent") {
@@ -2069,6 +2103,11 @@ export default function App() {
     editorPaneRef.current?.goToLine(requestedLine);
     setStatus(`Moved to line ${Math.trunc(requestedLine)}`);
   }, [goToLineValue]);
+
+  const jumpToHeading = useCallback((heading: MarkdownHeading) => {
+    editorPaneRef.current?.goToLine(heading.line);
+    setStatus(`Moved to line ${heading.line}`);
+  }, []);
 
   const checkTabForExternalChange = useCallback(
     async (tabId: string) => {
@@ -3400,7 +3439,10 @@ export default function App() {
             diffAvailable
             onToggleDiff={toggleDiffPane}
             onToggleAgent={toggleAgentPane}
+            onToggleOutline={toggleOutlinePane}
             onTogglePreview={togglePreviewPane}
+            outlineActive={sidePaneMode === "outline"}
+            outlineAvailable={activeTab !== null}
             previewActive={sidePaneMode === "preview"}
           />
           {activeDirty && activeTab ? (
@@ -3761,7 +3803,9 @@ export default function App() {
                   ? sidePaneCopy.fileComparison
                   : sidePaneMode === "agent"
                     ? sidePaneCopy.agentWorkbench
-                    : sidePaneCopy.markdownPreview
+                    : sidePaneMode === "outline"
+                      ? sidePaneCopy.documentOutline
+                      : sidePaneCopy.markdownPreview
               }
               onScroll={
                 sidePaneMode === "preview" ? syncEditorScroll : undefined
@@ -3798,6 +3842,12 @@ export default function App() {
                   stopPending={agentStopPending}
                   menuLanguage={menuLanguage}
                   workspaceRootPath={workspaceRootPath}
+                />
+              ) : sidePaneMode === "outline" ? (
+                <OutlinePane
+                  copy={sidePaneCopy}
+                  headings={documentOutline}
+                  onSelect={jumpToHeading}
                 />
               ) : activeTab && previewVisible ? (
                 <PreviewPane source={activeContents} />
@@ -4264,7 +4314,10 @@ function RightPaneToggleControls({
   diffAvailable,
   onToggleAgent,
   onToggleDiff,
+  onToggleOutline,
   onTogglePreview,
+  outlineActive,
+  outlineAvailable,
   previewActive,
 }: {
   agentActive: boolean;
@@ -4274,12 +4327,16 @@ function RightPaneToggleControls({
   copy: {
     agentTab: string;
     diffTab: string;
+    outlineTab: string;
     previewTab: string;
     sidePaneMode: string;
   };
   onToggleAgent: () => void;
   onToggleDiff: () => void;
+  onToggleOutline: () => void;
   onTogglePreview: () => void;
+  outlineActive: boolean;
+  outlineAvailable: boolean;
   previewActive: boolean;
 }) {
   return (
@@ -4302,6 +4359,15 @@ function RightPaneToggleControls({
           {copy.diffTab}
         </button>
       ) : null}
+      <button
+        aria-pressed={outlineActive}
+        className="right-pane-toggle"
+        disabled={!outlineAvailable}
+        onClick={onToggleOutline}
+        type="button"
+      >
+        {copy.outlineTab}
+      </button>
       {agentAvailable ? (
         <button
           aria-pressed={agentActive}
@@ -4326,6 +4392,46 @@ function PreviewUnavailablePane({
   return (
     <div className="preview-unavailable" aria-label={ariaLabel}>
       {reason}
+    </div>
+  );
+}
+
+function OutlinePane({
+  copy,
+  headings,
+  onSelect,
+}: {
+  copy: {
+    documentOutline: string;
+    outlineEmpty: string;
+  };
+  headings: MarkdownHeading[];
+  onSelect: (heading: MarkdownHeading) => void;
+}) {
+  return (
+    <div className="outline-pane">
+      <div className="outline-pane-header">
+        <span>{copy.documentOutline}</span>
+      </div>
+      {headings.length > 0 ? (
+        <div className="outline-list">
+          {headings.map((heading) => (
+            <button
+              className="outline-item"
+              key={`${heading.line}-${heading.text}`}
+              onClick={() => onSelect(heading)}
+              style={{ paddingLeft: `${10 + (heading.level - 1) * 12}px` }}
+              title={`${heading.line}: ${heading.text}`}
+              type="button"
+            >
+              <span className="outline-line">{heading.line}</span>
+              <span className="outline-text">{heading.text}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="outline-empty">{copy.outlineEmpty}</div>
+      )}
     </div>
   );
 }
@@ -6071,6 +6177,58 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
       ].join(","),
     ),
   ).filter((element) => element.offsetParent !== null);
+}
+
+function extractMarkdownHeadings(source: string): MarkdownHeading[] {
+  const headings: MarkdownHeading[] = [];
+  const lines = source.split(/\r\n|\n|\r/);
+  let fenceMarker: "`" | "~" | null = null;
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const trimmedStart = line.trimStart();
+    const fenceMatch = trimmedStart.match(/^(```+|~~~+)/);
+
+    if (fenceMatch) {
+      const marker = fenceMatch[1].startsWith("`") ? "`" : "~";
+
+      if (fenceMarker === marker) {
+        fenceMarker = null;
+      } else if (fenceMarker === null) {
+        fenceMarker = marker;
+      }
+
+      continue;
+    }
+
+    if (fenceMarker !== null) {
+      continue;
+    }
+
+    const headingMatch = line.match(/^(#{1,6})[ \t]+(.+?)\s*$/);
+
+    if (!headingMatch) {
+      continue;
+    }
+
+    const text = headingMatch[2].replace(/[ \t]+#+[ \t]*$/, "").trim();
+
+    if (!text) {
+      continue;
+    }
+
+    headings.push({
+      level: headingMatch[1].length,
+      line: index + 1,
+      text,
+    });
+
+    if (headings.length >= MARKDOWN_OUTLINE_MAX_HEADINGS) {
+      break;
+    }
+  }
+
+  return headings;
 }
 
 function findTextMatches(

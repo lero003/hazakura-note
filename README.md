@@ -77,7 +77,7 @@ Example use case:
 - In-file search for the active tab, with visible match highlights, active-match selection, and keyboard next / previous / return-to-editor flow
 - Search options for case-sensitive, whole-word, and regex matching with invalid-regex reporting
 - Explicit non-Git split Diff workbench for comparing workspace text files by choosing separate source/target slots, plus active editor changes versus disk, recoverable drafts, and external-change conflicts, without inspecting Git repository state
-- Current-file Markdown heading outline with click-to-jump navigation, without workspace-wide indexing
+- Current-file Markdown heading outline and current-section status context with click-to-jump navigation, without workspace-wide indexing
 - Go to Line, cursor line/column status, and approximate selected character/line count
 - Editor display settings for line wrap, invisible characters, font size, and tab size, with persisted preference
 - Find-field and global shortcut handling ignores active IME composition so Japanese text conversion is not mistaken for editor commands

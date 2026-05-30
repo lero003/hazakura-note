@@ -1748,6 +1748,13 @@ button:disabled {
   border-color: var(--border-strong);
 }
 
+.outline-item.current {
+  background: var(--accent-soft);
+  border-color: var(--border-strong);
+  color: var(--accent);
+  font-weight: 700;
+}
+
 .outline-line {
   color: var(--text-muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -2138,7 +2145,8 @@ button:disabled {
 }
 
 .status-bar span:last-child {
-  flex: none;
+  flex: 0 1 auto;
+  max-width: 72%;
   opacity: 0.85;
 }
 

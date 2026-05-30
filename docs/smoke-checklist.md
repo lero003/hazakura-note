@@ -87,6 +87,8 @@ Latest narrow viewport containment polish checks: 2026-05-30 Vite browser smoke 
 
 Latest Markdown outline navigation checks: 2026-05-30 Vite browser smoke confirmed the no-file Safe Editor surface loads with a disabled Outline toggle, and automated gates passed after adding a current-file Outline toggle that lists ATX Markdown headings outside fenced code blocks and jumps the editor to the selected heading line. No fresh built-app outline interaction smoke was claimed.
 
+Latest Markdown current-section context checks: 2026-05-30 Vite browser smoke confirmed the no-file Safe Editor surface still loads with Outline disabled, and automated gates passed after adding current-section status-bar context from the cursor line and highlighting the matching heading in the Outline pane. No fresh built-app outline interaction smoke was claimed.
+
 ## Build First
 
 ```bash
@@ -169,8 +171,10 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 2. Click Outline / 見出し in the top editor chrome and confirm a right-side document outline opens.
 3. Confirm headings inside fenced code blocks are not listed.
 4. Click a heading in the outline and confirm the editor jumps to that heading line.
-5. Toggle Outline off and confirm the editor remains active and the tab contents are unchanged.
-6. Open a Markdown file without headings and confirm the Outline pane shows the empty-heading message instead of stale headings from the prior file.
+5. Move the cursor under a different heading and confirm the status bar shows the current section / 現在の見出し context.
+6. Confirm the matching Outline row is highlighted as the cursor moves through sections.
+7. Toggle Outline off and confirm the editor remains active and the tab contents are unchanged.
+8. Open a Markdown file without headings and confirm the Outline pane shows the empty-heading message instead of stale headings from the prior file.
 
 ## Markdown Preview Sync
 

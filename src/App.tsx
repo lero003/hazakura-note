@@ -676,6 +676,10 @@ export default function App() {
     () => (activeTab ? extractMarkdownHeadings(activeContents) : []),
     [activeContents, activeTab],
   );
+  const currentMarkdownHeading = useMemo(
+    () => findCurrentMarkdownHeading(documentOutline, selectionInfo.line),
+    [documentOutline, selectionInfo.line],
+  );
   const activeDocumentStats = useMemo(
     () => analyzeTextDocument(activeContents, activeTab?.line_ending),
     [activeContents, activeTab?.line_ending],
@@ -700,7 +704,12 @@ export default function App() {
   const activeStatusDetail = compareDocumentMeta
     ? compareDocumentMeta
     : activeTab
-    ? `${activeDocumentMeta} · ${formatSelectionInfo(selectionInfo, menuLanguage)}`
+    ? formatActiveEditorStatusDetail(
+        activeDocumentMeta,
+        selectionInfo,
+        currentMarkdownHeading,
+        menuLanguage,
+      )
     : activeDocumentMeta;
   const documentKey = activeTab?.path ?? selectedImage?.path ?? "welcome";
   const findMatches = useMemo(
@@ -3846,6 +3855,7 @@ export default function App() {
               ) : sidePaneMode === "outline" ? (
                 <OutlinePane
                   copy={sidePaneCopy}
+                  currentHeadingLine={currentMarkdownHeading?.line ?? null}
                   headings={documentOutline}
                   onSelect={jumpToHeading}
                 />
@@ -4398,6 +4408,7 @@ function PreviewUnavailablePane({
 
 function OutlinePane({
   copy,
+  currentHeadingLine,
   headings,
   onSelect,
 }: {
@@ -4405,6 +4416,7 @@ function OutlinePane({
     documentOutline: string;
     outlineEmpty: string;
   };
+  currentHeadingLine: number | null;
   headings: MarkdownHeading[];
   onSelect: (heading: MarkdownHeading) => void;
 }) {
@@ -4417,7 +4429,10 @@ function OutlinePane({
         <div className="outline-list">
           {headings.map((heading) => (
             <button
-              className="outline-item"
+              aria-current={
+                heading.line === currentHeadingLine ? "location" : undefined
+              }
+              className={`outline-item${heading.line === currentHeadingLine ? " current" : ""}`}
               key={`${heading.line}-${heading.text}`}
               onClick={() => onSelect(heading)}
               style={{ paddingLeft: `${10 + (heading.level - 1) * 12}px` }}
@@ -6231,6 +6246,23 @@ function extractMarkdownHeadings(source: string): MarkdownHeading[] {
   return headings;
 }
 
+function findCurrentMarkdownHeading(
+  headings: MarkdownHeading[],
+  line: number,
+): MarkdownHeading | null {
+  let currentHeading: MarkdownHeading | null = null;
+
+  for (const heading of headings) {
+    if (heading.line > line) {
+      break;
+    }
+
+    currentHeading = heading;
+  }
+
+  return currentHeading;
+}
+
 function findTextMatches(
   source: string,
   query: string,
@@ -6734,6 +6766,25 @@ function formatSelectionInfo(
   return menuLanguage === "ja"
     ? `${selection.line.toLocaleString()} 行, ${selection.column.toLocaleString()} 列${selectionText}`
     : `Ln ${selection.line.toLocaleString()}, Col ${selection.column.toLocaleString()}${selectionText}`;
+}
+
+function formatActiveEditorStatusDetail(
+  documentMeta: string,
+  selection: EditorSelectionInfo,
+  currentHeading: MarkdownHeading | null,
+  menuLanguage: MenuLanguage,
+): string {
+  const parts = [documentMeta, formatSelectionInfo(selection, menuLanguage)];
+
+  if (currentHeading) {
+    parts.push(
+      menuLanguage === "ja"
+        ? `見出し: ${currentHeading.text}`
+        : `Section: ${currentHeading.text}`,
+    );
+  }
+
+  return parts.join(" · ");
 }
 
 function formatTimestamp(timestamp: number): string {

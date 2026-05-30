@@ -15,6 +15,15 @@ export function LinkIcon() {
   );
 }
 
+export function TableIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1.5" y="2.5" width="11" height="9" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+      <path d="M1.5 5.5H12.5M5 2.5V11.5M9 2.5V11.5" stroke="currentColor" strokeWidth="1.3"/>
+    </svg>
+  );
+}
+
 export function FolderIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">

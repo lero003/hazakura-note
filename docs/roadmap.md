@@ -119,11 +119,16 @@ Goal: add Pi as a first-class Agent Workbench CLI provider while improving app s
 
 Status: Active development lane after the `v0.4.0` warning-expected DMG preview release.
 
+Delivered:
+
+- `pi` is available as an allowlisted local CLI provider in the existing Agent Workbench UI and backend validation path
+- Pi remains a local CLI provider only: no Pi RPC, SDK, provider-add UI, arbitrary provider configuration, multi-agent orchestration, auto-apply, auto-commit, general terminal, or Git client behavior
+
 Candidate work:
 
-- add `pi` as an allowlisted local CLI provider, after updating `docs/agent-workbench-boundary.md`
 - keep Pi launch behavior inside the existing Agent Workbench gate: explicit mode, restart boundary, responsibility consent, selected workspace root, one active session, no restore
 - run trusted-workspace manual smoke for Pi CLI usage alongside existing `codex` / `opencode` provider checks
+- record provider-not-found evidence when Pi is not installed locally, without installing or configuring it during automation
 - improve app stability and responsiveness found during normal editor and Agent Workbench smoke
 - keep Safe Editor Mode visually and conceptually primary while the provider list grows
 

@@ -83,6 +83,8 @@ Latest Non-Git diff/review readiness checks: 2026-05-30 automated gates passed a
 
 Latest Diff empty-state polish checks: 2026-05-30 Vite browser smoke confirmed the no-file / no-workspace surface loads, Diff opens as a main workbench, the center editor area is hidden, Compare remains disabled, and the setup copy now asks the user to open a workspace folder before choosing source/target files. No fresh built-app file-comparison interaction smoke was claimed.
 
+Latest narrow viewport containment polish checks: 2026-05-30 Vite browser inspection found the app document could retain horizontal scroll offset from the previous 760px body minimum, shifting the workspace pane partially off-screen in narrow browser surfaces. The CSS now lets the app root fill the viewport without document-level horizontal scrolling; no fresh built-app narrow-window smoke was claimed.
+
 ## Build First
 
 ```bash

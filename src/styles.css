@@ -134,11 +134,17 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+
 body {
   margin: 0;
-  min-width: 760px;
   min-height: 100vh;
-  overflow: hidden;
 }
 
 /* アニメーション / Keyframes */

@@ -11,6 +11,7 @@ import {
 } from "react";
 // xterm imports moved to AgentTerminalView component
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import EditorPane, {
   type EditorPaneHandle,
   type MarkdownFormat,
@@ -2395,7 +2396,10 @@ export default function App() {
     }
 
     void writeAgentWorkbenchSessionInput(data)
-      .then(() => undefined)
+      .then(() => {
+        // Immediately poll for output after sending input
+        void refreshAgentSessionState();
+      })
       .catch((err) => {
         setAgentLaunchGate({
           kind: "rejected",
@@ -2749,6 +2753,57 @@ export default function App() {
       unlisten?.();
     };
   }, [openExternalFilePaths, restoreComplete]);
+
+  // Handle file drag-and-drop onto the app window
+  useEffect(() => {
+    if (!isTauriRuntime()) return;
+    let unlisten: UnlistenFn | null = null;
+    let cancelled = false;
+
+    void getCurrentWebview()
+      .onDragDropEvent(async (event) => {
+        if (cancelled) return;
+        const payload = event.payload;
+        if (payload.type === "drop") {
+          const paths = payload.paths.filter(
+            (p: string) =>
+              p.endsWith(".md") ||
+              p.endsWith(".markdown") ||
+              p.endsWith(".txt") ||
+              p.endsWith(".json") ||
+              p.endsWith(".yaml") ||
+              p.endsWith(".yml") ||
+              p.endsWith(".toml") ||
+              p.endsWith(".csv") ||
+              p.endsWith(".css") ||
+              p.endsWith(".html") ||
+              p.endsWith(".log") ||
+              p.endsWith(".ini") ||
+              p.endsWith(".conf"),
+          );
+          if (paths.length === 1) {
+            await openExternalFilePaths(paths);
+          } else if (paths.length > 1) {
+            // Open the first one directly, queue the rest via opened_files
+            await openExternalFilePaths([paths[0]]);
+            // The remaining files will appear in the background
+            setStatus(`Opened ${paths.length} file(s)`);
+          }
+        }
+      })
+      .then((nextUnlisten) => {
+        if (!cancelled) unlisten = nextUnlisten;
+        else nextUnlisten();
+      })
+      .catch((err) => {
+        console.warn("Failed to listen for drag-drop events", err);
+      });
+
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [openExternalFilePaths]);
 
   useEffect(() => {
     if (!restoreComplete) {
@@ -3720,6 +3775,12 @@ export default function App() {
 
       <footer className="status-bar">
         <span>{localizeStatusMessage(status, menuLanguage)}</span>
+        {agentWorkbenchActive && activeAgentSession ? (
+          <span className="status-agent-indicator" title="Agent mode active">
+            <span className="status-agent-dot" />
+            {providerLabel(agentWorkbenchProvider)}
+          </span>
+        ) : null}
         <span>{activeStatusDetail}</span>
       </footer>
 

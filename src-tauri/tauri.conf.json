@@ -29,30 +29,32 @@
     "icon": ["icons/icon.icns"],
     "fileAssociations": [
       {
-        "name": "Text files",
-        "ext": [
-          "md",
-          "markdown",
-          "mdown",
-          "txt",
-          "text",
-          "log",
-          "json",
-          "jsonl",
-          "yaml",
-          "yml",
-          "toml",
-          "csv",
-          "tsv",
-          "css",
-          "html",
-          "xml",
-          "ini",
-          "conf"
-        ],
-        "contentTypes": ["public.text", "public.plain-text", "public.json"],
+        "name": "Markdown files",
+        "ext": ["md", "markdown", "mdown"],
+        "contentTypes": ["public.text"],
         "role": "Editor",
-        "rank": "None"
+        "rank": "Default"
+      },
+      {
+        "name": "Text files",
+        "ext": ["txt", "text", "log"],
+        "contentTypes": ["public.plain-text"],
+        "role": "Editor",
+        "rank": "Default"
+      },
+      {
+        "name": "Data files",
+        "ext": ["json", "jsonl", "yaml", "yml", "toml", "csv", "tsv"],
+        "contentTypes": ["public.text", "public.json"],
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "name": "Code files",
+        "ext": ["css", "html", "xml", "ini", "conf"],
+        "contentTypes": ["public.text"],
+        "role": "Editor",
+        "rank": "Alternate"
       }
     ],
     "macOS": {

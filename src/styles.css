@@ -115,6 +115,7 @@ html, body, #root, .app-shell,
 /* 夜光 / Yakou – Warp-inspired dark gradient theme */
 :root[data-theme="yakou"] {
   --bg: linear-gradient(135deg, #0d0d12 0%, #11101e 50%, #0d0d12 100%);
+  --bg-gradient: true;
   --surface: #14141e;
   --surface-rgb: 20, 20, 30;
   --surface-strong: #1a1a28;
@@ -415,6 +416,60 @@ button:disabled {
   position: relative;
 }
 
+
+/* スペシャルテーマ用パルスグロー / Pulse Glow for Special Themes */
+@keyframes accentPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes bgDrift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 夜光: 背景グラデーションアニメーション / Yakou: Animated BG */
+:root[data-theme="yakou"] .app-shell {
+  background: linear-gradient(135deg, #0d0d12 0%, #11101e 50%, #0d0d12 100%);
+  background-size: 200% 200%;
+  animation: bgDrift 20s ease-in-out infinite;
+}
+
+/* 曙光: ゆっくりと変化する曙のグラデーション / Shokou: Slow Dawn Shift */
+:root[data-theme="shokou"] .app-shell {
+  background: linear-gradient(135deg, #eef7ff 0%, #fff4e6 50%, #fdf0e0 100%);
+  background-size: 200% 200%;
+  animation: bgDrift 25s ease-in-out infinite;
+}
+
+/* 紅葉: 秋の風合いアニメーション / Kouyou: Autumn Drift */
+:root[data-theme="kouyou"] .app-shell {
+  background: linear-gradient(135deg, #f7efe4 0%, #edf2e6 50%, #f5ece0 100%);
+  background-size: 200% 200%;
+  animation: bgDrift 22s ease-in-out infinite;
+}
+
+/* スペシャルテーマ: アクセント要素のグローパルス / Special Theme: Glow Pulse */
+:root[data-theme="yakou"] .agent-mode-badge:not(.pending),
+:root[data-theme="shokou"] .agent-mode-badge:not(.pending),
+:root[data-theme="kouyou"] .agent-mode-badge:not(.pending) {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 30%, transparent);
+  animation: accentPulse 3s ease-in-out infinite;
+}
+
+/* スペシャルテーマ: ステータスバーの装飾 / Status Bar Accent */
+:root[data-theme="yakou"] .status-bar {
+  border-top: 1px solid rgba(139, 124, 248, 0.12);
+}
+
+:root[data-theme="shokou"] .status-bar {
+  border-top: 1px solid rgba(242, 159, 75, 0.12);
+}
+
+:root[data-theme="kouyou"] .status-bar {
+  border-top: 1px solid rgba(168, 68, 50, 0.12);
+}
 .sakura-petals {
   inset: 0;
   overflow: hidden;
@@ -2068,6 +2123,7 @@ button:disabled {
   gap: 10px;
   height: 100%;
   min-height: 0;
+  overflow: hidden;
   padding: 14px 18px 18px;
 }
 
@@ -2180,9 +2236,10 @@ button:disabled {
   flex: 1 1 320px;
   flex-direction: column;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  min-height: 0;
+  min-height: 80px;
   overflow: hidden;
   position: relative;
+  transition: flex 0.15s ease;
 }
 
 .agent-terminal-shell.inactive {
@@ -2211,13 +2268,18 @@ button:disabled {
   font-family:
     system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 13px;
-  inset: 48px 18px 18px;
+  inset: 0;
   display: grid;
   place-items: center;
   pointer-events: auto;
   position: absolute;
   text-align: center;
   user-select: none;
+}
+
+/* When placeholder is shown, the host div collapses */
+.agent-terminal-shell:has(.agent-terminal-placeholder) .agent-terminal-host {
+  display: none;
 }
 
 .agent-terminal-host .xterm {
@@ -2513,6 +2575,44 @@ button:disabled {
   flex: 0 1 auto;
   max-width: 72%;
   opacity: 0.85;
+}
+
+/* ステータスバー: エージェントモードインジケーター / Agent Mode Status */
+.status-agent-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 650;
+  padding: 0 10px;
+  margin: 0 4px;
+  color: color-mix(in srgb, var(--status-text) 80%, transparent);
+  flex: 0 0 auto;
+}
+
+.status-agent-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent);
+  animation: agentPulse 2s ease-in-out infinite;
+}
+
+@keyframes agentPulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+:root[data-theme="yakou"] .status-agent-dot {
+  background: var(--accent-gradient);
+  box-shadow: 0 0 8px rgba(124, 111, 240, 0.4);
+}
+:root[data-theme="shokou"] .status-agent-dot {
+  box-shadow: 0 0 8px rgba(242, 159, 75, 0.4);
+}
+:root[data-theme="kouyou"] .status-agent-dot {
+  box-shadow: 0 0 8px rgba(168, 68, 50, 0.4);
 }
 
 /* モーダルダイアログのアニメーション化 / Modals */

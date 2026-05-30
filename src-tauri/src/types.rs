@@ -227,6 +227,24 @@ pub(crate) struct AgentRuntimeLaunchRequest<'a> {
     pub(crate) terminal_rows: Option<u16>,
 }
 
+#[derive(Debug, Serialize)]
+pub(crate) struct WorkspaceTreeEntry {
+    pub(crate) name: String,
+    pub(crate) path: String,
+    pub(crate) kind: WorkspaceEntryKind,
+    pub(crate) children: Vec<WorkspaceTreeEntry>,
+    pub(crate) children_loaded: bool,
+    pub(crate) children_truncated: bool,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum WorkspaceEntryKind {
+    Directory,
+    File,
+}
+
+
 pub(crate) trait AgentRuntimeAdapter {
     fn start(&self, request: AgentRuntimeLaunchRequest<'_>) -> Result<AgentRuntimeHandle, String>;
     fn stop(&self, handle: &AgentRuntimeHandle) -> Result<AgentRuntimeHandle, String>;

@@ -147,6 +147,7 @@ export type EditorSettings = {
   showInvisibles: boolean;
   fontSize: number;
   tabSize: number;
+  spellcheckEnabled: boolean;
 };
 
 export type DraftRecord = {

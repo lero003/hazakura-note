@@ -42,6 +42,7 @@ type EditorPaneProps = {
   theme: "light" | "dark";
   fontSize: number;
   showInvisibles: boolean;
+  spellcheckEnabled: boolean;
   tabSize: number;
   wrapLines: boolean;
   activeSearchMatchIndex: number;
@@ -135,6 +136,7 @@ const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
       fontSize,
       searchMatches,
       showInvisibles,
+      spellcheckEnabled,
       tabSize,
       theme,
       value,
@@ -154,6 +156,7 @@ const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
   const wrappingCompartmentRef = useRef(new Compartment());
   const invisiblesCompartmentRef = useRef(new Compartment());
   const tabSizeCompartmentRef = useRef(new Compartment());
+  const spellcheckCompartmentRef = useRef(new Compartment());
 
   useImperativeHandle(
     ref,
@@ -248,6 +251,11 @@ const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
           showInvisibles ? invisibleCharactersField : [],
         ),
         tabSizeCompartmentRef.current.of(EditorState.tabSize.of(tabSize)),
+        spellcheckCompartmentRef.current.of(
+          EditorView.contentAttributes.of({
+            spellcheck: spellcheckEnabled ? "true" : "false",
+          }),
+        ),
         themeCompartmentRef.current.of([
           editorTheme(theme, fontSize),
           syntaxHighlighting(editorMarkdownHighlightStyle(theme)),
@@ -340,6 +348,22 @@ const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
       ),
     });
   }, [tabSize]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+
+    if (!view) {
+      return;
+    }
+
+    view.dispatch({
+      effects: spellcheckCompartmentRef.current.reconfigure(
+        EditorView.contentAttributes.of({
+          spellcheck: spellcheckEnabled ? "true" : "false",
+        }),
+      ),
+    });
+  }, [spellcheckEnabled]);
 
   useEffect(() => {
     const view = viewRef.current;

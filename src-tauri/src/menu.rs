@@ -23,6 +23,7 @@ pub(crate) fn build_app_menu_with_state<R: tauri::Runtime>(
     let preview_visible = state.map(|state| state.preview_visible).unwrap_or(true);
     let wrap_lines = state.map(|state| state.wrap_lines).unwrap_or(true);
     let show_invisibles = state.map(|state| state.show_invisibles).unwrap_or(false);
+    let spellcheck_enabled = state.map(|state| state.spellcheck_enabled).unwrap_or(true);
     let theme_preference = state
         .map(|state| state.theme_preference.as_str())
         .unwrap_or("system");
@@ -153,6 +154,14 @@ pub(crate) fn build_app_menu_with_state<R: tauri::Runtime>(
                 true,
                 show_invisibles,
                 Some("CmdOrCtrl+Option+I"),
+            )?,
+            &CheckMenuItem::with_id(
+                app,
+                MENU_TOGGLE_SPELLCHECK,
+                label("Spell Check", "スペルチェック"),
+                true,
+                spellcheck_enabled,
+                Some("CmdOrCtrl+Option+;"),
             )?,
             &PredefinedMenuItem::separator(app)?,
             &Submenu::with_items(

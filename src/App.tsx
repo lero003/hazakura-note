@@ -1569,6 +1569,12 @@ export default function App() {
             showInvisibles: !current.showInvisibles,
           }));
           break;
+        case "toggle-spellcheck":
+          setEditorSettings((current) => ({
+            ...current,
+            spellcheckEnabled: !current.spellcheckEnabled,
+          }));
+          break;
         case "theme-system":
           setThemePreference("system");
           break;
@@ -2598,6 +2604,7 @@ export default function App() {
       previewVisible,
       wrapLines: editorSettings.wrapLines,
       showInvisibles: editorSettings.showInvisibles,
+      spellcheckEnabled: editorSettings.spellcheckEnabled,
       themePreference,
       menuLanguage,
       recentFiles: menuRecentFiles,
@@ -2609,6 +2616,7 @@ export default function App() {
     activeDirty,
     activeTab,
     editorSettings.showInvisibles,
+    editorSettings.spellcheckEnabled,
     editorSettings.wrapLines,
     menuLanguage,
     previewVisible,
@@ -3649,6 +3657,7 @@ export default function App() {
                   onSelectionChange={setSelectionInfo}
                   searchMatches={findMatches}
                   showInvisibles={editorSettings.showInvisibles}
+                  spellcheckEnabled={editorSettings.spellcheckEnabled}
                   tabSize={editorSettings.tabSize}
                   theme={editorTheme}
                   value={activeContents}
@@ -4369,6 +4378,7 @@ function readStoredEditorSettings(): EditorSettings {
     showInvisibles: false,
     fontSize: 14,
     tabSize: 2,
+    spellcheckEnabled: true,
   };
   const value = window.localStorage.getItem(EDITOR_SETTINGS_STORAGE_KEY);
 
@@ -4392,6 +4402,10 @@ function readStoredEditorSettings(): EditorSettings {
       tabSize: [2, 4, 8].includes(Number(parsed.tabSize))
         ? Number(parsed.tabSize)
         : defaults.tabSize,
+      spellcheckEnabled:
+        typeof parsed.spellcheckEnabled === "boolean"
+          ? parsed.spellcheckEnabled
+          : defaults.spellcheckEnabled,
     };
   } catch {
     return defaults;

@@ -59,7 +59,7 @@ Latest Non-Git file comparison label polish checks: 2026-05-29 built-app Safe Ed
 
 Latest file comparison column readability checks: 2026-05-29 built-app launch was attempted, but Computer Use could not inspect the window in this run. Automated gates passed after adding source/target/content column headers to the existing file-comparison view. No fresh file-comparison interaction smoke was claimed.
 
-Latest file comparison target gating checks: 2026-05-30 automated gates passed after limiting Set as compare source / Compare with source actions to common text-document filenames while leaving Open and Copy full path available for other workspace files. No fresh file-comparison interaction smoke was claimed.
+Latest file comparison target gating checks: 2026-05-30 automated gates passed after limiting Set as compare source / Compare with source actions to common text-document filenames while leaving Open, Copy full path, and Show in Finder available for other workspace files. No fresh file-comparison interaction smoke was claimed.
 
 Latest file comparison wording alignment checks: 2026-05-30 automated gates passed after clarifying the second context-menu action as Compare with source / 比較元と比較 and aligning the README feature/limit wording with the existing explicit non-Git file-comparison behavior. No fresh file-comparison interaction smoke was claimed.
 
@@ -162,7 +162,7 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 9. Confirm additions are shown on the right, removals on the left, and changed lines appear aligned when practical.
 10. For Markdown files with headings, confirm changed blocks show the nearest heading context row when a heading exists before the changed lines.
 11. Confirm the labels say Diff or non-Git file/workspace comparison language, and do not mention Git status, branch, staging, commit, or repository state.
-12. Right-click an image or obvious non-text file such as `.DS_Store` if present and confirm compare actions are disabled while Open and Copy full path remain available.
+12. Right-click an image or obvious non-text file such as `.DS_Store` if present and confirm compare actions are disabled while Open, Copy full path, and Show in Finder remain available.
 13. Toggle Diff off and confirm the editor, workspace tree, and active tab remain usable.
 
 ## Change Review
@@ -290,18 +290,19 @@ Launch and session:
 2. Switch the right pane to Agent.
 3. Confirm the pane shows compact provider/session/runtime status and gives most of the right pane height to the xterm terminal surface.
 4. Right-click the small Markdown file in the workspace tree and choose Copy full path; confirm the clipboard contains the file path string, not file contents.
-5. Drag the file row if practical and confirm the drag payload can be used as text/path input rather than a file-copy operation.
-6. Click Start session.
-7. If the provider is missing, confirm the UI reports provider not found and no session starts.
-8. If the provider is found, confirm one session starts, launch gate is passed, runtime status becomes active/running, and terminal output mentions the provider start.
-9. While the session is active, confirm provider selection is disabled.
-10. Right-click the small Markdown file again and confirm Send full path to Agent is available only while the session is running.
-11. Choose Send full path to Agent and confirm only the selected workspace file path is sent as plain input, without hazakura adding a shell command or arbitrary path field.
-12. Type only harmless, user-chosen input into the terminal surface. Do not approve provider-internal command execution or file edits unless intentionally testing in the throwaway workspace.
-13. Confirm the provider receives input and terminal control output is rendered by the terminal surface instead of appearing as raw escape text.
-14. If testing file-targeted agent work, use only the copied/sent full path string in the provider prompt; hazakura should not expose an arbitrary path input field.
-15. Resize the right pane if practical and confirm the provider terminal remains usable.
-16. Click Stop session.
+5. Right-click the same file and choose Show in Finder / Finderで表示; confirm Finder opens with that file selected.
+6. Drag the file row if practical and confirm the drag payload can be used as text/path input rather than a file-copy operation.
+7. Click Start session.
+8. If the provider is missing, confirm the UI reports provider not found and no session starts.
+9. If the provider is found, confirm one session starts, launch gate is passed, runtime status becomes active/running, and terminal output mentions the provider start.
+10. While the session is active, confirm provider selection is disabled.
+11. Right-click the small Markdown file again and confirm Send full path to Agent is available only while the session is running.
+12. Choose Send full path to Agent and confirm only the selected workspace file path is sent as plain input, without hazakura adding a shell command or arbitrary path field.
+13. Type only harmless, user-chosen input into the terminal surface. Do not approve provider-internal command execution or file edits unless intentionally testing in the throwaway workspace.
+14. Confirm the provider receives input and terminal control output is rendered by the terminal surface instead of appearing as raw escape text.
+15. If testing file-targeted agent work, use only the copied/sent full path string in the provider prompt; hazakura should not expose an arbitrary path input field.
+16. Resize the right pane if practical and confirm the provider terminal remains usable.
+17. Click Stop session.
 17. Confirm session/runtime status becomes stopped or exited and terminal output records the stop or exit.
 18. Confirm terminal input no longer reaches the provider after stop.
 

@@ -735,6 +735,64 @@ fn open_text_file(path: String) -> Result<TextFileDocument, String> {
 }
 
 #[tauri::command]
+fn reveal_path_in_file_manager(path: String) -> Result<(), String> {
+    let path_buf = PathBuf::from(&path);
+
+    fs::metadata(&path_buf).map_err(|err| format!("Cannot reveal path: {err}"))?;
+
+    #[cfg(target_os = "macos")]
+    {
+        let status = Command::new("/usr/bin/open")
+            .arg("-R")
+            .arg(&path_buf)
+            .status()
+            .map_err(|err| format!("Cannot open Finder: {err}"))?;
+
+        if status.success() {
+            return Ok(());
+        }
+
+        return Err(format!("Finder reveal failed with status {status}."));
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let status = Command::new("explorer")
+            .arg("/select,")
+            .arg(&path_buf)
+            .status()
+            .map_err(|err| format!("Cannot open file manager: {err}"))?;
+
+        if status.success() {
+            return Ok(());
+        }
+
+        return Err(format!("File manager reveal failed with status {status}."));
+    }
+
+    #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+    {
+        let directory = if path_buf.is_dir() {
+            path_buf.as_path()
+        } else {
+            path_buf
+                .parent()
+                .ok_or_else(|| "Cannot find containing folder.".to_string())?
+        };
+        let status = Command::new("xdg-open")
+            .arg(directory)
+            .status()
+            .map_err(|err| format!("Cannot open file manager: {err}"))?;
+
+        if status.success() {
+            return Ok(());
+        }
+
+        Err(format!("File manager open failed with status {status}."))
+    }
+}
+
+#[tauri::command]
 fn create_text_file(path: String) -> Result<TextFileDocument, String> {
     let path_buf = PathBuf::from(&path);
 
@@ -2091,6 +2149,7 @@ pub fn run() {
     builder
         .invoke_handler(tauri::generate_handler![
             open_text_file,
+            reveal_path_in_file_manager,
             create_text_file,
             get_file_metadata,
             list_workspace_directory,

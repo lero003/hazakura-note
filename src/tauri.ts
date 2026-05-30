@@ -245,6 +245,14 @@ export async function openTextFile(path: string): Promise<TextFileDocument> {
   return invoke<TextFileDocument>("open_text_file", { path });
 }
 
+export async function revealPathInFileManager(path: string): Promise<void> {
+  if (!isTauriRuntime()) {
+    return;
+  }
+
+  await invoke("reveal_path_in_file_manager", { path });
+}
+
 export async function drainOpenedFiles(): Promise<string[]> {
   if (!isTauriRuntime()) {
     return [];

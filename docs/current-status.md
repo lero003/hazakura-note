@@ -292,7 +292,7 @@ Start panel layout polish on 2026-05-29:
 
 Agent Workbench Workspace Path Handoff on 2026-05-29:
 
-- Workspace file rows now support right-click Copy full path for passing a file path string to an Agent provider prompt without copying file contents.
+- Workspace file rows now support right-click Copy full path and Show in Finder / Finderで表示 for locating the selected item without copying file contents.
 - Workspace file rows also provide a text/plain drag payload containing the file full path, plus a hazakura-specific path payload, so drag/drop can be used as a path handoff where supported.
 - While one Agent session is running, the workspace file context menu can send that selected file's full path to the Agent as plain terminal input. It does not append a command or newline.
 - This does not add arbitrary path input UI, arbitrary shell/command execution, auto-apply, auto-commit, Git integration, provider-add UI, or file-copy behavior.

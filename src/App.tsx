@@ -35,6 +35,7 @@ import {
   pickSaveAsTextFilePath,
   pickWorkspaceFolder,
   requestAppRestart,
+  revealPathInFileManager,
   saveTextFile,
   saveTextFileAs,
   setCurrentWindowTitle,
@@ -1417,6 +1418,31 @@ export default function App() {
       );
       setStatus(
         menuLanguage === "ja" ? "パスのコピーに失敗しました" : "Copy path failed",
+      );
+    }
+  }, [menuLanguage]);
+
+  const revealWorkspacePath = useCallback(async (file: CompareAnchor) => {
+    setWorkspaceContextMenu(null);
+    setGlobalError(null);
+
+    try {
+      await revealPathInFileManager(file.path);
+      setStatus(
+        menuLanguage === "ja"
+          ? `Finderで表示: ${file.name}`
+          : `Shown in Finder: ${file.name}`,
+      );
+    } catch (err) {
+      setGlobalError(
+        menuLanguage === "ja"
+          ? `Finderで表示できませんでした: ${String(err)}`
+          : `Show in Finder failed: ${String(err)}`,
+      );
+      setStatus(
+        menuLanguage === "ja"
+          ? "Finderで表示できませんでした"
+          : "Show in Finder failed",
       );
     }
   }, [menuLanguage]);
@@ -4336,6 +4362,7 @@ export default function App() {
             void openWorkspaceFile(workspaceContextMenu.path);
           }}
           onCopyFullPath={() => void copyWorkspaceFullPath(workspaceContextMenu)}
+          onRevealInFinder={() => void revealWorkspacePath(workspaceContextMenu)}
           onSendFullPathToAgent={() =>
             void sendWorkspacePathToAgent(workspaceContextMenu)
           }
@@ -5697,6 +5724,7 @@ function WorkspaceContextMenu({
   onCompare,
   onCopyFullPath,
   onOpen,
+  onRevealInFinder,
   onSendFullPathToAgent,
   onSetCompareSource,
   onSetCompareTarget,
@@ -5711,6 +5739,7 @@ function WorkspaceContextMenu({
   onCompare: () => void;
   onCopyFullPath: () => void;
   onOpen: () => void;
+  onRevealInFinder: () => void;
   onSendFullPathToAgent: () => void;
   onSetCompareSource: () => void;
   onSetCompareTarget: () => void;
@@ -5719,7 +5748,7 @@ function WorkspaceContextMenu({
     activeTabPath !== null && activeTabPath !== anchor.path;
   const hasDifferentCompareSource =
     compareSource !== null && compareSource.path !== anchor.path;
-  const itemCount = 6 + (canSendToAgent ? 1 : 0) + (compareSource ? 1 : 0);
+  const itemCount = 7 + (canSendToAgent ? 1 : 0) + (compareSource ? 1 : 0);
   const estimatedWidth = 240;
   const estimatedHeight = 12 + itemCount * 34;
   const menuLeft = Math.min(
@@ -5740,6 +5769,7 @@ function WorkspaceContextMenu({
           copyFullPath: "フルパスをコピー",
           menu: "ワークスペース項目の操作",
           open: "開く",
+          revealInFinder: "Finderで表示",
           sendFullPathToAgent: "Agent にフルパスを送る",
           setCompareSource: "比較元にする",
           setCompareTarget: "比較先にする",
@@ -5752,6 +5782,7 @@ function WorkspaceContextMenu({
           copyFullPath: "Copy full path",
           menu: "Workspace item actions",
           open: "Open",
+          revealInFinder: "Show in Finder",
           sendFullPathToAgent: "Send full path to Agent",
           setCompareSource: "Set as compare source",
           setCompareTarget: "Set as compare target",
@@ -5771,6 +5802,9 @@ function WorkspaceContextMenu({
       </button>
       <button type="button" role="menuitem" onClick={onCopyFullPath}>
         {labels.copyFullPath}
+      </button>
+      <button type="button" role="menuitem" onClick={onRevealInFinder}>
+        {labels.revealInFinder}
       </button>
       {canSendToAgent ? (
         <button type="button" role="menuitem" onClick={onSendFullPathToAgent}>

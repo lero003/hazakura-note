@@ -2148,6 +2148,15 @@ button:disabled {
   min-height: 0;
   overflow: hidden;
   padding: 14px 18px 18px;
+  transition: opacity 0.2s ease;
+}
+
+.agent-pane.session-stopped .agent-terminal-shell {
+  border-color: var(--border);
+}
+
+.agent-pane.session-stopped .agent-compact-meta span:last-child {
+  color: var(--text-muted);
 }
 
 .agent-compact-header {

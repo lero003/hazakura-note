@@ -102,7 +102,7 @@ export function AgentPaneShell({
     !activeSession || gate.kind === "checking" || gate.kind === "rejected";
 
   return (
-    <section className="agent-pane" aria-label="Agent Workbench pane">
+    <section className={`agent-pane${!activeSession ? " session-stopped" : ""}`} aria-label="Agent Workbench pane">
       <div className="agent-compact-header">
         <div className="agent-compact-title">
           <strong>{providerLabel(provider)}</strong>

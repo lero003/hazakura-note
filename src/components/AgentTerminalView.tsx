@@ -198,6 +198,7 @@ export function AgentTerminalView({
   const activeSessionRef = useRef(activeSession);
   const onDataRef = useRef(onData);
   const onResizeRef = useRef(onResize);
+  const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showInactivePlaceholder = !activeSession && output.length === 0;
 
   useEffect(() => {
@@ -253,8 +254,16 @@ export function AgentTerminalView({
       }
 
       lastTerminalSizeRef.current = nextSize;
-      onResizeRef.current(nextSize);
+      // Debounce resize notifications (100ms)
+      if (resizeTimerRef.current !== null) {
+        clearTimeout(resizeTimerRef.current);
+      }
+      resizeTimerRef.current = setTimeout(
+        () => onResizeRef.current(nextSize),
+        100,
+      );
     };
+    fitAndNotify._timer = 0 as unknown as ReturnType<typeof setTimeout>;
     fitAndNotify();
 
     const dataDisposable = terminal.onData((data) => {
@@ -299,6 +308,10 @@ export function AgentTerminalView({
       dataDisposable.dispose();
       terminal.dispose();
       terminalRef.current = null;
+      if (resizeTimerRef.current !== null) {
+        clearTimeout(resizeTimerRef.current);
+        resizeTimerRef.current = null;
+      }
       lastOutputSeqRef.current = 0;
       lastTerminalSizeRef.current = null;
     };

@@ -118,6 +118,21 @@ pub(crate) fn build_app_menu_with_state<R: tauri::Runtime>(
             &PredefinedMenuItem::separator(app)?,
             &MenuItem::with_id(
                 app,
+                MENU_EXPORT_HTML,
+                label("Export as HTML…", "HTMLとして書き出す…"),
+                has_active_tab,
+                Some("CmdOrCtrl+Alt+H"),
+            )?,
+            &MenuItem::with_id(
+                app,
+                MENU_EXPORT_PDF,
+                label("Export as PDF…", "PDFとして書き出す…"),
+                has_active_tab,
+                Some("CmdOrCtrl+Alt+P"),
+            )?,
+            &PredefinedMenuItem::separator(app)?,
+            &MenuItem::with_id(
+                app,
                 MENU_CLOSE_WINDOW,
                 label("Close Window", "ウィンドウを閉じる"),
                 true,

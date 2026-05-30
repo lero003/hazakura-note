@@ -12,6 +12,7 @@ import {
 // xterm imports moved to AgentTerminalView component
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { save as saveDialog } from "@tauri-apps/plugin-dialog";
 import EditorPane, {
   type EditorPaneHandle,
   type MarkdownFormat,
@@ -1471,6 +1472,77 @@ export default function App() {
     }
   }, []);
 
+  const exportPdf = useCallback(() => {
+    window.print();
+  }, []);
+
+  const exportHtml = useCallback(async () => {
+    if (!activeTab || activeContents === undefined) {
+      setStatus("No active document to export");
+      return;
+    }
+
+    try {
+      // Pick save location
+      const destPath = await saveDialog({
+        defaultPath: activeTab.name.replace(/\.[^.]+$/, "") + ".html",
+        filters: [{ name: "HTML", extensions: ["html"] }],
+      });
+      if (!destPath) return;
+
+      // Build standalone HTML
+      const { renderMarkdown } = await import("./markdown");
+      const bodyHtml = renderMarkdown(activeContents);
+
+      // Extract current theme CSS variables for inline styles
+      const root = document.documentElement;
+      const cs = getComputedStyle(root);
+      const cssVars = [
+        "--bg", "--text", "--text-muted", "--accent", "--border",
+        "--surface", "--surface-muted", "--surface-strong",
+        "--font-mono", "--font-ui",
+      ].map((v) => `  ${v}: ${cs.getPropertyValue(v)};`).join("\n");
+
+      const standaloneHtml = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(activeTab.name)}</title>
+<style>
+:root {
+${cssVars}
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui, system-ui, sans-serif);
+  line-height: 1.7;
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+img { max-width: 100%; height: auto; }
+code { font-family: var(--font-mono, monospace); }
+pre { overflow-x: auto; }
+blockquote { border-left: 3px solid var(--accent); margin-left: 0; padding-left: 1rem; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid var(--border); padding: 0.5rem; text-align: left; }
+</style>
+</head>
+<body>
+${bodyHtml}
+</body>
+</html>`;
+
+      await saveTextFileAs(destPath, standaloneHtml, "lf");
+      setStatus(`Exported HTML: ${destPath}`);
+    } catch (err) {
+      setGlobalError(`Export HTML failed: ${String(err)}`);
+      setStatus("Export HTML failed");
+    }
+  }, [activeTab, activeContents]);
+
   const appMenuActionsRef = useRef({
     createNewFile,
     openFile,
@@ -1479,6 +1551,8 @@ export default function App() {
     requestWindowClose,
     saveActiveTab,
     saveActiveTabAs,
+    exportHtml,
+    exportPdf,
   });
 
   useEffect(() => {
@@ -1490,6 +1564,8 @@ export default function App() {
       requestWindowClose,
       saveActiveTab,
       saveActiveTabAs,
+      exportHtml,
+      exportPdf,
     };
   }, [
     createNewFile,
@@ -1499,6 +1575,8 @@ export default function App() {
     requestWindowClose,
     saveActiveTab,
     saveActiveTabAs,
+    exportHtml,
+    exportPdf,
   ]);
 
   useEffect(() => {
@@ -1553,6 +1631,12 @@ export default function App() {
           break;
         case "close-window":
           void actions.requestWindowClose();
+          break;
+        case "export-html":
+          void actions.exportHtml();
+          break;
+        case "export-pdf":
+          void actions.exportPdf();
           break;
         case "toggle-preview":
           setPreviewVisible((current) => !current);
@@ -5419,4 +5503,12 @@ function suggestedSaveAsPath(path: string): string {
   }
 
   return `${directory}${fileName.slice(0, dotIndex)}-copy${fileName.slice(dotIndex)}`;
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }

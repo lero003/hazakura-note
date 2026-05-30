@@ -416,6 +416,29 @@ button:disabled {
   position: relative;
 }
 
+.app-shell.zen-mode {
+  grid-template-rows: 0fr 0fr 1fr 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-shell.zen-mode .tabs-row,
+.app-shell.zen-mode .file-tree-pane,
+.app-shell.zen-mode .preview-pane,
+.app-shell.zen-mode .right-pane,
+.app-shell.zen-mode .status-bar,
+.app-shell.zen-mode .start-panel,
+.app-shell.zen-mode .workspace-context-menu,
+.app-shell.zen-mode .pane-resizer {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.app-shell.zen-mode .pane.editor-pane {
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
 
 /* スペシャルテーマ用パルスグロー / Pulse Glow for Special Themes */
 @keyframes accentPulse {

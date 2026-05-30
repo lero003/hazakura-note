@@ -186,6 +186,7 @@ export default function App() {
   const [pendingAppClose, setPendingAppClose] = useState(false);
   const [preferencesDialogMode, setPreferencesDialogMode] =
     useState<PreferencesDialogMode | null>(null);
+  const [zenMode, setZenMode] = useState(false);
   const [agentWorkbenchActive] = useState(() =>
     readStoredAgentWorkbenchEnabled(),
   );
@@ -1569,6 +1570,9 @@ export default function App() {
             showInvisibles: !current.showInvisibles,
           }));
           break;
+        case "toggle-zen":
+          setZenMode((current) => !current);
+          break;
         case "theme-system":
           setThemePreference("system");
           break;
@@ -2598,6 +2602,7 @@ export default function App() {
       previewVisible,
       wrapLines: editorSettings.wrapLines,
       showInvisibles: editorSettings.showInvisibles,
+      zenMode,
       themePreference,
       menuLanguage,
       recentFiles: menuRecentFiles,
@@ -2615,6 +2620,7 @@ export default function App() {
     recentFiles,
     recentFolders,
     themePreference,
+    zenMode,
   ]);
 
   // Update theme checkmarks in the native menu without full rebuild
@@ -3012,6 +3018,12 @@ export default function App() {
         return;
       }
 
+      if (event.key === "Escape" && zenMode) {
+        event.preventDefault();
+        setZenMode(false);
+        return;
+      }
+
       if ((event.metaKey || event.ctrlKey) && event.key === ",") {
         event.preventDefault();
         setPreferencesDialogMode("settings");
@@ -3199,6 +3211,7 @@ export default function App() {
     saveActiveTabAs,
     saveActiveTab,
     selectedImage,
+    zenMode,
   ]);
 
   useEffect(() => {
@@ -3218,7 +3231,7 @@ export default function App() {
   }, [pendingAppClose, pendingCloseTab, preferencesOpen]);
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell${zenMode ? " zen-mode" : ""}`}>
       {resolvedTheme === "sakura" ? <SakuraPetals /> : null}
       <section
         className="tabs-row"

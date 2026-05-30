@@ -38,6 +38,7 @@ pub(crate) const MENU_CLOSE_WINDOW: &str = "close-window";
 pub(crate) const MENU_TOGGLE_PREVIEW: &str = "toggle-preview";
 pub(crate) const MENU_TOGGLE_WRAP: &str = "toggle-wrap";
 pub(crate) const MENU_TOGGLE_INVISIBLES: &str = "toggle-invisibles";
+pub(crate) const MENU_TOGGLE_ZEN: &str = "toggle-zen";
 pub(crate) const MENU_THEME_SYSTEM: &str = "theme-system";
 pub(crate) const MENU_THEME_LIGHT: &str = "theme-light";
 pub(crate) const MENU_THEME_DARK: &str = "theme-dark";
@@ -251,6 +252,7 @@ pub(crate) struct AppMenuState {
     pub(crate) preview_visible: bool,
     pub(crate) wrap_lines: bool,
     pub(crate) show_invisibles: bool,
+    pub(crate) zen_mode: bool,
     pub(crate) theme_preference: String,
     pub(crate) menu_language: String,
     pub(crate) recent_files: Vec<AppMenuRecentItem>,

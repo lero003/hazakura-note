@@ -99,6 +99,8 @@ Latest Markdown preview readability checks: 2026-05-30 automated gates passed af
 
 Latest Markdown Outline cap note checks: 2026-05-30 automated gates passed after adding a visible note when a current-file Outline is capped at the first 200 headings. No fresh built-app large-outline smoke was claimed.
 
+Latest Markdown Review Navigation UI polish checks: 2026-05-30 automated gates passed after renaming the Japanese Outline toggle to `アウトライン`, changing current-section status copy to `現在位置: § ...`, changing Markdown diff heading context copy to `変更位置: § ...`, and adding a transient Markdown scroll-position HUD. No fresh built-app scroll-HUD smoke was claimed.
+
 ## Build First
 
 ```bash
@@ -179,14 +181,17 @@ open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 ## Markdown Outline Navigation
 
 1. Open a Markdown file with several ATX headings such as `#`, `##`, and `###`.
-2. Click Outline / 見出し in the top editor chrome and confirm a right-side document outline opens.
+2. Click Outline / アウトライン in the top editor chrome and confirm a right-side document outline opens.
 3. Confirm headings inside fenced code blocks are not listed.
 4. Click a heading in the outline and confirm the editor jumps to that heading line.
-5. Move the cursor under a different heading and confirm the status bar shows the current section / 現在の見出し context.
+5. Move the cursor under a different heading and confirm the status bar shows the current position / 現在位置 context.
 6. Confirm the matching Outline row is highlighted as the cursor moves through sections.
 7. Toggle Outline off and confirm the editor remains active and the tab contents are unchanged.
 8. Open a Markdown file without headings and confirm the Outline pane shows the empty-heading message instead of stale headings from the prior file.
 9. Open or generate a Markdown file with more than 200 headings and confirm the Outline pane shows a visible note that only the first 200 headings are listed.
+10. In Japanese menu mode, confirm the top editor chrome uses `アウトライン` rather than `見出し`.
+11. Scroll a Markdown file with headings and confirm a small transient `§` current-position HUD appears over the editor, then fades out after scrolling stops.
+12. Confirm the status bar current-section text reads like `現在位置: § ...` / `Position: § ...` rather than being mixed in as a plain heading label.
 
 ## Markdown Preview Sync
 

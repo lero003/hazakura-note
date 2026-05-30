@@ -112,6 +112,11 @@ type MarkdownOutline = {
   headings: MarkdownHeading[];
   truncated: boolean;
 };
+type MarkdownHeadingContext = {
+  previous: MarkdownHeading | null;
+  current: MarkdownHeading | null;
+  next: MarkdownHeading | null;
+};
 
 type AgentLaunchGateState = {
   kind: "idle" | "checking" | "passed" | "rejected";
@@ -309,6 +314,10 @@ export default function App() {
     selectedCharacters: 0,
     selectedLines: 0,
   });
+  const [scrollHud, setScrollHud] = useState({
+    ratio: 0,
+    visible: false,
+  });
   const [pendingDrafts, setPendingDrafts] = useState<DraftRecord[]>([]);
   const [themePreference, setThemePreference] = useState<ThemePreference>(() =>
     readStoredThemePreference(),
@@ -345,6 +354,7 @@ export default function App() {
   const editorPreviewGridRef = useRef<HTMLDivElement | null>(null);
   const previewPaneRef = useRef<HTMLDivElement | null>(null);
   const previewScrollFrameRef = useRef<number | null>(null);
+  const scrollHudHideTimerRef = useRef<number | null>(null);
   const scrollSyncSourceRef = useRef<"editor" | "preview" | null>(null);
   const agentUiSuspendedRef = useRef(false);
   const tabsRef = useRef<EditorTab[]>([]);
@@ -415,7 +425,7 @@ export default function App() {
           outlineEmpty: "このファイルに Markdown 見出しはありません。",
           outlineTruncated:
             "見出しが多いため、最初の200件まで表示しています。",
-          outlineTab: "見出し",
+          outlineTab: "アウトライン",
           documentOutline: "文書アウトライン",
           openTextFileToPreview:
             "Markdown プレビューを表示するにはテキストファイルを開いてください。",
@@ -702,6 +712,18 @@ export default function App() {
     () => findCurrentMarkdownHeading(documentHeadings, selectionInfo.line),
     [documentHeadings, selectionInfo.line],
   );
+  const activeDocumentLineCount = useMemo(
+    () => countDocumentLines(activeContents),
+    [activeContents],
+  );
+  const scrollHudLine = Math.min(
+    activeDocumentLineCount,
+    Math.max(1, Math.round(1 + scrollHud.ratio * (activeDocumentLineCount - 1))),
+  );
+  const scrollHudHeadingContext = useMemo(
+    () => getMarkdownHeadingContext(documentHeadings, scrollHudLine),
+    [documentHeadings, scrollHudLine],
+  );
   const activeDocumentStats = useMemo(
     () => analyzeTextDocument(activeContents, activeTab?.line_ending),
     [activeContents, activeTab?.line_ending],
@@ -846,10 +868,39 @@ export default function App() {
     setRightPaneMode("agent");
   }, [sidePaneMode]);
 
+  const showScrollPositionHud = useCallback(
+    (ratio: number) => {
+      if (
+        !activeTab ||
+        !isMarkdownDocumentPath(activeTab.path) ||
+        documentHeadings.length === 0
+      ) {
+        return;
+      }
+
+      if (scrollHudHideTimerRef.current !== null) {
+        window.clearTimeout(scrollHudHideTimerRef.current);
+      }
+
+      setScrollHud({
+        ratio: clampScrollRatio(ratio),
+        visible: true,
+      });
+
+      scrollHudHideTimerRef.current = window.setTimeout(() => {
+        scrollHudHideTimerRef.current = null;
+        setScrollHud((current) => ({ ...current, visible: false }));
+      }, 1400);
+    },
+    [activeTab, documentHeadings.length],
+  );
+
   const syncPreviewScroll = useCallback((ratio: number) => {
     if (scrollSyncSourceRef.current === "preview") {
       return;
     }
+
+    showScrollPositionHud(ratio);
 
     if (previewScrollFrameRef.current !== null) {
       window.cancelAnimationFrame(previewScrollFrameRef.current);
@@ -880,7 +931,7 @@ export default function App() {
         }, 80);
       }
     });
-  }, []);
+  }, [showScrollPositionHud]);
 
   const syncEditorScroll = useCallback(() => {
     if (scrollSyncSourceRef.current === "editor") {
@@ -2865,6 +2916,10 @@ export default function App() {
       if (previewScrollFrameRef.current !== null) {
         window.cancelAnimationFrame(previewScrollFrameRef.current);
       }
+
+      if (scrollHudHideTimerRef.current !== null) {
+        window.clearTimeout(scrollHudHideTimerRef.current);
+      }
     },
     [],
   );
@@ -3889,21 +3944,31 @@ export default function App() {
         >
           <div className="pane editor-pane" aria-label="Editor">
             {activeTab ? (
-              <EditorPane
-                ref={editorPaneRef}
-                activeSearchMatchIndex={activeMatchIndex}
-                documentKey={documentKey}
-                fontSize={editorSettings.fontSize}
-                onChange={handleEditorChange}
-                onScrollRatioChange={syncPreviewScroll}
-                onSelectionChange={setSelectionInfo}
-                searchMatches={findMatches}
-                showInvisibles={editorSettings.showInvisibles}
-                tabSize={editorSettings.tabSize}
-                theme={editorTheme}
-                value={activeContents}
-                wrapLines={editorSettings.wrapLines}
-              />
+              <>
+                <EditorPane
+                  ref={editorPaneRef}
+                  activeSearchMatchIndex={activeMatchIndex}
+                  documentKey={documentKey}
+                  fontSize={editorSettings.fontSize}
+                  onChange={handleEditorChange}
+                  onScrollRatioChange={syncPreviewScroll}
+                  onSelectionChange={setSelectionInfo}
+                  searchMatches={findMatches}
+                  showInvisibles={editorSettings.showInvisibles}
+                  tabSize={editorSettings.tabSize}
+                  theme={editorTheme}
+                  value={activeContents}
+                  wrapLines={editorSettings.wrapLines}
+                />
+                {scrollHud.visible && scrollHudHeadingContext.current ? (
+                  <ScrollPositionHud
+                    context={scrollHudHeadingContext}
+                    line={scrollHudLine}
+                    menuLanguage={menuLanguage}
+                    totalLines={activeDocumentLineCount}
+                  />
+                ) : null}
+              </>
             ) : selectedImage ? (
               <ImagePreviewPane
                 image={selectedImage}
@@ -4540,6 +4605,45 @@ function PreviewUnavailablePane({
   return (
     <div className="preview-unavailable" aria-label={ariaLabel}>
       {reason}
+    </div>
+  );
+}
+
+function ScrollPositionHud({
+  context,
+  line,
+  menuLanguage,
+  totalLines,
+}: {
+  context: MarkdownHeadingContext;
+  line: number;
+  menuLanguage: MenuLanguage;
+  totalLines: number;
+}) {
+  const progress =
+    totalLines <= 1 ? 0 : Math.round(((line - 1) / (totalLines - 1)) * 100);
+  const meta =
+    menuLanguage === "ja"
+      ? `${line.toLocaleString()} / ${totalLines.toLocaleString()} 行 · ${progress}%`
+      : `${line.toLocaleString()} / ${totalLines.toLocaleString()} lines · ${progress}%`;
+
+  return (
+    <div className="scroll-position-hud" aria-hidden="true">
+      {context.previous ? (
+        <div className="scroll-position-hud-neighbor">
+          {context.previous.text}
+        </div>
+      ) : null}
+      <div className="scroll-position-hud-current">
+        <span>§</span>
+        <strong>{context.current?.text}</strong>
+      </div>
+      {context.next ? (
+        <div className="scroll-position-hud-neighbor next">
+          {context.next.text}
+        </div>
+      ) : null}
+      <div className="scroll-position-hud-meta">{meta}</div>
     </div>
   );
 }
@@ -5692,13 +5796,13 @@ function formatDiffSectionContext(
 
   if (leftText && rightText && leftText !== rightText) {
     return menuLanguage === "ja"
-      ? `見出し: 比較元 ${leftText} / 比較先 ${rightText}`
-      : `Section: source ${leftText} / target ${rightText}`;
+      ? `変更位置: 比較元 § ${leftText} / 比較先 § ${rightText}`
+      : `Changed in: source § ${leftText} / target § ${rightText}`;
   }
 
   return menuLanguage === "ja"
-    ? `見出し: ${leftText ?? rightText}`
-    : `Section: ${leftText ?? rightText}`;
+    ? `変更位置: § ${leftText ?? rightText}`
+    : `Changed in: § ${leftText ?? rightText}`;
 }
 
 function localizeCompareError(message: string): string {
@@ -6587,6 +6691,44 @@ function findCurrentMarkdownHeading(
   return currentHeading;
 }
 
+function getMarkdownHeadingContext(
+  headings: MarkdownHeading[],
+  line: number,
+): MarkdownHeadingContext {
+  let currentIndex = -1;
+
+  for (let index = 0; index < headings.length; index += 1) {
+    if (headings[index].line > line) {
+      break;
+    }
+
+    currentIndex = index;
+  }
+
+  return {
+    previous: currentIndex > 0 ? headings[currentIndex - 1] : null,
+    current: currentIndex >= 0 ? headings[currentIndex] : null,
+    next:
+      currentIndex >= 0 && currentIndex + 1 < headings.length
+        ? headings[currentIndex + 1]
+        : currentIndex < 0
+          ? headings[0] ?? null
+          : null,
+  };
+}
+
+function countDocumentLines(source: string): number {
+  return source.split(/\r\n|\n|\r/).length;
+}
+
+function clampScrollRatio(ratio: number): number {
+  if (!Number.isFinite(ratio)) {
+    return 0;
+  }
+
+  return Math.min(Math.max(ratio, 0), 1);
+}
+
 function findTextMatches(
   source: string,
   query: string,
@@ -7223,8 +7365,8 @@ function formatActiveEditorStatusDetail(
   if (currentHeading) {
     parts.push(
       menuLanguage === "ja"
-        ? `見出し: ${currentHeading.text}`
-        : `Section: ${currentHeading.text}`,
+        ? `現在位置: § ${currentHeading.text}`
+        : `Position: § ${currentHeading.text}`,
     );
   }
 

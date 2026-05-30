@@ -1145,6 +1145,7 @@ button:disabled {
 
 .editor-pane {
   border-right: 1px solid var(--border);
+  position: relative;
 }
 
 .editor-preview-grid:not(.preview-hidden) .editor-pane {
@@ -1186,6 +1187,59 @@ button:disabled {
 
 .editor-host {
   height: 100%;
+}
+
+.scroll-position-hud {
+  backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--surface-strong) 68%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-strong) 62%, transparent);
+  border-radius: 8px;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--shadow) 14%, transparent);
+  color: var(--text);
+  display: grid;
+  gap: 4px;
+  max-width: min(420px, calc(100% - 48px));
+  opacity: 0.88;
+  padding: 10px 12px;
+  pointer-events: none;
+  position: absolute;
+  right: 20px;
+  top: 18px;
+  z-index: 3;
+}
+
+.scroll-position-hud-current {
+  align-items: baseline;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.scroll-position-hud-current span {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.scroll-position-hud-current strong,
+.scroll-position-hud-neighbor {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scroll-position-hud-neighbor {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.scroll-position-hud-neighbor.next {
+  opacity: 0.8;
+}
+
+.scroll-position-hud-meta {
+  color: var(--text-muted);
+  font-size: 11px;
 }
 
 .start-panel {

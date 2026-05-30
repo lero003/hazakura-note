@@ -5,7 +5,7 @@ Scope: Warning-expected DMG preview distribution
 Authority: Medium
 Last reviewed: 2026-05-29
 
-This checklist is for a warning-expected binary DMG preview lane only. It was used for the `v0.2.0-pre.0`, `v0.2.0-pre.1`, `v0.2.0`, and `v0.3.0` warning-expected DMG previews and remains the current boundary for similar preview releases.
+This checklist is for a warning-expected binary DMG preview lane only. It was used for the `v0.2.0-pre.0`, `v0.2.0-pre.1`, `v0.2.0`, `v0.3.0`, and `v0.4.0` warning-expected DMG previews and remains the current boundary for similar preview releases.
 
 Do not attach the DMG to the source-only GitHub Release. Do not create tags, push commits, publish a GitHub Release, or attach assets without explicit approval.
 

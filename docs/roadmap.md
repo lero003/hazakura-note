@@ -17,6 +17,7 @@ The current public line is:
 - `v0.2.0-pre.1`: pre0.2 warning-expected DMG preview with Finder/app-icon text document open support
 - `v0.2.0`: Safe Editor preview warning-expected DMG release with theme/Japanese UI polish and the current Agent Workbench boundary kept optional
 - `v0.3.0`: Safe Editor non-Git diff / change-review warning-expected DMG release
+- `v0.4.0`: Markdown Review Navigation warning-expected DMG release
 
 The old `v0.1` / `v0.3.x` phase map is archived in `docs/roadmap-v0.1-archived.md`.
 
@@ -97,15 +98,17 @@ Do not add:
 
 Goal: make Markdown documents easier to read, navigate, and review after the v0.3 diff foundation, while avoiding intrusive prediction or automatic rewriting.
 
-Candidate work:
+Status: Released as `v0.4.0` warning-expected DMG preview.
 
-- current-file heading outline with click-to-jump (started)
-- current heading or section context in the editor/review surface (started)
-- diff hunk heading context for Markdown files (started)
-- local Markdown link navigation limited to explicitly selected workspace files (started)
-- open-tabs and recent-files navigator (started)
-- display/readability polish for Markdown preview and review (started)
-- transient current-section HUD during Markdown scrolling, based only on the current file's headings, with no workspace indexing or automatic rewriting (started)
+Delivered:
+
+- current-file heading outline with click-to-jump
+- current heading or section context in the editor/review surface
+- diff hunk heading context for Markdown files
+- local Markdown link navigation limited to explicitly selected workspace files
+- open-tabs keyboard navigation
+- display/readability polish for Markdown preview and review
+- transient current-section HUD during Markdown scrolling, based only on the current file's headings, with no workspace indexing or automatic rewriting
 - small Markdown editing helpers only when they are predictable, reversible, and not aggressive
 
 This phase should prefer navigation, visibility, and manual review over prediction. Avoid strong autocomplete, automatic lint fixes, broad formatting rewrites, workspace-wide indexing, or project-level symbol search unless a later boundary review explicitly approves them.

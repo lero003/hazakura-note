@@ -295,7 +295,10 @@ v0.4 warning-expected DMG preview release preparation on 2026-05-30:
 - `cd src-tauri/target/release/bundle/dmg && shasum -c hazakura-note_0.4.0_aarch64-warning-expected.dmg.sha256` passed.
 - The DMG mounted read-only; the contained `hazakura-note.app` reported `CFBundleShortVersionString` `0.4.0`, `CFBundleVersion` `0.4.0`, bundle identifier `lab.hazakura.note`, and passed `codesign --verify --deep --strict --verbose=2`.
 - `spctl -a -vv -t open` rejected the app with `source=Insufficient Context`, which is expected for this ad-hoc signed and not-notarized preview.
-- GitHub prerelease publication and remote asset verification are pending for `v0.4.0`.
+- GitHub prerelease published at `https://github.com/lero003/hazakura-note/releases/tag/v0.4.0`.
+- Public release tag `v0.4.0` is the fresh tag for this release; older public tags were left immutable.
+- Remote verification downloaded the published GitHub Release assets, confirmed `shasum -c` passed, `hdiutil verify` passed, and the mounted app reported version `0.4.0` / bundle identifier `lab.hazakura.note` with `codesign --verify --deep --strict --verbose=2` passing.
+- v0.5 planning can now focus on Pi CLI provider and app stability while keeping Safe Editor Mode primary and release/signing automation separate.
 
 Cherry blossom app icon update on 2026-05-29:
 

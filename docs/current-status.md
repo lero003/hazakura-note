@@ -51,7 +51,7 @@ Last reviewed: 2026-05-30
 - If Save from a dirty-tab close dialog fails or detects an external change, the close is stopped, the failed tab is selected, the dialog is dismissed, editor focus returns, and the existing save-failure or conflict recovery actions remain visible.
 - If Save All from the app/window close dialog fails or detects an external change, the close is stopped, the failed tab is selected, editor focus returns, and the existing save-failure or conflict recovery actions remain visible.
 - Discard All from the app/window close dialog removes matching stored unsaved drafts before close, so intentionally discarded edits are not offered for restoration on restart.
-- Cmd+N creates a new file, Cmd+O opens a file, Cmd+Shift+O opens a folder, Cmd+W closes the active tab through the same dirty-tab confirmation path as the tab close button, and Cmd+Shift+W requests window close.
+- Cmd+N creates a new file, Cmd+O opens a file, Cmd+Shift+O opens a folder, Cmd+Option+Left / Cmd+Option+Right focus the previous or next open tab, Cmd+W closes the active tab through the same dirty-tab confirmation path as the tab close button, and Cmd+Shift+W requests window close.
 - Workspace tree loading now reads only direct children for the opened root or expanded directory, keeps heavy and hidden directory exclusions, rejects direct child listing outside the selected workspace root, and reports per-folder cap overflow as a partial listing instead of failing the whole workspace.
 - Atomic save cleanup removes the hidden temporary save file if the final replace step fails and refuses to overwrite a pre-existing hidden save temp file.
 - The app bundle icon uses a cherry-blossom emoji mark centered on a soft pink rounded base.
@@ -113,7 +113,7 @@ Last reviewed: 2026-05-30
 - Agent Workbench right-pane shell, visible only after active-session mode and consent gates pass, with compact provider/running/workspace state, bounded PTY-backed xterm output/input, PTY resize from xterm rows/columns, and no arbitrary command, shell selector, auto-apply, auto-commit, or Git integration
 - Rust-side Agent Workbench launch preflight, runtime adapter, and in-memory session lifecycle that rejects disabled mode, unacknowledged consent, non-allowlisted providers, invalid workspace roots, provider-not-found starts, adapter failures, stop-adapter failures, and second active sessions before starting an allowlisted provider process
 - Dynamic window title for active file and unsaved state
-- Keyboard shortcuts for New File, Open, Open Folder, Save, Find, active-tab close, and window close
+- Keyboard shortcuts for New File, Open, Open Folder, Save, Find, previous/next tab focus, active-tab close, and window close
 - Conflict recovery actions for reloading, closing, or continuing with local edits
 - Save-failure recovery wording and retry / keep-editing actions for non-conflict save errors
 - App/window close confirmation for dirty tabs

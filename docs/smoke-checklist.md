@@ -93,6 +93,8 @@ Latest Markdown diff heading-context checks: 2026-05-30 automated gates passed a
 
 Latest local Markdown preview link navigation checks: 2026-05-30 automated gates passed after adding preview-click navigation for relative links that resolve to supported text files inside the selected workspace. Absolute paths, external URLs, anchor-only links, and links outside the workspace remain unopened by hazakura. No fresh built-app preview-link interaction smoke was claimed.
 
+Latest open-tabs keyboard navigation checks: 2026-05-30 automated gates passed after adding Cmd+Option+Left / Cmd+Option+Right previous/next tab focus. No fresh built-app multi-tab keyboard smoke was claimed.
+
 ## Build First
 
 ```bash
@@ -421,11 +423,14 @@ Record:
 1. Press Cmd+N and confirm the native new-file path picker opens.
 2. Press Cmd+O and confirm the native file picker opens.
 3. Press Cmd+Shift+O and confirm the native folder picker opens.
-4. Open a throwaway Markdown file, edit it without saving, then press Cmd+W.
-5. Confirm the app offers Save, Discard, and Cancel through the same dirty-tab confirmation used by the tab close button.
-6. Cancel once and confirm the tab stays open with its unsaved text and keyboard focus returns to the editor.
-7. Repeat Cmd+W and confirm Discard closes the tab without writing the unsaved text.
-8. Press Cmd+Shift+W and confirm the window close path is requested.
+4. Open at least two throwaway Markdown/text files as tabs.
+5. Press Cmd+Option+Right and confirm the next tab is focused without changing file contents.
+6. Press Cmd+Option+Left and confirm the previous tab is focused without changing file contents.
+7. Edit a throwaway Markdown file without saving, then press Cmd+W.
+8. Confirm the app offers Save, Discard, and Cancel through the same dirty-tab confirmation used by the tab close button.
+9. Cancel once and confirm the tab stays open with its unsaved text and keyboard focus returns to the editor.
+10. Repeat Cmd+W and confirm Discard closes the tab without writing the unsaved text.
+11. Press Cmd+Shift+W and confirm the window close path is requested.
 
 ## Editor Keyboard Editing
 

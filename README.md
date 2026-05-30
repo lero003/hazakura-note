@@ -70,7 +70,7 @@ Example use case:
 - Native View menu and Preferences dialog for Preview, Wrap, Invisibles, Theme, Font, Tab settings, and menu language
 - Window title reflects the active file and unsaved state
 - Tab-level unsaved state and Save / Discard / Cancel before closing dirty tabs
-- Keyboard shortcuts for New File, Open, Open Folder, Save, Find, and tab close
+- Keyboard shortcuts for New File, Open, Open Folder, Save, Find, previous/next tab focus, and tab close
 - External-change save conflict detection with Reopen from disk / Close without saving / Keep editing actions
 - Non-conflict save failures keep local edits and show Try save again / Keep editing recovery actions
 - Workspace tree directory expansion loads direct children on demand, keeps heavy / hidden directory exclusions, and shows a partial-listing note instead of failing the whole workspace when one folder exceeds the entry cap

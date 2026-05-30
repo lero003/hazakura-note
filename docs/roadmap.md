@@ -103,7 +103,7 @@ Candidate work:
 - current heading or section context in the editor/review surface (started)
 - diff hunk heading context for Markdown files (started)
 - local Markdown link navigation limited to explicitly selected workspace files (started)
-- open-tabs and recent-files navigator
+- open-tabs and recent-files navigator (started)
 - display/readability polish for Markdown preview and review
 - small Markdown editing helpers only when they are predictable, reversible, and not aggressive
 

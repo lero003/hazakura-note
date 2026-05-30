@@ -1950,6 +1950,35 @@ export default function App() {
     setStatus("Image preview closed");
   }, [imageReturnTabId, tabs]);
 
+  const focusAdjacentTab = useCallback(
+    (direction: "previous" | "next") => {
+      if (tabs.length < 2) {
+        setStatus("No other tab to focus");
+        return;
+      }
+
+      const currentTabId = activeTabId ?? imageReturnTabId ?? tabs[0]?.id;
+      const currentIndex = tabs.findIndex((tab) => tab.id === currentTabId);
+      const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+      const offset = direction === "next" ? 1 : -1;
+      const nextIndex = (safeIndex + offset + tabs.length) % tabs.length;
+      const nextTab = tabs[nextIndex];
+
+      if (!nextTab) {
+        return;
+      }
+
+      setSelectedImage(null);
+      setImageReturnTabId(null);
+      setActiveTabId(nextTab.id);
+      setStatus(
+        direction === "next" ? "Next tab focused" : "Previous tab focused",
+      );
+      focusEditorSoon();
+    },
+    [activeTabId, focusEditorSoon, imageReturnTabId, tabs],
+  );
+
   const closeTabNow = useCallback(
     (tabId: string) => {
       setTabs((currentTabs) => {
@@ -3333,6 +3362,16 @@ export default function App() {
         return;
       }
 
+      if (
+        (event.metaKey || event.ctrlKey) &&
+        event.altKey &&
+        (event.key === "ArrowLeft" || event.key === "ArrowRight")
+      ) {
+        event.preventDefault();
+        focusAdjacentTab(event.key === "ArrowRight" ? "next" : "previous");
+        return;
+      }
+
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "w") {
         event.preventDefault();
 
@@ -3362,6 +3401,7 @@ export default function App() {
     findVisible,
     closeFindAndFocusEditor,
     closeSelectedImagePreview,
+    focusAdjacentTab,
     modalOpen,
     openFile,
     openWorkspace,

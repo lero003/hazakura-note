@@ -5,7 +5,6 @@ use std::path::PathBuf;
 use std::process::Command;
 use tauri::{Emitter, Manager};
 
-
 pub(crate) mod types;
 use crate::types::*;
 pub(crate) mod util;
@@ -17,7 +16,6 @@ use crate::menu::*;
 
 #[cfg(test)]
 pub(crate) mod tests;
-
 
 #[tauri::command]
 fn open_text_file(path: String) -> Result<TextFileDocument, String> {
@@ -643,7 +641,6 @@ fn validate_agent_workbench_launch(
     Ok(canonical_workspace)
 }
 
-
 #[cfg(desktop)]
 #[tauri::command]
 fn update_app_menu_state<R: tauri::Runtime>(
@@ -672,7 +669,6 @@ fn request_app_restart<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> Result<()
     app.request_restart();
     Ok(())
 }
-
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

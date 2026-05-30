@@ -1,12 +1,14 @@
 use crate::types::*;
 use tauri::menu::{
-    AboutMetadata, CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu,
-    HELP_SUBMENU_ID, WINDOW_SUBMENU_ID,
+    AboutMetadata, CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu, HELP_SUBMENU_ID,
+    WINDOW_SUBMENU_ID,
 };
-use tauri::{Emitter, Manager};
+use tauri::Emitter;
 
 #[cfg(desktop)]
-pub(crate) fn build_app_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<Menu<R>> {
+pub(crate) fn build_app_menu<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+) -> tauri::Result<Menu<R>> {
     build_app_menu_with_state(app, None)
 }
 

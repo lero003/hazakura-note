@@ -406,4 +406,3 @@ pub(crate) fn snapshot_agent_output(
         .map(|chunks| chunks.clone())
         .map_err(|_| "Agent Workbench output state is unavailable.".to_string())
 }
-

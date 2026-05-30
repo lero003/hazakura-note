@@ -84,7 +84,6 @@ pub(crate) fn ensure_workspace_root(root_path: &Path) -> Result<PathBuf, String>
     fs::canonicalize(root_path).map_err(|err| format!("Cannot read workspace folder: {err}"))
 }
 
-
 pub(crate) fn find_allowlisted_agent_provider_in_path_env(
     provider: &str,
     path_var: &OsStr,
@@ -107,7 +106,9 @@ pub(crate) fn find_allowlisted_agent_provider_in_path_env(
 pub(crate) fn is_allowlisted_agent_provider(provider: &str) -> bool {
     matches!(
         provider,
-        crate::types::AGENT_PROVIDER_CODEX | crate::types::AGENT_PROVIDER_OPENCODE | crate::types::AGENT_PROVIDER_PI
+        crate::types::AGENT_PROVIDER_CODEX
+            | crate::types::AGENT_PROVIDER_OPENCODE
+            | crate::types::AGENT_PROVIDER_PI
     )
 }
 

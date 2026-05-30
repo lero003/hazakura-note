@@ -244,7 +244,6 @@ pub(crate) enum WorkspaceEntryKind {
     File,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct AppMenuState {
     pub(crate) has_active_tab: bool,
@@ -296,4 +295,3 @@ impl<'a> RealAgentRuntimeAdapter<'a> {
         }
     }
 }
-

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tauri dev",
     "dev:vite": "vite --host 127.0.0.1 --port 1420",
+    "typecheck": "tsc --noEmit",
     "build": "tauri build",
     "build:dmg-preview": "bash scripts/build-warning-dmg-preview.sh",
     "build:vite": "tsc --noEmit && vite build",

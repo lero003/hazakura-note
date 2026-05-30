@@ -267,6 +267,9 @@ v0.3 warning-expected DMG preview release preparation on 2026-05-30:
 - `cd src-tauri/target/release/bundle/dmg && shasum -c hazakura-note_0.3.0_aarch64-warning-expected.dmg.sha256` passed.
 - The DMG mounted read-only; the contained `hazakura-note.app` reported `CFBundleShortVersionString` `0.3.0`, `CFBundleVersion` `0.3.0`, bundle identifier `lab.hazakura.note`, and passed `codesign --verify --deep --strict --verbose=2`.
 - `spctl -a -vv -t open` rejected the app with `source=Insufficient Context`, which is expected for this ad-hoc signed and not-notarized preview.
+- GitHub prerelease published at `https://github.com/lero003/hazakura-note/releases/tag/v0.3.0`.
+- Public release tag `v0.3.0` is the fresh tag for this release; older public tags were left immutable.
+- Remote verification downloaded the published GitHub Release assets, confirmed `shasum -c` passed, `hdiutil verify` passed, and the mounted app reported version `0.3.0` / bundle identifier `lab.hazakura.note` with `codesign --verify --deep --strict --verbose=2` passing.
 
 Cherry blossom app icon update on 2026-05-29:
 
@@ -783,8 +786,8 @@ Known verification note:
 
 ## Next Actions
 
-1. For v0.3 release readiness, run built-app smoke for File Comparison and Change Review, then record whether the non-Git comparison/recovery acceptance criteria are met.
-2. For v0.4 planning, keep Markdown Review Navigation focused on current-file outline, heading context, local Markdown link navigation, open-tabs/recent-files navigation, and display polish without strong prediction or auto-rewrite behavior.
+1. For v0.4 planning, keep Markdown Review Navigation focused on current-file outline, heading context, local Markdown link navigation, open-tabs/recent-files navigation, and display polish without strong prediction or auto-rewrite behavior.
+2. Re-smoke Diff / Change Review in normal daily use after the v0.3 release and treat any regressions as patch candidates rather than expanding the v0.4 scope.
 3. For Agent Workbench work, treat further changes as boundary maintenance; run `docs/smoke-checklist.md` Agent Workbench Trusted Workspace Manual Smoke in a throwaway workspace before further terminal, PTY, or provider-lifecycle changes.
 4. For recurring automation, use the 30-minute safe-editor review loop in `docs/development-automation.md`; keep slices narrow and avoid new test code unless it protects a real bug, backend/safety contract, or high-value lifecycle path.
 5. Re-smoke long file name / constrained-width layout before binary distribution readiness.

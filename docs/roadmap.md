@@ -58,7 +58,7 @@ Do not use 0.2 to add broad new features.
 
 Goal: complete the core product promise of checking text changes without turning the app into a Git client, merge tool, IDE, or project analyzer.
 
-Status: Ready for `v0.3.0` warning-expected DMG release.
+Status: Released as `v0.3.0` warning-expected DMG preview.
 
 Priority work:
 

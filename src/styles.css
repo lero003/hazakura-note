@@ -706,6 +706,15 @@ button:disabled {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.tab-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+.tab-item.drag-over {
+  border-left: 2px solid var(--accent);
+}
+
 .tab-button,
 .tab-close {
   border: 0;

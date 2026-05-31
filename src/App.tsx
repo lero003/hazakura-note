@@ -1888,6 +1888,33 @@ ${bodyHtml}
     [activeTabId],
   );
 
+  const dragTabIdRef = useRef<string | null>(null);
+  const dragOverTabIdRef = useRef<string | null>(null);
+
+  const reorderTabs = useCallback(
+    (targetTabId: string) => {
+      const draggedId = dragTabIdRef.current;
+      if (!draggedId || draggedId === targetTabId) {
+        dragTabIdRef.current = null;
+        return;
+      }
+
+      setTabs((currentTabs) => {
+        const draggedIndex = currentTabs.findIndex((t) => t.id === draggedId);
+        const targetIndex = currentTabs.findIndex((t) => t.id === targetTabId);
+        if (draggedIndex < 0 || targetIndex < 0) return currentTabs;
+
+        const next = [...currentTabs];
+        const [moved] = next.splice(draggedIndex, 1);
+        next.splice(targetIndex, 0, moved);
+        return next;
+      });
+
+      dragTabIdRef.current = null;
+    },
+    [],
+  );
+
   const requestCloseTab = useCallback(
     (tabId: string) => {
       const tab = tabs.find((candidate) => candidate.id === tabId);
@@ -3462,9 +3489,35 @@ ${bodyHtml}
 
               return (
                 <div
-                  className={`tab-item${tab.id === activeTabId ? " active" : ""}`}
+                  className={`tab-item${tab.id === activeTabId ? " active" : ""}${dragTabIdRef.current === tab.id ? " dragging" : ""}${dragOverTabIdRef.current === tab.id ? " drag-over" : ""}`}
                   key={tab.id}
                   role="presentation"
+                  draggable="true"
+                  onDragStart={(e) => {
+                    dragTabIdRef.current = tab.id;
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                  }}
+                  onDragEnter={() => {
+                    dragOverTabIdRef.current = tab.id;
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverTabIdRef.current === tab.id) {
+                      dragOverTabIdRef.current = null;
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    dragOverTabIdRef.current = null;
+                    reorderTabs(tab.id);
+                  }}
+                  onDragEnd={() => {
+                    dragTabIdRef.current = null;
+                    dragOverTabIdRef.current = null;
+                  }}
                 >
                   <button
                     aria-selected={tab.id === activeTabId}

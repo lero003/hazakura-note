@@ -4488,6 +4488,26 @@ function localizeStatusMessage(
     return `${message.slice("Moved to line ".length)} 行目へ移動しました`;
   }
 
+  if (message.startsWith("Image saved: ")) {
+    return `画像を保存しました: ${message.slice("Image saved: ".length)}`;
+  }
+
+  if (message.startsWith("Imported: ")) {
+    return `画像を取込みました: ${message.slice("Imported: ".length)}`;
+  }
+
+  if (message.startsWith("Failed to import image: ")) {
+    return `画像の取込みに失敗しました: ${message.slice("Failed to import image: ".length)}`;
+  }
+
+  if (message === "Saving pasted image...") {
+    return "貼り付けた画像を保存中...";
+  }
+
+  if (message === "Image paste failed") {
+    return "画像の貼り付けに失敗しました";
+  }
+
   return message;
 }
 

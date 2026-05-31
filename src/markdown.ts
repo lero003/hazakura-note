@@ -103,14 +103,17 @@ function workspaceAssetImageUrl(
     return null;
   }
 
-  const match = /^assets\/([A-Za-z0-9_-][A-Za-z0-9._-]*\.(?:png|jpe?g|gif|webp))$/i.exec(
-    decodedSrc,
-  );
+  const match = /^assets\//i.exec(decodedSrc);
   if (!match) {
     return null;
   }
 
-  const absolutePath = `${workspaceRoot.replace(/\/+$/, "")}/assets/${match[1]}`;
+  const relativePath = decodedSrc.slice(match[0].length);
+  if (!relativePath || relativePath.startsWith("..")) {
+    return null;
+  }
+
+  const absolutePath = `${workspaceRoot.replace(/\/+$/, "")}/assets/${relativePath}`;
 
   if (
     typeof window !== "undefined" &&
@@ -120,5 +123,7 @@ function workspaceAssetImageUrl(
     return convertFileSrc(absolutePath);
   }
 
-  return `asset://localhost/${encodeURIComponent(absolutePath)}`;
+  // Fallback: encode each path segment individually for asset:// URL
+  const segments = absolutePath.split("/").map(encodeURIComponent);
+  return `asset://localhost/${segments.join("/")}`;
 }

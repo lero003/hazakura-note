@@ -1503,8 +1503,7 @@ export default function App() {
       setStatus("Generating print HTML...");
       try {
         const workspaceRoot = workspaceRootPath;
-        const { renderMarkdown } = await import("./markdown");
-        const rendered = await renderMarkdown(activeContents_, {
+        const rendered = renderMarkdown(activeContents_, {
           workspaceRoot: workspaceRoot ?? undefined,
         });
 
@@ -4027,7 +4026,12 @@ ${bodyHtml}
                 <PreviewPane
                   onOpenLocalLink={openPreviewMarkdownLink}
                   source={activeContents}
-                  workspaceRoot={workspaceRootPath}
+                  workspaceRoot={
+                    workspaceRootPath ??
+                    (activeTab?.path
+                      ? activeTab.path.replace(/\/[^/]+$/, "")
+                      : null)
+                  }
                 />
               ) : (
                 <PreviewUnavailablePane

@@ -120,8 +120,7 @@ fn open_temp_print_html(html_content: String, file_name: String) -> Result<Strin
     use std::io::Write;
 
     let temp_dir = std::env::temp_dir().join("hazakura-note-print");
-    fs::create_dir_all(&temp_dir)
-        .map_err(|err| format!("Cannot create print temp dir: {err}"))?;
+    fs::create_dir_all(&temp_dir).map_err(|err| format!("Cannot create print temp dir: {err}"))?;
 
     let file_path = temp_dir.join(&file_name);
     let mut file = fs::File::create(&file_path)

@@ -22,6 +22,8 @@ import {
   type DecorationSet,
   EditorView,
   keymap,
+  rectangularSelection,
+  crosshairCursor,
 } from "@codemirror/view";
 import { tags as highlightTags } from "@lezer/highlight";
 import { basicSetup } from "codemirror";
@@ -271,6 +273,8 @@ const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
       parent: hostRef.current,
       extensions: [
         basicSetup,
+        rectangularSelection(),
+        crosshairCursor(),
         editorKeyboardShortcuts,
         editorTabIndentation,
         markdown(),

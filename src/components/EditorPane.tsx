@@ -62,6 +62,7 @@ export type EditorPaneHandle = {
   goToLine: (line: number) => void;
   applyMarkdownFormat: (format: MarkdownFormat) => void;
   insertTable: (columns: number) => void;
+  insertText: (text: string) => void;
   setScrollRatio: (ratio: number, tolerancePx?: number) => boolean;
 };
 
@@ -206,6 +207,17 @@ const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
         const view = viewRef.current;
         if (!view) return;
         insertTableAtCursor(view, columns);
+        view.focus();
+      },
+      insertText(text) {
+        const view = viewRef.current;
+        if (!view) return;
+        view.dispatch({
+          changes: {
+            from: view.state.selection.main.from,
+            insert: text,
+          },
+        });
         view.focus();
       },
       setScrollRatio(ratio, tolerancePx = 0) {

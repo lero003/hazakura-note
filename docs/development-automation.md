@@ -3,7 +3,7 @@
 Status: Operational
 Scope: Recurring automation guidance for quality hardening
 Authority: High
-Last reviewed: 2026-05-30
+Last reviewed: 2026-05-31
 
 ## Purpose
 
@@ -19,7 +19,7 @@ Cadence: 30-minute heartbeat loop for v0.5 slices and non-goal micro-polish work
 
 Current phase: v0.5 Pi CLI Provider And App Stability, after the `v0.4.0` Markdown Review Navigation warning-expected DMG preview release.
 
-Primary outcome: one coherent Pi CLI provider, Agent Workbench stability, or safe-editor quality improvement per run, verified, documented, committed, and pushed when checks pass. A verified no-op is acceptable when no safe useful slice is found.
+Primary outcome: one coherent Pi CLI provider, Agent Workbench stability, Markdown authoring readiness, or safe-editor quality improvement per run, verified, documented, committed, and pushed when checks pass. A verified no-op is acceptable when no safe useful slice is found.
 
 Each run should fit the 30-minute cadence. If the useful slice is larger than that, narrow it, leave a short next-step note, or stop with a verified no-op instead of stretching the scope.
 
@@ -41,6 +41,13 @@ Do not decide verified no-op from documentation review alone when app inspection
 
 Choose the first useful slice that is both small and verifiable.
 
+0. Pre-release Markdown authoring feature readiness:
+   - use `docs/authoring-feature-readiness.md` as the source of truth for image paste, export, Zen, spellcheck, table, and Agent authoring gaps
+   - prefer safe workspace-relative `assets/...` preview/export rendering before adding more image UX
+   - treat image drag-and-drop into `assets/` as separate from the existing file-open drag/drop behavior
+   - keep PDF export described as Print to PDF unless a real PDF pipeline is explicitly approved
+   - keep current table behavior described as Insert table until row/column/alignment editing exists
+   - do not claim Agent authoring actions until selected text, candidate output, diff review, and explicit apply are designed inside the safe boundary
 1. v0.5 Pi CLI Provider And App Stability:
    - keep `pi` only as an allowlisted local CLI provider inside the existing Agent Workbench gate
    - keep Pi launch behavior inside explicit mode, restart boundary, responsibility consent, selected workspace root, and one active session

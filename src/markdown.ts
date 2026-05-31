@@ -6,9 +6,12 @@ marked.use({
   breaks: false,
 });
 
-export function renderMarkdown(source: string): string {
+export function renderMarkdown(
+  source: string,
+  options?: { workspaceRoot?: string | null },
+): string {
   const rawHtml = marked.parse(source, { async: false }) as string;
-  const imageBoundedHtml = applyImagePreviewPolicy(rawHtml);
+  const imageBoundedHtml = applyImagePreviewPolicy(rawHtml, options?.workspaceRoot ?? null);
   const tableBoundedHtml = applyTablePreviewPolicy(imageBoundedHtml);
 
   return DOMPurify.sanitize(tableBoundedHtml, {
@@ -18,7 +21,10 @@ export function renderMarkdown(source: string): string {
   });
 }
 
-function applyImagePreviewPolicy(html: string): string {
+function applyImagePreviewPolicy(
+  html: string,
+  workspaceRoot: string | null,
+): string {
   const template = document.createElement("template");
   template.innerHTML = html;
 
@@ -26,6 +32,24 @@ function applyImagePreviewPolicy(html: string): string {
     const src = image.getAttribute("src")?.trim() ?? "";
 
     if (isAllowedEmbeddedImageSource(src)) {
+      image.removeAttribute("srcset");
+      image.setAttribute("loading", "lazy");
+      image.setAttribute("decoding", "async");
+      continue;
+    }
+
+    // Allow workspace-relative assets/ images; convert to asset:// URL
+    if (workspaceRoot && src.startsWith("assets/")) {
+      const absolutePath = workspaceRoot.replace(/\/+$/, "") + "/" + src;
+      image.setAttribute("src", `asset://localhost/${absolutePath}`);
+      image.removeAttribute("srcset");
+      image.setAttribute("loading", "lazy");
+      image.setAttribute("decoding", "async");
+      continue;
+    }
+
+    // Also allow explicit asset:// URLs (for already-resolved paths)
+    if (src.startsWith("asset://") || src.startsWith("http://asset.localhost/")) {
       image.removeAttribute("srcset");
       image.setAttribute("loading", "lazy");
       image.setAttribute("decoding", "async");

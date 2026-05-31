@@ -3,7 +3,7 @@
 Status: Operational
 Scope: Current release sequence and planning boundaries
 Authority: Medium
-Last reviewed: 2026-05-30
+Last reviewed: 2026-05-31
 
 ## Current Position
 
@@ -20,6 +20,8 @@ The current public line is:
 - `v0.4.0`: Markdown Review Navigation warning-expected DMG release
 
 The old `v0.1` / `v0.3.x` phase map is archived in `docs/roadmap-v0.1-archived.md`.
+
+Before the next public release claims image paste, export, Zen, spellcheck, table editing, or Agent authoring improvements, reconcile the implementation against `docs/authoring-feature-readiness.md`. Several merged slices have UI or command surfaces, but not all of the product promises are complete enough to advertise honestly.
 
 ## Product Boundary
 
@@ -118,6 +120,13 @@ This phase should prefer navigation, visibility, and manual review over predicti
 Goal: add Pi as a first-class Agent Workbench CLI provider while improving app stability in small, verifiable slices.
 
 Status: Active development lane after the `v0.4.0` warning-expected DMG preview release.
+
+Pre-release gate:
+
+- resolve or explicitly defer the incomplete Markdown authoring/export items in `docs/authoring-feature-readiness.md`
+- do not claim image paste as complete until pasted `assets/...` references render safely in preview and HTML export
+- do not claim table editing beyond "Insert table" until row/column/alignment editing exists
+- do not claim Agent selection actions until a selected-text candidate and diff-review flow is designed inside the safe boundary
 
 Delivered:
 

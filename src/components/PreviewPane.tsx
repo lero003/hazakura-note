@@ -4,13 +4,15 @@ import { renderMarkdown } from "../markdown";
 type PreviewPaneProps = {
   onOpenLocalLink?: (href: string) => void;
   source: string;
+  workspaceRoot?: string | null;
 };
 
 export default function PreviewPane({
   onOpenLocalLink,
   source,
+  workspaceRoot,
 }: PreviewPaneProps) {
-  const html = useMemo(() => renderMarkdown(source), [source]);
+  const html = useMemo(() => renderMarkdown(source, { workspaceRoot }), [source, workspaceRoot]);
   const handleClick = (event: MouseEvent<HTMLElement>) => {
     if (!onOpenLocalLink) {
       return;

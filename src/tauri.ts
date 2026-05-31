@@ -306,6 +306,16 @@ export async function savePastedImage(
   });
 }
 
+export async function importImageFromPath(
+  workspaceRoot: string,
+  sourcePath: string,
+): Promise<string> {
+  return invoke<string>("import_image_from_path", {
+    workspaceRoot,
+    sourcePath,
+  });
+}
+
 export async function saveTextFile(
   path: string,
   contents: string,

@@ -358,6 +358,90 @@ fn save_pasted_image(
     Ok(relative)
 }
 
+/// Import an image from an arbitrary file path into the workspace assets folder.
+#[tauri::command]
+fn import_image_from_path(
+    workspace_root: String,
+    source_path: String,
+) -> Result<String, String> {
+    let root = PathBuf::from(&workspace_root);
+    let canonical_root = ensure_workspace_root(&root)?;
+
+    let src = PathBuf::from(&source_path);
+    let metadata = fs::metadata(&src)
+        .map_err(|e| format!("Cannot read source file: {e}"))?;
+    if !metadata.is_file() {
+        return Err("Source path is not a file".to_string());
+    }
+    if metadata.len() > MAX_IMAGE_PREVIEW_BYTES {
+        return Err(format!(
+            "File exceeds size limit of {} MB",
+            MAX_IMAGE_PREVIEW_BYTES / (1024 * 1024)
+        ));
+    }
+
+    let bytes = fs::read(&src).map_err(|e| format!("Cannot read source file: {e}"))?;
+    let ext = src
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("png")
+        .to_lowercase();
+
+    // Validate that it's an image
+    if !matches!(ext.as_str(), "png" | "jpg" | "jpeg" | "gif" | "webp") {
+        return Err(format!("Unsupported image format: .{ext}"));
+    }
+    if image_mime_type(&src, &bytes).is_none() {
+        return Err("File contents do not match a supported image type.".to_string());
+    }
+
+    let assets_dir = canonical_root.join("assets");
+    fs::create_dir_all(&assets_dir)
+        .map_err(|e| format!("Cannot create assets folder: {e}"))?;
+
+    let stem = src
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("image");
+    let safe_name = format!("{stem}.{ext}");
+    let safe_name: String = safe_name
+        .chars()
+        .filter(|c| c.is_alphanumeric() || *c == '-' || *c == '_' || *c == '.')
+        .collect();
+    if safe_name.is_empty() {
+        return Err("Invalid file name".to_string());
+    }
+
+    // Handle duplicate names by appending a counter
+    let dest = assets_dir.join(&safe_name);
+    let final_path = if dest.exists() {
+        let stem = dest
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("image");
+        let mut counter = 1;
+        loop {
+            let candidate = assets_dir.join(format!("{stem}_{counter}.{ext}"));
+            if !candidate.exists() {
+                break candidate;
+            }
+            counter += 1;
+        }
+    } else {
+        dest
+    };
+
+    fs::write(&final_path, &bytes)
+        .map_err(|e| format!("Cannot write image file: {e}"))?;
+
+    let relative = final_path
+        .strip_prefix(&canonical_root)
+        .unwrap_or(&final_path)
+        .to_string_lossy()
+        .replace(std::path::MAIN_SEPARATOR, "/");
+    Ok(relative)
+}
+
 #[tauri::command]
 fn start_agent_workbench_session(
     session_store: tauri::State<'_, AgentWorkbenchSessionStore>,
@@ -776,6 +860,7 @@ pub fn run() {
             update_app_menu_state,
             update_theme_menu_state,
             save_pasted_image,
+            import_image_from_path,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

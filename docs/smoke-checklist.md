@@ -3,7 +3,7 @@
 Status: Operational
 Scope: Manual prototype checks
 Authority: Medium
-Last reviewed: 2026-05-30
+Last reviewed: 2026-05-31
 
 Use this checklist after changes to file creation, file opening, workspace listing, tabs, saving, preview rendering, theme handling, workspace restoration, search, or save-conflict handling.
 
@@ -116,6 +116,57 @@ Open the built app:
 ```bash
 open -n src-tauri/target/release/bundle/macos/hazakura-note.app
 ```
+
+## Markdown Image Paste And Drop
+
+1. Open a throwaway workspace outside the repo.
+2. Open or create a Markdown file inside that workspace.
+3. Copy a small PNG/JPEG/GIF/WebP image to the clipboard and press Cmd+V inside the editor.
+4. Confirm an `assets/` folder is created inside the selected workspace.
+5. Confirm Markdown image syntax is inserted at the cursor.
+6. Confirm the image renders in preview without enabling arbitrary local image loading.
+7. Confirm the inserted image remains scoped to the selected workspace and does not load external URLs or absolute local paths.
+8. Repeat with an unsupported or renamed non-image payload and confirm the app does not write it as a trusted image.
+9. Drag a supported image file onto the editor and confirm it is copied into `assets/` and inserted as Markdown image syntax.
+10. Quit the app after the smoke if a built app was launched.
+
+## Markdown Export
+
+1. Open a throwaway Markdown file with headings, paragraphs, lists, code, blockquotes, a table, and a workspace-relative `assets/` image.
+2. Turn Preview on and confirm the document renders as expected inside the app.
+3. Use File > Export as HTML.
+4. Save to a throwaway path and open the exported HTML.
+5. Confirm the exported HTML keeps the same safe Markdown content, theme-level styling, table readability, and workspace image rendering expected from preview.
+6. Confirm external images, absolute local paths, and scripts are still blocked or sanitized.
+7. Use File > Export as PDF and confirm the system Print dialog appears.
+8. Save as PDF from the print dialog if practical, then confirm the output reflects the rendered Markdown and does not claim a separate app-owned PDF pipeline.
+
+## Zen And Spellcheck
+
+1. Open a Markdown file and focus the editor.
+2. Use View > Zen Mode or Cmd+Shift+F.
+3. Confirm tabs, workspace tree, side pane, status bar, and start panel are hidden while the editor remains usable.
+4. Press Escape and confirm Zen Mode exits, focus returns predictably, and the View menu check state is correct.
+5. Use View > Spell Check or Cmd+Option+; to toggle spellcheck.
+6. Type a clearly misspelled English word and confirm the WebView spellcheck behavior follows the toggle as far as the platform exposes it.
+7. Confirm no macOS `NSSpellChecker` suggestion UI is claimed unless it has been implemented separately.
+
+## Table Insert
+
+1. Open a Markdown file and place the cursor on an empty line.
+2. Press Cmd+Shift+T or use the table toolbar button.
+3. Confirm a fixed 3-column Markdown table is inserted at the cursor.
+4. Turn Preview on and confirm the table renders inside the bounded table frame with readable headers, cells, and horizontal scrolling if needed.
+5. Confirm row/column add/delete and alignment editing are not presented unless those commands have been implemented.
+
+## Agent Authoring Boundary
+
+1. Start from Safe Editor Mode and confirm no Agent authoring actions are visible by default.
+2. Enable Agent Workbench only through the existing explicit mode gate, restart boundary, provider allowlist, selected workspace root, and responsibility consent.
+3. If a selected-text Agent helper is implemented, select text in the editor and send it only to the running allowlisted Agent session with an explicit instruction.
+4. Confirm no generated response is auto-applied to the editor.
+5. Confirm any future apply path uses a visible diff/review step and explicit user confirmation.
+6. Confirm no arbitrary command field, general terminal outside Agent Workbench, provider-add UI, auto-commit, Git operation, or project-wide indexing appears.
 
 ## Open -> Edit -> Save
 

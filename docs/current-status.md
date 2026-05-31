@@ -3,13 +3,14 @@
 Status: Operational
 Scope: Current implementation state and next safe actions
 Authority: High
-Last reviewed: 2026-05-30
+Last reviewed: 2026-05-31
 
 ## Current State
 
 - A touchable Tauri desktop prototype exists.
 - Current public preview release is `v0.4.0` as a warning-expected DMG preview.
 - Current development lane is v0.5 Pi CLI Provider And App Stability.
+- Markdown authoring feature readiness is now tracked in `docs/authoring-feature-readiness.md`; do not claim image paste, export, table editing, or Agent authoring beyond the implemented subset until those gaps are closed or explicitly deferred.
 - The prototype creates user-selected text/Markdown files, opens common UTF-8 text documents from File > Open or Finder/app-icon open events, opens a user-selected folder, shows a lazy bounded file tree, opens multiple files in tabs, edits the active tab with CodeMirror 6, saves through Rust with external-change protection, searches with visible match highlights and keyboard/navigation options, renders a toggleable sanitized Markdown preview, and shows selected workspace images in a read-only preview.
 - Existing LF / CRLF line endings are detected when a file is opened and preserved through save.
 - The status bar shows file type, UTF-8 encoding, approximate byte count, character count, saved line-ending mode, final-newline state, and clean/unsaved state.
@@ -143,6 +144,16 @@ cargo test --manifest-path src-tauri/Cargo.toml
 npm run build
 git diff --check
 ```
+
+Markdown Authoring Feature Readiness audit on 2026-05-31:
+
+- Clipboard image paste has a backend save path and editor insertion path, but pasted `assets/...` references still do not render in Markdown preview/export because local image references remain blocked by policy.
+- Drag-and-drop currently opens supported text files through the app-level file-open path; it does not ingest dropped images into `assets/` or insert Markdown image syntax.
+- HTML export and Print to PDF menu entries exist, but HTML export is not yet preview-identical and inherits the local-image blocking behavior. PDF is currently a system print flow, not an app-owned PDF file pipeline.
+- Zen mode and WebView spellcheck toggles exist but need release-facing smoke coverage before being claimed.
+- Table support is currently fixed 3-column Markdown insertion plus preview table styling, not WYSIWYG-style row/column/alignment editing.
+- Agent Workbench can send file paths to a running allowlisted provider, but selection-range summarize/proofread/translate actions and candidate-to-diff apply flow are not implemented.
+- `docs/authoring-feature-readiness.md`, `docs/next-goals.md`, `docs/roadmap.md`, and `docs/development-automation.md` now identify the next safe slices without adding new product behavior.
 
 v0.5 Pi provider allowlist slice on 2026-05-30:
 

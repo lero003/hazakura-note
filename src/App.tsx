@@ -35,6 +35,7 @@ import {
   createTextFile,
   drainOpenedFiles,
   getFileMetadata,
+  importImageFromPath,
   listWorkspaceDirectory,
   listWorkspaceTree,
   OPENED_FILES_EVENT,
@@ -1494,8 +1495,30 @@ export default function App() {
       });
       if (!destPath) return;
 
-      // Build standalone HTML
-      const bodyHtml = renderMarkdown(activeContents);
+      // Build standalone HTML with inlined images for export
+      let bodyHtml = renderMarkdown(activeContents, { workspaceRoot: workspaceRootPath });
+
+      // Resolve asset://localhost/ images to data: URIs for standalone export
+      if (bodyHtml.includes("asset://localhost/") && workspaceRootPath) {
+        const assetImgRegex = /<img[^>]*src="(asset:\/\/localhost\/[^"]+)"[^>]*>/g;
+        let match;
+        const replacements: Array<{ oldSrc: string; absPath: string }> = [];
+
+        while ((match = assetImgRegex.exec(bodyHtml)) !== null) {
+          const fullSrc = match[1];
+          const absPath = decodeURIComponent(fullSrc.replace("asset://localhost/", "")).replace(/^\/\/+/, "/");
+          replacements.push({ oldSrc: fullSrc, absPath });
+        }
+
+        for (const r of replacements) {
+          try {
+            const img = await openWorkspaceImage(workspaceRootPath, r.absPath);
+            bodyHtml = bodyHtml.replace(r.oldSrc, img.dataUrl);
+          } catch {
+            // Leave as-is; will show broken in export
+          }
+        }
+      }
 
       // Extract current theme CSS variables for inline styles
       const root = document.documentElement;
@@ -2865,7 +2888,7 @@ ${bodyHtml}
         if (cancelled) return;
         const payload = event.payload;
         if (payload.type === "drop") {
-          const paths = payload.paths.filter(
+          const textFiles = payload.paths.filter(
             (p: string) =>
               p.endsWith(".md") ||
               p.endsWith(".markdown") ||
@@ -2881,13 +2904,37 @@ ${bodyHtml}
               p.endsWith(".ini") ||
               p.endsWith(".conf"),
           );
-          if (paths.length === 1) {
-            await openExternalFilePaths(paths);
-          } else if (paths.length > 1) {
-            // Open the first one directly, queue the rest via opened_files
-            await openExternalFilePaths([paths[0]]);
-            // The remaining files will appear in the background
-            setStatus(`Opened ${paths.length} file(s)`);
+          const imageFiles = payload.paths.filter((p: string) =>
+            /\.(png|jpe?g|gif|webp)$/i.test(p),
+          );
+
+          // Open text files
+          if (textFiles.length === 1) {
+            await openExternalFilePaths(textFiles);
+          } else if (textFiles.length > 1) {
+            await openExternalFilePaths([textFiles[0]]);
+          }
+
+          // Import image files to workspace assets
+          if (imageFiles.length > 0 && workspaceRootPath) {
+            for (const imgPath of imageFiles) {
+              try {
+                const relativePath = await importImageFromPath(
+                  workspaceRootPath,
+                  imgPath,
+                );
+                // Insert markdown at cursor if editor is active
+                editorPaneRef.current?.insertText(
+                  `![](${relativePath})`,
+                );
+                setStatus(
+                  `Imported: ${relativePath}`,
+                );
+              } catch (err) {
+                console.warn("Failed to import image:", imgPath, err);
+                setStatus(`Failed to import image: ${String(err)}`);
+              }
+            }
           }
         }
       })
@@ -3899,6 +3946,7 @@ ${bodyHtml}
                 <PreviewPane
                   onOpenLocalLink={openPreviewMarkdownLink}
                   source={activeContents}
+                  workspaceRoot={workspaceRootPath}
                 />
               ) : (
                 <PreviewUnavailablePane

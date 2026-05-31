@@ -3,7 +3,50 @@
 Status: Operational
 Scope: Ready-to-use goal prompts and phase boundaries
 Authority: High
-Last reviewed: 2026-05-30
+Last reviewed: 2026-05-31
+
+## Ready Goal: Markdown Authoring Feature Completion
+
+Status: Ready
+
+目的: 画像ペースト、エクスポート、Zen、スペルチェック、テーブル、Agent authoring について、実装済みの雰囲気と実際の完成度を切り分け、release claim に耐える MVP へ小さく進める。
+
+正本: `docs/authoring-feature-readiness.md`
+
+### Goal Prompt
+
+```txt
+Bring hazakura-note's Markdown authoring feature set from feature-shaped stubs to honest release-ready MVP behavior.
+
+Start by reading AGENTS.md, docs/security-boundary.md, docs/current-status.md, docs/roadmap.md, docs/smoke-checklist.md, docs/development-automation.md, and docs/authoring-feature-readiness.md. Check git status --short --branch and do not revert user changes.
+
+Choose exactly one small slice from docs/authoring-feature-readiness.md, in this order: safe workspace-relative assets image rendering in preview/export; image drag-and-drop into assets; export smoke/parity; Zen/spellcheck smoke and docs; table insertion honesty; Agent selected-text context-helper design. Do not implement multiple areas in one run.
+
+Keep the safe-editor boundary: no arbitrary command execution, no shell/Pandoc pipeline, no arbitrary local image loading, no external image loading, no Git integration, no LSP, no plugins, no project-wide indexing, no Agent auto-apply or auto-commit.
+
+For code changes run npm run typecheck, cargo fmt --manifest-path src-tauri/Cargo.toml -- --check, cargo test --manifest-path src-tauri/Cargo.toml, npm run build, and git diff --check. For docs-only changes run git diff --check. Update smoke checklist/current status only when behavior or evidence changes.
+
+Final report: selected slice, what is now honestly implemented, what remains deferred, verification, and the next smallest slice.
+```
+
+### Acceptance Criteria
+
+- `docs/authoring-feature-readiness.md` の1項目だけを選ぶ
+- 画像ペーストは、保存、Markdown挿入、preview表示、HTML export表示が揃うまで完成扱いにしない
+- 画像D&Dは、既存のファイルオープンD&Dとは別に `assets/` 保存とMarkdown挿入を確認する
+- PDFは明示的なPDF生成ではなく Print to PDF として扱う場合、その制限をREADME/docsに残す
+- Tableは row/column/alignment UI が入るまで "Insert table" として表現する
+- Agent authoring は selected text -> candidate -> diff review -> explicit apply の設計なしに release claim しない
+- code変更では既存の品質ゲートを通す
+- UI挙動を変えた場合は `docs/smoke-checklist.md` を更新または実施する
+
+### Non-goals
+
+- arbitrary local image loading
+- external image loading
+- Pandoc or shell-backed export
+- WYSIWYG table editor in one broad change
+- Agent auto-apply, auto-commit, general terminal, provider plugins, or Git integration
 
 ## Current Recurring Automation: v0.5 Pi CLI Provider And App Stability
 

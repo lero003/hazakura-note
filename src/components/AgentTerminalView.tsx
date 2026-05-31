@@ -263,7 +263,6 @@ export function AgentTerminalView({
         100,
       );
     };
-    fitAndNotify._timer = 0 as unknown as ReturnType<typeof setTimeout>;
     fitAndNotify();
 
     const dataDisposable = terminal.onData((data) => {

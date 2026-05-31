@@ -138,6 +138,17 @@ fn binary_detection_finds_nul_byte() {
 }
 
 #[test]
+fn base64_decoder_rejects_invalid_padding() {
+    assert_eq!(
+        decode_base64("iVBORw0KGgo=").expect("decode png header"),
+        b"\x89PNG\r\n\x1a\n"
+    );
+    assert!(decode_base64("AA=A").is_err());
+    assert!(decode_base64("AAAA=AAA").is_err());
+    assert!(decode_base64("A===").is_err());
+}
+
+#[test]
 fn agent_workbench_launch_rejects_disabled_mode() {
     let error =
         validate_agent_workbench_launch(false, true, AGENT_PROVIDER_CODEX, "/tmp").unwrap_err();
@@ -2303,6 +2314,66 @@ fn open_workspace_image_rejects_oversized_image_before_preview() {
     assert!(err.contains("preview limit of 20 MB"), "{err}");
 
     let _ = fs::remove_dir_all(dir);
+}
+
+#[test]
+fn save_pasted_image_writes_supported_image_inside_assets() {
+    let dir = unique_test_dir("pasted_image");
+    fs::create_dir_all(&dir).expect("create test dir");
+
+    let relative = save_pasted_image(
+        dir.to_string_lossy().to_string(),
+        "iVBORw0KGgo=".to_string(),
+        "../pasted.png".to_string(),
+    )
+    .expect("save pasted image");
+
+    assert_eq!(relative, "assets/pasted.png");
+    assert!(dir.join("assets/pasted.png").is_file());
+
+    let _ = fs::remove_dir_all(dir);
+}
+
+#[test]
+fn save_pasted_image_rejects_non_image_bytes() {
+    let dir = unique_test_dir("pasted_non_image");
+    fs::create_dir_all(&dir).expect("create test dir");
+
+    let error = save_pasted_image(
+        dir.to_string_lossy().to_string(),
+        "SGVsbG8=".to_string(),
+        "pasted.png".to_string(),
+    )
+    .expect_err("non-image paste should be rejected");
+
+    assert!(error.contains("supported image type"), "{error}");
+
+    let _ = fs::remove_dir_all(dir);
+}
+
+#[cfg(unix)]
+#[test]
+fn save_pasted_image_rejects_assets_symlink_outside_workspace() {
+    use std::os::unix::fs::symlink;
+
+    let root = unique_test_dir("pasted_symlink_root");
+    let outside = unique_test_dir("pasted_symlink_outside");
+    fs::create_dir_all(&root).expect("create root");
+    fs::create_dir_all(&outside).expect("create outside");
+    symlink(&outside, root.join("assets")).expect("create assets symlink");
+
+    let error = save_pasted_image(
+        root.to_string_lossy().to_string(),
+        "iVBORw0KGgo=".to_string(),
+        "pasted.png".to_string(),
+    )
+    .expect_err("assets symlink should be rejected");
+
+    assert!(error.contains("outside the workspace root"), "{error}");
+    assert!(!outside.join("pasted.png").exists());
+
+    let _ = fs::remove_dir_all(root);
+    let _ = fs::remove_dir_all(outside);
 }
 
 #[test]

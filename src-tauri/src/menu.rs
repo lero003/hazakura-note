@@ -1,7 +1,7 @@
 use crate::types::*;
 use tauri::menu::{
-    AboutMetadata, CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu,
-    HELP_SUBMENU_ID, WINDOW_SUBMENU_ID,
+    AboutMetadata, CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu, HELP_SUBMENU_ID,
+    WINDOW_SUBMENU_ID,
 };
 use tauri::Emitter;
 
@@ -467,7 +467,6 @@ pub(crate) fn emit_app_menu_event<R: tauri::Runtime>(
         let _ = app.emit(MENU_ACTION_EVENT, action);
     }
 }
-
 
 #[cfg(desktop)]
 pub(crate) fn sync_theme_menu_state<R: tauri::Runtime>(

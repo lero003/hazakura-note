@@ -95,6 +95,7 @@ import {
   parseMarkdownHeadingLine,
   providerLabel,
 } from "./utils";
+import { renderMarkdown } from "./markdown";
 import { OutlinePane } from "./components/OutlinePane";
 import { PreviewUnavailablePane } from "./components/PreviewUnavailablePane";
 import {
@@ -1494,7 +1495,6 @@ export default function App() {
       if (!destPath) return;
 
       // Build standalone HTML
-      const { renderMarkdown } = await import("./markdown");
       const bodyHtml = renderMarkdown(activeContents);
 
       // Extract current theme CSS variables for inline styles

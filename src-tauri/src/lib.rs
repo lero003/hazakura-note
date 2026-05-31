@@ -1,7 +1,7 @@
 use std::env;
 use std::ffi::OsStr;
 use std::fs::{self, OpenOptions};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tauri::{Emitter, Manager};
 
@@ -301,33 +301,40 @@ fn save_pasted_image(
     file_name: String,
 ) -> Result<String, String> {
     let root = PathBuf::from(&workspace_root);
-    ensure_workspace_root(&root)?;
+    let canonical_root = ensure_workspace_root(&root)?;
 
     // Create assets directory if it doesn't exist
-    let assets_dir = root.join("assets");
-    fs::create_dir_all(&assets_dir)
-        .map_err(|e| format!("Cannot create assets folder: {e}"))?;
+    let assets_dir = canonical_root.join("assets");
+    fs::create_dir_all(&assets_dir).map_err(|e| format!("Cannot create assets folder: {e}"))?;
+    let canonical_assets =
+        fs::canonicalize(&assets_dir).map_err(|e| format!("Cannot verify assets folder: {e}"))?;
+
+    if !canonical_assets.starts_with(&canonical_root) {
+        return Err("Assets folder is outside the workspace root.".to_string());
+    }
 
     // Sanitize filename: only allow safe characters
-    let safe_name: String = file_name
+    let requested_name = Path::new(&file_name)
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("");
+    let safe_name: String = requested_name
         .chars()
         .filter(|c| c.is_alphanumeric() || *c == '-' || *c == '_' || *c == '.')
         .collect();
+    let safe_name = safe_name.trim_matches('.').to_string();
     if safe_name.is_empty() {
         return Err("Invalid file name".to_string());
     }
 
     // Handle duplicate names by appending a counter
-    let dest = assets_dir.join(&safe_name);
+    let dest = canonical_assets.join(&safe_name);
     let final_path = if dest.exists() {
-        let stem = dest
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("image");
+        let stem = dest.file_stem().and_then(|s| s.to_str()).unwrap_or("image");
         let ext = dest.extension().and_then(|e| e.to_str()).unwrap_or("png");
         let mut counter = 1;
         loop {
-            let candidate = assets_dir.join(format!("{stem}_{counter}.{ext}"));
+            let candidate = canonical_assets.join(format!("{stem}_{counter}.{ext}"));
             if !candidate.exists() {
                 break candidate;
             }
@@ -338,15 +345,16 @@ fn save_pasted_image(
     };
 
     let bytes = decode_base64(&data_base64)?;
-    fs::write(&final_path, &bytes)
-        .map_err(|e| format!("Cannot write image file: {e}"))?;
+    image_mime_type(&final_path, &bytes)
+        .ok_or_else(|| "Pasted image contents do not match a supported image type.".to_string())?;
+    fs::write(&final_path, &bytes).map_err(|e| format!("Cannot write image file: {e}"))?;
 
     // Return the relative path (for markdown insertion)
     let relative = final_path
-        .strip_prefix(&root)
+        .strip_prefix(&canonical_root)
         .unwrap_or(&final_path)
         .to_string_lossy()
-        .to_string();
+        .replace(std::path::MAIN_SEPARATOR, "/");
     Ok(relative)
 }
 
@@ -767,7 +775,7 @@ pub fn run() {
             save_text_file_as,
             update_app_menu_state,
             update_theme_menu_state,
-            save_pasted_image
+            save_pasted_image,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

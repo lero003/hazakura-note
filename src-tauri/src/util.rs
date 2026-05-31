@@ -97,28 +97,45 @@ pub(crate) fn decode_base64(encoded: &str) -> Result<Vec<u8>, String> {
         return Err("Invalid base64 input length".to_string());
     }
 
-    let padding = cleaned.iter().rev().take(2).filter(|b| **b == b'=').count();
-    let output_len = cleaned.len() / 4 * 3 - padding;
-    let mut decoded = Vec::with_capacity(output_len);
+    let mut decoded = Vec::with_capacity(cleaned.len() / 4 * 3);
+    let last_chunk_index = cleaned.len() / 4 - 1;
+    let decode = |byte: u8| -> Result<u16, String> {
+        let value = DECODE.get(byte as usize).copied().unwrap_or(-1);
+        if value < 0 {
+            Err("Invalid base64 character".to_string())
+        } else {
+            Ok(value as u16)
+        }
+    };
 
-    for chunk in cleaned.chunks(4) {
-        let a = DECODE.get(chunk[0] as usize).copied().unwrap_or(-1);
-        let b = DECODE.get(chunk[1] as usize).copied().unwrap_or(-1);
-        let c = DECODE.get(chunk[2] as usize).copied().unwrap_or(-1);
-        let d = DECODE.get(chunk[3] as usize).copied().unwrap_or(-1);
+    for (chunk_index, chunk) in cleaned.chunks(4).enumerate() {
+        let is_last_chunk = chunk_index == last_chunk_index;
 
-        if a < 0 || b < 0 {
-            return Err("Invalid base64 character".to_string());
+        if (chunk[0] == b'=' || chunk[1] == b'=')
+            || (!is_last_chunk && (chunk[2] == b'=' || chunk[3] == b'='))
+            || (chunk[2] == b'=' && chunk[3] != b'=')
+        {
+            return Err("Invalid base64 padding".to_string());
         }
 
-        decoded.push(((a as u16) << 2 | (b as u16) >> 4) as u8);
+        let a = decode(chunk[0])?;
+        let b = decode(chunk[1])?;
 
-        if c >= 0 {
-            decoded.push(((b as u16 & 0x0f) << 4 | (c as u16) >> 2) as u8);
+        decoded.push(((a << 2) | (b >> 4)) as u8);
+
+        if chunk[2] == b'=' {
+            continue;
         }
-        if d >= 0 {
-            decoded.push(((c as u16 & 0x03) << 6 | d as u16) as u8);
+
+        let c = decode(chunk[2])?;
+        decoded.push((((b & 0x0f) << 4) | (c >> 2)) as u8);
+
+        if chunk[3] == b'=' {
+            continue;
         }
+
+        let d = decode(chunk[3])?;
+        decoded.push((((c & 0x03) << 6) | d) as u8);
     }
 
     Ok(decoded)

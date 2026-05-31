@@ -3,11 +3,13 @@
 Status: Operational
 Scope: Current release sequence and planning boundaries
 Authority: Medium
-Last reviewed: 2026-05-31
+Last reviewed: 2026-05-31 (v0.6 scope redefined per review feedback: Foundation Release)
 
 ## Current Position
 
 `hazakura-note` is no longer in the early `v0.1` planning sequence.
+
+> **Planned rename**: `hazakura-note` → **`hazakura editor`** at v0.6 release. The name change signals the product identity as a text editor first (evoking the classic サクラエディタ heritage), rather than a note-taking app. All docs, package names, and release assets will be updated at that boundary.
 
 The current public line is:
 
@@ -143,35 +145,70 @@ Candidate work:
 
 Do not use this phase to add Pi SDK integration, RPC integration, arbitrary provider configuration, multi-agent orchestration, auto-apply, auto-commit, a general terminal, or a Git client.
 
-## 0.6: Agent Workbench Hardening
+## 0.6: Foundation Release — Daily-Drivable Safe Editor
 
-Goal: reduce friction and risk found through real Agent Workbench usage before treating the agent surface as release-quality.
+Goal: v0.6 is not a feature-adding release. It's the release where `hazakura-note` becomes **`hazakura editor`** — an editor you can actually use every day.
+
+> Agent で勝つより先に、Agent を安心して置けるエディタの床を固める
+
+The core positioning remains **「安全に読める。安全に直せる。必要なときだけAIに渡せる。Markdown-first の小さな作業場。」**
+
+The rename to `hazakura editor` also signals kinship with the classic サクラエディタ (Sakura Editor) lineage — a lightweight, Japanese-first text editor heritage. Selected Sakura Editor features (encoding display, rectangular selection, regex replace) will be adopted where they align with the safe Markdown-first identity.
+
+v0.6 delivers:
+
+1. **App.tsx 分割** — extract `useAgentWorkbench`, `usePreferences`, `useExport` into custom hooks. No zustand/Context. Goal: stop writing to App.tsx by default.
+2. **Cmd+P クイックオープン** — fzf-style file name search + Enter to open. The single most impactful editor shortcut.
+3. **自動保存 + バックアップ** — periodic save to `.hazakura/backups/` with Draft restore recovery. Trust foundation.
+4. **Replace (置換)** — Find bar gets replace input, Replace one / Replace all.
+5. **Agent 差分ポーリング** — `last_seen_seq` incremental output fetching. Eliminates polling lag.
+6. **選択範囲→Agent 送信** — select text in editor → send to terminal stdin via shortcut or right-click.
+7. **プリセットプロンプトボタン** — [要約] [校正] [翻訳] [コードレビュー] chips above the terminal.
+8. **タブのドラッグ並び替え** — Drag-and-drop tab reordering.
+9. **Multi-cursor** — CodeMirror 6 built-in: Alt+click, Cmd+D.
+10. **矩形選択 (Rectangular selection)** — CodeMirror 6 built-in: Alt+Shift+drag. Quick win from Sakura Editor heritage.
+
+Estimated effort: ~11 days total.
+
+Deliberately deferred to v0.7:
+- Global Search (Cmd+Shift+F)
+- コマンドパレット (Cmd+Shift+P)
+- ツリー Rename / Delete
+- セッションログ保存
+- ファイルコンテキスト自動添付
+- Alt text 編集UI
+- **文字コード表示 + 別名保存で文字コード変更**: status bar encoding display + Save As dialog with encoding dropdown (UTF-8/Shift-JIS/EUC-JP). Rust `encoding_rs` conversion.
+- ペイン切替ショートカット
+
+Do not use this phase to add SDK integration, background sessions, session restore, provider plugins, arbitrary command execution, automated approval of provider actions, zustand/Context architecture changes, Pi RPC, theme editor, KaTeX, Mermaid, tab split, or external file rename tracking.
+
+## 0.7: Workspace Power Release
+
+Goal: make the workspace experience powerful enough that users never need to leave the app for file/search operations.
 
 Candidate work:
 
-- tighten start, stop, exit, resize, output-buffer, and app-close behavior from real-provider smoke findings
-- improve provider availability, launch failure, and consent-state messaging
-- verify that provider-made file changes continue to surface through existing external-change and conflict handling
-- document known provider-specific limitations without claiming control over provider internals
-- evaluate whether Pi RPC should become the next experiment lane, while keeping it out of the app until a boundary review approves it
+- Global Search (Cmd+Shift+F): workspace-wide grep via Rust
+- コマンドパレット (Cmd+Shift+P): fuzzy-accessible all actions
+- ツリー Rename / Delete: in-app file management
+- セッションログ保存: save Agent chat as .md
+- ファイルコンテキスト自動添付: auto-attach active file path to Agent messages
+- Alt text 編集UI: improve image paste completeness
 
-Do not use this phase to add SDK integration, background sessions, session restore, provider plugins, arbitrary command execution, or automated approval of provider actions.
+Do not use this phase to add Git integration, LSP, plugin system, theme editor, or project-wide indexing.
 
-## 0.7: Release And Maintenance Quality
+## 0.8: Writing Experience Release
 
-Goal: make the preview line easier to test, maintain, and distribute honestly without treating it as a formally signed production app.
+Goal: refine the Markdown editing experience beyond basic functionality.
 
 Candidate work:
 
-- minimal CI for TypeScript build, Rust format, and Rust tests
-- Dependabot or equivalent dependency visibility without auto-merge
-- documented cross-machine smoke matrix
-- release checklist tightening for source-only and warning-expected DMG lanes
-- clearer dependency-audit triage for Tauri/wry transitive warnings
-- README and release-note polish based on external tester feedback
-- evaluate whether a Safe Editor-only build variant would make review and distribution easier
-
-Developer ID signing, hardened runtime review, notarization, stapling, and production installation guidance remain separate future decisions. 0.7 should improve release hygiene for the existing preview lanes without implying formal macOS distribution quality.
+- プレビュースクロール同期: scroll preview to match editor position
+- Markdown スニペット展開: auto-complete blockquote, list, heading
+- Markdown ツールバー拡充: heading / bold / italic / list / code block buttons
+- フォーカスモード / タイプライターモード: highlight only the current line
+- 書き出し品質向上: CSS polish for HTML export
+- ピン留め / お気に入り: quick-access pinned files
 
 ## Future
 
@@ -180,9 +217,14 @@ Possible later work, only after a fresh boundary review:
 - Developer ID signed and notarized distribution
 - Markdown lint or manual formatting checks
 - heading-level or paragraph-level Markdown diff
-- carefully scoped Git-adjacent review helpers
-- Pi RPC integration, only after Pi CLI usage proves useful and a fresh Agent Workbench boundary review approves the wider integration shape
-- Pi SDK integration, only as a separate product-level decision if `hazakura-note` intentionally moves beyond a safe editor with an optional agent pane
+- Pi RPC integration, only after CLI mode improvements prove insufficient
+- KaTeX 数式レンダリング
+- Mermaid 図レンダリング
+- テーマ自動切替（macOS appearance sync）
+- タブ分割編集
+- Homebrew Cask 対応
+- GitHub Actions .dmg 自動ビルド
+- アップデート通知
 
 These are not approval to add a general terminal, arbitrary command execution, Git client behavior, plugin execution, auto-apply, auto-commit, or multi-agent orchestration.
 
@@ -195,5 +237,6 @@ Use these when asking for external review:
 3. Does 0.3 complete the "check with diff" promise without becoming Git-aware?
 4. Does 0.4 improve Markdown review/navigation without over-predicting or auto-rewriting user text?
 5. Does 0.5 add Pi as a bounded CLI provider without making Agent Workbench feel like the default app mode?
-6. Does 0.6 harden Agent Workbench from real usage without hiding provider-internal responsibility from the user?
-7. Does 0.7 improve release quality without implying production distribution before signing and notarization are actually implemented?
+6. Does 0.6 deliver a daily-drivable safe editor — Cmd+P, auto-save, Replace, App.tsx split — before adding more Agent features?
+7. Does 0.7 add workspace power (Global Search, command palette, Rename) without scope creep?
+8. Does 0.8 refine the writing experience without becoming a full IDE?

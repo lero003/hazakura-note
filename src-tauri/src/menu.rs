@@ -128,7 +128,7 @@ pub(crate) fn build_app_menu_with_state<R: tauri::Runtime>(
             &MenuItem::with_id(
                 app,
                 MENU_EXPORT_PDF,
-                label("Export as PDF…", "PDFとして書き出す…"),
+                label("Print to PDF…", "PDFに印刷…"),
                 true,
                 Some("CmdOrCtrl+Alt+P"),
             )?,

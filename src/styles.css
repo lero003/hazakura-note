@@ -421,6 +421,10 @@ button:disabled {
   transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.app-shell.zen-mode .workspace {
+  grid-template-columns: 0px minmax(0, 1fr);
+}
+
 .app-shell.zen-mode .tabs-row,
 .app-shell.zen-mode .file-tree-pane,
 .app-shell.zen-mode .preview-pane,

@@ -3162,6 +3162,7 @@ ${bodyHtml}
       if (event.key === "Escape" && zenMode) {
         event.preventDefault();
         setZenMode(false);
+        focusEditorSoon();
         return;
       }
 
@@ -3831,14 +3832,18 @@ ${bodyHtml}
                   workspaceRoot={workspaceRootPath ?? undefined}
                   onPasteImage={async (dataBase64, fileName) => {
                     if (!workspaceRootPath) return null;
+                    setStatus("Saving pasted image...");
                     try {
-                      return await savePastedImage(
+                      const result = await savePastedImage(
                         workspaceRootPath,
                         dataBase64,
                         fileName,
                       );
+                      setStatus(`Image saved: ${result}`);
+                      return result;
                     } catch (err) {
                       console.warn("Failed to save pasted image", err);
+                      setStatus("Image paste failed");
                       return null;
                     }
                   }}

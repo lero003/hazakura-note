@@ -97,7 +97,7 @@ import {
   parseMarkdownHeadingLine,
   providerLabel,
 } from "./utils";
-import { renderMarkdown } from "./markdown";
+import { inlineWorkspaceAssetImages, renderMarkdown } from "./markdown";
 import { OutlinePane } from "./components/OutlinePane";
 import { PreviewUnavailablePane } from "./components/PreviewUnavailablePane";
 import {
@@ -1486,30 +1486,21 @@ export default function App() {
       return;
     }
 
-    setStatus("Opening system print dialog...");
-
-    // Try window.print() first.
-    let printed = false;
+    // Print only the rendered Markdown document, not the editor workspace UI.
+    setStatus("Opening in browser for printing...");
     try {
-      window.print();
-      printed = true;
-      setTimeout(() => setStatus(""), 2000);
-    } catch (err) {
-      console.warn("window.print() failed:", err);
-    }
-
-    if (!printed) {
-      // window.print() is not available in this Tauri v2 + WKWebView.
-      // Generate a standalone HTML file and open it in the system browser,
-      // where the user can print / Save as PDF via the browser's print dialog.
-      setStatus("Opening in browser for printing...");
-      try {
-        const workspaceRoot = workspaceRootPath;
-        const rendered = await renderMarkdown(activeContents_, {
-          workspaceRoot: workspaceRoot ?? undefined,
+      const workspaceRoot = workspaceRootPath;
+      let rendered = renderMarkdown(activeContents_, {
+        workspaceRoot: workspaceRoot ?? undefined,
+      });
+      if (workspaceRoot) {
+        rendered = await inlineWorkspaceAssetImages(rendered, async (path) => {
+          const image = await openWorkspaceImage(workspaceRoot, path);
+          return image.dataUrl;
         });
+      }
 
-        const standaloneHtml = `<!DOCTYPE html>
+      const standaloneHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1525,9 +1516,10 @@ export default function App() {
   th { background: #f5f5f7; }
 </style>
 </head>
-<body>${rendered}</body>
+<body>${rendered}<script>window.addEventListener("load", () => window.print());</script></body>
 </html>`;
 
+      if (isTauriRuntime()) {
         const tempPath = await openTempPrintHtml(
           standaloneHtml,
           activeTab_.name.replace(/\.[^.]+$/, "") + ".html",
@@ -1535,10 +1527,22 @@ export default function App() {
         if (tempPath) {
           setStatus("Opening in browser for printing...");
         }
-      } catch (err) {
-        console.warn("Print fallback failed:", err);
-        setStatus("Print unavailable");
+        setTimeout(() => setStatus(""), 2000);
+        return;
       }
+
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        setStatus("Print unavailable");
+        return;
+      }
+      printWindow.document.open();
+      printWindow.document.write(standaloneHtml);
+      printWindow.document.close();
+      setTimeout(() => setStatus(""), 2000);
+    } catch (err) {
+      console.warn("Print failed:", err);
+      setStatus("Print unavailable");
     }
   }, [setStatus, activeContents, activeTab, workspaceRootPath]);
 
@@ -1558,27 +1562,11 @@ export default function App() {
 
       // Build standalone HTML with inlined images for export
       let bodyHtml = renderMarkdown(activeContents, { workspaceRoot: workspaceRootPath });
-
-      // Resolve asset://localhost/ images to data: URIs for standalone export
-      if (bodyHtml.includes("asset://localhost/") && workspaceRootPath) {
-        const assetImgRegex = /<img[^>]*src="(asset:\/\/localhost\/[^"]+)"[^>]*>/g;
-        let match;
-        const replacements: Array<{ oldSrc: string; absPath: string }> = [];
-
-        while ((match = assetImgRegex.exec(bodyHtml)) !== null) {
-          const fullSrc = match[1];
-          const absPath = decodeURIComponent(fullSrc.replace("asset://localhost/", "")).replace(/^\/\/+/, "/");
-          replacements.push({ oldSrc: fullSrc, absPath });
-        }
-
-        for (const r of replacements) {
-          try {
-            const img = await openWorkspaceImage(workspaceRootPath, r.absPath);
-            bodyHtml = bodyHtml.replace(r.oldSrc, img.dataUrl);
-          } catch {
-            // Leave as-is; will show broken in export
-          }
-        }
+      if (workspaceRootPath) {
+        bodyHtml = await inlineWorkspaceAssetImages(bodyHtml, async (path) => {
+          const image = await openWorkspaceImage(workspaceRootPath, path);
+          return image.dataUrl;
+        });
       }
 
       // Extract current theme CSS variables for inline styles

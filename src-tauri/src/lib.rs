@@ -1,7 +1,7 @@
 use std::env;
 use std::ffi::OsStr;
 use std::fs::{self, OpenOptions};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 use tauri::{Emitter, Manager};
 
@@ -356,65 +356,68 @@ fn save_pasted_image(
     data_base64: String,
     file_name: String,
 ) -> Result<String, String> {
+    // Keep the parameter for Tauri command compatibility (frontend sends it)
+    let _ = &file_name;
     let root = PathBuf::from(&workspace_root);
     let canonical_root = ensure_workspace_root(&root)?;
 
-    // Create assets directory if it doesn't exist
+    // Decode the base64 image data FIRST
+    let bytes = decode_base64(&data_base64)?;
+
+    // Validate image type from bytes only (magic bytes check)
+    let ext = image_ext_from_bytes(&bytes)
+        .ok_or_else(|| {
+            "Unsupported image type.".to_string()
+        })?
+        .to_string();
+
+    // Compute content hash for deduplication (deterministic FNV-1a)
+    let hash = bytes.iter().fold(0xcbf29ce484222325u64, |mut h, &b| {
+        h ^= b as u64;
+        h.wrapping_mul(0x100000001b3)
+    });
+    let hash_hex = format!("{:016x}", hash);
+    let safe_name = format!("{hash_hex}.{ext}");
+
+    // Create assets directory
     let assets_dir = canonical_root.join("assets");
-    fs::create_dir_all(&assets_dir).map_err(|e| format!("Cannot create assets folder: {e}"))?;
-    let canonical_assets =
-        fs::canonicalize(&assets_dir).map_err(|e| format!("Cannot verify assets folder: {e}"))?;
+    fs::create_dir_all(&assets_dir)
+        .map_err(|e| format!("Cannot create assets folder: {e}"))?;
+    let canonical_assets = fs::canonicalize(&assets_dir)
+        .map_err(|e| format!("Cannot verify assets folder: {e}"))?;
 
     if !canonical_assets.starts_with(&canonical_root) {
         return Err("Assets folder is outside the workspace root.".to_string());
     }
 
-    // Sanitize filename: only allow safe characters
-    let requested_name = Path::new(&file_name)
-        .file_name()
-        .and_then(|name| name.to_str())
-        .unwrap_or("");
-    let safe_name: String = requested_name
-        .chars()
-        .filter(|c| c.is_alphanumeric() || *c == '-' || *c == '_' || *c == '.')
-        .collect();
-    let safe_name = safe_name.trim_matches('.').to_string();
-    if safe_name.is_empty() {
-        return Err("Invalid file name".to_string());
+    let dest = canonical_assets.join(&safe_name);
+
+    // If a file with this content hash already exists, return its path
+    // without overwriting (dedup).
+    if dest.exists() {
+        let relative = dest
+            .strip_prefix(&canonical_root)
+            .unwrap_or(&dest)
+            .to_string_lossy()
+            .replace(std::path::MAIN_SEPARATOR, "/");
+        return Ok(relative);
     }
 
-    // Handle duplicate names by appending a counter
-    let dest = canonical_assets.join(&safe_name);
-    let final_path = if dest.exists() {
-        let stem = dest.file_stem().and_then(|s| s.to_str()).unwrap_or("image");
-        let ext = dest.extension().and_then(|e| e.to_str()).unwrap_or("png");
-        let mut counter = 1;
-        loop {
-            let candidate = canonical_assets.join(format!("{stem}_{counter}.{ext}"));
-            if !candidate.exists() {
-                break candidate;
-            }
-            counter += 1;
-        }
-    } else {
-        dest
-    };
-
-    let bytes = decode_base64(&data_base64)?;
-    image_mime_type(&final_path, &bytes)
-        .ok_or_else(|| "Pasted image contents do not match a supported image type.".to_string())?;
-    fs::write(&final_path, &bytes).map_err(|e| format!("Cannot write image file: {e}"))?;
+    // Write the new image file
+    fs::write(&dest, &bytes).map_err(|e| format!("Cannot write image file: {e}"))?;
 
     // Return the relative path (for markdown insertion)
-    let relative = final_path
+    let relative = dest
         .strip_prefix(&canonical_root)
-        .unwrap_or(&final_path)
+        .unwrap_or(&dest)
         .to_string_lossy()
         .replace(std::path::MAIN_SEPARATOR, "/");
     Ok(relative)
 }
 
 /// Import an image from an arbitrary file path into the workspace assets folder.
+/// Uses content hash for deduplication: importing the same image twice
+/// returns the existing path without creating a duplicate.
 #[tauri::command]
 fn import_image_from_path(workspace_root: String, source_path: String) -> Result<String, String> {
     let root = PathBuf::from(&workspace_root);
@@ -433,22 +436,25 @@ fn import_image_from_path(workspace_root: String, source_path: String) -> Result
     }
 
     let bytes = fs::read(&src).map_err(|e| format!("Cannot read source file: {e}"))?;
-    let ext = src
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("png")
-        .to_lowercase();
 
-    // Validate that it's an image
-    if !matches!(ext.as_str(), "png" | "jpg" | "jpeg" | "gif" | "webp") {
-        return Err(format!("Unsupported image format: .{ext}"));
-    }
-    if image_mime_type(&src, &bytes).is_none() {
-        return Err("File contents do not match a supported image type.".to_string());
-    }
+    // Detect format from magic bytes only (for security)
+    let ext = image_ext_from_bytes(&bytes)
+        .ok_or_else(|| {
+            "Unsupported image type.".to_string()
+        })?
+        .to_string();
+
+    // Compute content hash for deduplication (deterministic FNV-1a)
+    let hash = bytes.iter().fold(0xcbf29ce484222325u64, |mut h, &b| {
+        h ^= b as u64;
+        h.wrapping_mul(0x100000001b3)
+    });
+    let hash_hex = format!("{:016x}", hash);
+    let safe_name = format!("{hash_hex}.{ext}");
 
     let assets_dir = canonical_root.join("assets");
-    fs::create_dir_all(&assets_dir).map_err(|e| format!("Cannot create assets folder: {e}"))?;
+    fs::create_dir_all(&assets_dir)
+        .map_err(|e| format!("Cannot create assets folder: {e}"))?;
     let canonical_assets =
         fs::canonicalize(&assets_dir).map_err(|e| format!("Cannot verify assets folder: {e}"))?;
 
@@ -456,38 +462,24 @@ fn import_image_from_path(workspace_root: String, source_path: String) -> Result
         return Err("Assets folder is outside the workspace root.".to_string());
     }
 
-    let stem = src.file_stem().and_then(|s| s.to_str()).unwrap_or("image");
-    let safe_name = format!("{stem}.{ext}");
-    let safe_name: String = safe_name
-        .chars()
-        .filter(|c| c.is_alphanumeric() || *c == '-' || *c == '_' || *c == '.')
-        .collect();
-    let safe_name = safe_name.trim_matches('.').to_string();
-    if safe_name.is_empty() {
-        return Err("Invalid file name".to_string());
+    let dest = canonical_assets.join(&safe_name);
+
+    // Dedup: if a file with this hash already exists, return its path
+    if dest.exists() {
+        let relative = dest
+            .strip_prefix(&canonical_root)
+            .unwrap_or(&dest)
+            .to_string_lossy()
+            .replace(std::path::MAIN_SEPARATOR, "/");
+        return Ok(relative);
     }
 
-    // Handle duplicate names by appending a counter
-    let dest = canonical_assets.join(&safe_name);
-    let final_path = if dest.exists() {
-        let stem = dest.file_stem().and_then(|s| s.to_str()).unwrap_or("image");
-        let mut counter = 1;
-        loop {
-            let candidate = canonical_assets.join(format!("{stem}_{counter}.{ext}"));
-            if !candidate.exists() {
-                break candidate;
-            }
-            counter += 1;
-        }
-    } else {
-        dest
-    };
+    // Copy the file
+    fs::copy(&src, &dest).map_err(|e| format!("Cannot copy image file: {e}"))?;
 
-    fs::write(&final_path, &bytes).map_err(|e| format!("Cannot write image file: {e}"))?;
-
-    let relative = final_path
+    let relative = dest
         .strip_prefix(&canonical_root)
-        .unwrap_or(&final_path)
+        .unwrap_or(&dest)
         .to_string_lossy()
         .replace(std::path::MAIN_SEPARATOR, "/");
     Ok(relative)

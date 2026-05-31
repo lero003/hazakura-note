@@ -45,6 +45,22 @@ pub(crate) fn image_mime_type(path: &Path, bytes: &[u8]) -> Option<&'static str>
     }
 }
 
+/// Detect image format from magic bytes only (ignoring filename).
+/// Returns the file extension, e.g. "png", "jpg", "gif", "webp".
+pub(crate) fn image_ext_from_bytes(bytes: &[u8]) -> Option<&'static str> {
+    if bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
+        Some("png")
+    } else if bytes.starts_with(&[0xff, 0xd8, 0xff]) {
+        Some("jpg")
+    } else if bytes.starts_with(b"GIF87a") || bytes.starts_with(b"GIF89a") {
+        Some("gif")
+    } else if bytes.len() >= 12 && bytes.starts_with(b"RIFF") && &bytes[8..12] == b"WEBP" {
+        Some("webp")
+    } else {
+        None
+    }
+}
+
 pub(crate) fn encode_base64(bytes: &[u8]) -> String {
     const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut encoded = String::with_capacity(bytes.len().div_ceil(3) * 4);

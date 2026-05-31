@@ -2328,8 +2328,14 @@ fn save_pasted_image_writes_supported_image_inside_assets() {
     )
     .expect("save pasted image");
 
-    assert_eq!(relative, "assets/pasted.png");
-    assert!(dir.join("assets/pasted.png").is_file());
+    assert!(
+        relative.starts_with("assets/") && relative.ends_with(".png"),
+        "Expected assets/<hash>.png, got: {relative}",
+    );
+    assert!(
+        dir.join(&relative).is_file(),
+        "File should exist at {relative}",
+    );
 
     let _ = fs::remove_dir_all(dir);
 }
@@ -2395,9 +2401,14 @@ fn import_image_from_path_writes_supported_image_inside_assets() {
     )
     .expect("import image");
 
-    assert_eq!(relative, "assets/DroppedImage.png");
-    assert!(root.join("assets/DroppedImage.png").is_file());
-
+    assert!(
+        relative.starts_with("assets/") && relative.ends_with(".png"),
+        "Expected assets/<hash>.png, got: {relative}",
+    );
+    assert!(
+        root.join(&relative).is_file(),
+        "File should exist at {relative}",
+    );
     let _ = fs::remove_dir_all(root);
     let _ = fs::remove_dir_all(source_dir);
 }

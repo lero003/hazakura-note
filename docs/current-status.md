@@ -26,7 +26,7 @@ Last reviewed: 2026-05-31
 - The app window title follows the active file and marks unsaved state, so the redundant in-app title header is no longer shown.
 - The workspace header includes a small open-folder action for switching workspace without returning to the native menu.
 - Save writes the editor text without adding or removing a final trailing newline by policy; Rust tests cover LF and CRLF final-newline presence.
-- Markdown preview shows embedded `data:image` PNG/JPEG/GIF/WebP images and blocks external or local image references with an in-preview note.
+- Markdown preview shows embedded `data:image` PNG/JPEG/GIF/WebP images and safe workspace `assets/...`, `./assets/...`, and `/assets/...` image references, while blocking external or other local image references with an in-preview note.
 - Markdown preview uses readable review-oriented spacing for paragraphs, lists, task checkboxes, horizontal rules, blockquotes, code blocks, and GFM tables; tables stay in a bounded horizontal scroll frame with clearer headers, grid lines, row striping, and alignment support.
 - Selecting a PNG/JPEG/GIF/WebP file up to 20 MB in the workspace tree opens a read-only local image preview in the work area after a lightweight content-signature check, without adding Markdown local-image loading. Closing that image preview returns to the prior text tab when one is still open.
 - Markdown preview and editor panes use lightweight bidirectional scroll synchronization with a small tolerance to avoid jitter while preview is visible.
@@ -79,7 +79,7 @@ Last reviewed: 2026-05-31
 - Approximate byte count, character count, line-ending mode, final-newline status, and clean/unsaved state in the status bar
 - Final-newline presence preservation on save
 - Preview visibility toggle through View / Preferences with `localStorage` persistence
-- Safe embedded-image preview policy for Markdown preview
+- Safe embedded-image and workspace-asset preview policy for Markdown preview
 - Markdown preview readability styling for lists, task checkboxes, horizontal rules, blockquotes, code blocks, and GFM tables with a bounded horizontal table frame
 - Read-only local workspace image preview for PNG/JPEG/GIF/WebP files up to 20 MB, with extension and content-signature validation
 - Lightweight bidirectional editor/preview scroll synchronization while Markdown preview is visible
@@ -143,13 +143,20 @@ cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
 cargo test --manifest-path src-tauri/Cargo.toml
 npm run build
 git diff --check
+codesign --verify --deep --strict --verbose=2 src-tauri/target/release/bundle/macos/hazakura-note.app
 ```
+
+Print and workspace image preview fix on 2026-05-31:
+
+- `Print to PDF` now prints only a standalone rendered Markdown HTML document, not the full editor workspace UI; workspace asset images are inlined before opening the temporary print HTML.
+- Workspace Markdown images under `assets/...`, `./assets/...`, and `/assets/...` are resolved through the existing `open_workspace_image` validation path and then inlined as `data:` URIs for preview/export/print instead of relying on broad Tauri asset protocol scope.
+- `npm run typecheck`, `cargo test --manifest-path src-tauri/Cargo.toml`, `npm run build`, `git diff --check`, and app bundle `codesign --verify --deep --strict --verbose=2` passed. Native print-dialog and image-preview behavior still need app-level smoke because build checks cannot open the macOS dialog.
 
 Markdown Authoring Feature Readiness audit on 2026-05-31:
 
-- Clipboard image paste has a backend save path and editor insertion path, but pasted `assets/...` references still do not render in Markdown preview/export because local image references remain blocked by policy.
+- Clipboard image paste has a backend save path and editor insertion path; `assets/...` references are now allowed for Markdown preview/export, but still need release-facing smoke coverage with actual pasted images.
 - Drag-and-drop currently opens supported text files through the app-level file-open path; it does not ingest dropped images into `assets/` or insert Markdown image syntax.
-- HTML export and Print to PDF menu entries exist, but HTML export is not yet preview-identical and inherits the local-image blocking behavior. PDF is currently a system print flow, not an app-owned PDF file pipeline.
+- HTML export and Print to PDF menu entries exist, and workspace asset images are inlined for standalone output. HTML export is not yet preview-identical, and PDF remains a system print flow rather than an app-owned PDF file pipeline.
 - Zen mode and WebView spellcheck toggles exist but need release-facing smoke coverage before being claimed.
 - Table support is currently fixed 3-column Markdown insertion plus preview table styling, not WYSIWYG-style row/column/alignment editing.
 - Agent Workbench can send file paths to a running allowlisted provider, but selection-range summarize/proofread/translate actions and candidate-to-diff apply flow are not implemented.

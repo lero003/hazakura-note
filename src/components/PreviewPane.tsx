@@ -1,5 +1,6 @@
-import { type MouseEvent, useMemo } from "react";
-import { renderMarkdown } from "../markdown";
+import { type MouseEvent, useEffect, useMemo, useState } from "react";
+import { inlineWorkspaceAssetImages, renderMarkdown } from "../markdown";
+import { openWorkspaceImage } from "../tauri";
 
 type PreviewPaneProps = {
   onOpenLocalLink?: (href: string) => void;
@@ -12,7 +13,36 @@ export default function PreviewPane({
   source,
   workspaceRoot,
 }: PreviewPaneProps) {
-  const html = useMemo(() => renderMarkdown(source, { workspaceRoot }), [source, workspaceRoot]);
+  const renderedHtml = useMemo(
+    () => renderMarkdown(source, { workspaceRoot }),
+    [source, workspaceRoot],
+  );
+  const [html, setHtml] = useState(renderedHtml);
+
+  useEffect(() => {
+    let cancelled = false;
+    setHtml(renderedHtml);
+
+    if (!workspaceRoot) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void inlineWorkspaceAssetImages(renderedHtml, async (path) => {
+      const image = await openWorkspaceImage(workspaceRoot, path);
+      return image.dataUrl;
+    }).then((nextHtml) => {
+      if (!cancelled) {
+        setHtml(nextHtml);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [renderedHtml, workspaceRoot]);
+
   const handleClick = (event: MouseEvent<HTMLElement>) => {
     if (!onOpenLocalLink) {
       return;

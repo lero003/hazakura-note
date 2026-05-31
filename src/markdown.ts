@@ -1,11 +1,14 @@
 import DOMPurify from "dompurify";
 import { marked } from "marked";
-import { convertFileSrc } from "@tauri-apps/api/core";
 
 marked.use({
   gfm: true,
   breaks: false,
 });
+
+const WORKSPACE_ASSET_PATH_ATTR = "data-hazakura-asset-path";
+const TRANSPARENT_IMAGE_SRC =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
 
 export function renderMarkdown(
   source: string,
@@ -20,9 +23,42 @@ export function renderMarkdown(
 
   return DOMPurify.sanitize(tableBoundedHtml, {
     USE_PROFILES: { html: true },
+    ALLOWED_URI_REGEXP:
+      /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
     FORBID_TAGS: ["script", "iframe", "object", "embed"],
     FORBID_ATTR: ["onerror", "onload", "onclick"],
   });
+}
+
+export async function inlineWorkspaceAssetImages(
+  html: string,
+  loadImageDataUrl: (absolutePath: string) => Promise<string>,
+): Promise<string> {
+  if (!html.includes(WORKSPACE_ASSET_PATH_ATTR)) {
+    return html;
+  }
+
+  const template = document.createElement("template");
+  template.innerHTML = html;
+
+  for (const image of Array.from(
+    template.content.querySelectorAll(`img[${WORKSPACE_ASSET_PATH_ATTR}]`),
+  )) {
+    const path = image.getAttribute(WORKSPACE_ASSET_PATH_ATTR);
+    if (!path) {
+      continue;
+    }
+
+    try {
+      const dataUrl = await loadImageDataUrl(path);
+      image.setAttribute("src", dataUrl);
+      image.removeAttribute(WORKSPACE_ASSET_PATH_ATTR);
+    } catch {
+      image.replaceWith(blockedImageMessage(image.getAttribute("alt")?.trim()));
+    }
+  }
+
+  return template.innerHTML;
 }
 
 function applyImagePreviewPolicy(
@@ -42,26 +78,30 @@ function applyImagePreviewPolicy(
       continue;
     }
 
-    const assetUrl = workspaceAssetImageUrl(src, workspaceRoot);
-    if (assetUrl) {
-      image.setAttribute("src", assetUrl);
+    const assetPath = workspaceAssetImagePath(src, workspaceRoot);
+    if (assetPath) {
+      image.setAttribute("src", TRANSPARENT_IMAGE_SRC);
+      image.setAttribute(WORKSPACE_ASSET_PATH_ATTR, assetPath);
       image.removeAttribute("srcset");
       image.setAttribute("loading", "lazy");
       image.setAttribute("decoding", "async");
       continue;
     }
 
-    const replacement = document.createElement("span");
-    const alt = image.getAttribute("alt")?.trim();
-    replacement.className = "blocked-image";
-    replacement.setAttribute("role", "note");
-    replacement.textContent = alt
-      ? `Image blocked: ${alt}`
-      : "Image blocked: external and local image loading is disabled.";
-    image.replaceWith(replacement);
+    image.replaceWith(blockedImageMessage(image.getAttribute("alt")?.trim()));
   }
 
   return template.innerHTML;
+}
+
+function blockedImageMessage(alt?: string | null): HTMLSpanElement {
+  const replacement = document.createElement("span");
+  replacement.className = "blocked-image";
+  replacement.setAttribute("role", "note");
+  replacement.textContent = alt
+    ? `Image blocked: ${alt}`
+    : "Image blocked: external and local image loading is disabled.";
+  return replacement;
 }
 
 function applyTablePreviewPolicy(html: string): string {
@@ -88,7 +128,7 @@ function isAllowedEmbeddedImageSource(src: string): boolean {
   return /^data:image\/(?:png|jpe?g|gif|webp);base64,[a-z0-9+/=\s]+$/i.test(src);
 }
 
-function workspaceAssetImageUrl(
+function workspaceAssetImagePath(
   src: string,
   workspaceRoot: string | null,
 ): string | null {
@@ -103,27 +143,20 @@ function workspaceAssetImageUrl(
     return null;
   }
 
-  const match = /^assets\//i.exec(decodedSrc);
+  const match = /^(?:\.\/|\/)?assets\//i.exec(decodedSrc);
   if (!match) {
     return null;
   }
 
   const relativePath = decodedSrc.slice(match[0].length);
-  if (!relativePath || relativePath.startsWith("..")) {
+  if (
+    !relativePath ||
+    relativePath.startsWith(".") ||
+    relativePath.includes("..") ||
+    relativePath.includes("\\")
+  ) {
     return null;
   }
 
-  const absolutePath = `${workspaceRoot.replace(/\/+$/, "")}/assets/${relativePath}`;
-
-  if (
-    typeof window !== "undefined" &&
-    (window as { __TAURI_INTERNALS__?: { convertFileSrc?: unknown } })
-      .__TAURI_INTERNALS__?.convertFileSrc
-  ) {
-    return convertFileSrc(absolutePath);
-  }
-
-  // Fallback: encode each path segment individually for asset:// URL
-  const segments = absolutePath.split("/").map(encodeURIComponent);
-  return `asset://localhost/${segments.join("/")}`;
+  return `${workspaceRoot.replace(/\/+$/, "")}/assets/${relativePath}`;
 }

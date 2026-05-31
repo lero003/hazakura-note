@@ -18,7 +18,10 @@
 
 ## リリース意図
 
-「iOS/macOS 向け Pi エージェント」系のマイルストーンではなく、**v0.4 Markdown Review Navigation** で出し切れなかった以下の機能群を仕上げて、あらためて warning-expected DMG preview として配布する。
+v0.5 のテーマは **Pi CLI Provider + App Stability**。
+Pi を Agent Workbench の allowlisted CLI provider として追加し、
+v0.4 Markdown Review Navigation で出し切れなかった polish 機能を仕上げて
+warning-expected DMG preview として配布する。
 
 - 画像ペースト（assets/ 保存 → プレビュー/エクスポート表示）
 - 画像ドラッグ＆ドロップ（assets/ 取込）
@@ -29,6 +32,7 @@
 
 ## 今回実装されたもの
 
+- **Pi CLI Provider の allowlist 追加**: Agent Workbench のプロバイダー選択肢に `pi` を追加。既存の codex/opencode と同様の起動ゲート・同意・単一セッション制約を維持
 - **Image paste**: Cmd+V でクリップボード画像 → `assets/<hash>.png` → `![](assets/xxx)` 挿入。ワークスペースなしでもファイルの親ディレクトリに assets/ を作成
 - **Image drag & drop**: 画像ファイルをウィンドウにドロップ → assets/ に取込 → `![](assets/xxx)` 挿入
 - **Hash-based dedup**: 同じ画像を複数回ペーストしても1ファイルしか増えない（FNV-1a ハッシュ + 存在チェック）

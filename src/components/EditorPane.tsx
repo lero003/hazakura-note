@@ -66,6 +66,8 @@ export type EditorPaneHandle = {
   insertTable: (columns: number) => void;
   insertText: (text: string) => void;
   setScrollRatio: (ratio: number, tolerancePx?: number) => boolean;
+  replaceCurrent: (replacement: string) => boolean;
+  replaceAll: (replacement: string) => void;
 };
 
 const setSearchMatchesEffect =
@@ -242,6 +244,36 @@ const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
 
         scroller.scrollTop = nextScrollTop;
         return true;
+      },
+      replaceCurrent(replacement) {
+        const view = viewRef.current;
+        if (!view || searchMatches.length === 0 || activeSearchMatchIndex < 0) {
+          return false;
+        }
+
+        const match = searchMatches[activeSearchMatchIndex];
+        if (!match) return false;
+
+        view.dispatch({
+          changes: { from: match.from, to: match.to, insert: replacement },
+          selection: { anchor: match.from + replacement.length },
+        });
+        view.focus();
+        return true;
+      },
+      replaceAll(replacement) {
+        const view = viewRef.current;
+        if (!view || searchMatches.length === 0) return;
+
+        // Replace in reverse order to preserve positions
+        const changes = searchMatches.map((match) => ({
+          from: match.from,
+          to: match.to,
+          insert: replacement,
+        }));
+
+        view.dispatch({ changes });
+        view.focus();
       },
     }),
     [],

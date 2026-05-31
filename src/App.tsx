@@ -418,21 +418,12 @@ export default function App() {
           return nextOutput;
         }
 
-        if (nextOutput.length === 0 && currentOutput.length > 0) {
+        if (nextOutput.length === 0) {
           return currentOutput;
         }
 
-        const nextSeq = lastAgentOutputSeq(nextOutput);
-        const currentSeq = lastAgentOutputSeq(currentOutput);
-
-        if (
-          nextSeq === currentSeq &&
-          nextOutput.length === currentOutput.length
-        ) {
-          return currentOutput;
-        }
-
-        return nextSeq > currentSeq ? nextOutput : currentOutput;
+        // Differential: append new chunks from the filtered response
+        return [...currentOutput, ...nextOutput];
       });
     },
     [],
@@ -2406,9 +2397,23 @@ ${bodyHtml}
     [activeAgentSession],
   );
 
+  const agentLastSeenSeqRef = useRef(0);
+
+  // Reset last seen seq when session changes
+  useEffect(() => {
+    agentLastSeenSeqRef.current = 0;
+  }, [agentSession?.createdAtMs]);
+
   const refreshAgentSessionState = useCallback(async () => {
     try {
-      const state = await getAgentWorkbenchSessionState();
+      const state = await getAgentWorkbenchSessionState(
+        agentLastSeenSeqRef.current || undefined,
+      );
+      // Update last seen seq from response
+      const maxSeq = lastAgentOutputSeq(state.output);
+      if (maxSeq > agentLastSeenSeqRef.current) {
+        agentLastSeenSeqRef.current = maxSeq;
+      }
       setAgentSession((currentSession) =>
         sameAgentWorkbenchSession(currentSession, state.session)
           ? currentSession

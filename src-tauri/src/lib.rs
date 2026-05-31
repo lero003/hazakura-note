@@ -523,8 +523,12 @@ fn stop_agent_workbench_session(
 #[tauri::command]
 fn get_agent_workbench_session_state(
     session_store: tauri::State<'_, AgentWorkbenchSessionStore>,
+    last_seen_seq: Option<u64>,
 ) -> Result<AgentWorkbenchSessionState, String> {
-    get_agent_workbench_session_state_with_store(session_store.inner())
+    match last_seen_seq {
+        Some(seq) => get_agent_workbench_session_state_since_with_store(session_store.inner(), seq),
+        None => get_agent_workbench_session_state_with_store(session_store.inner()),
+    }
 }
 
 #[tauri::command]
@@ -650,6 +654,23 @@ fn get_agent_workbench_session_state_with_store(
     Ok(AgentWorkbenchSessionState {
         session: current_session.clone(),
         output: snapshot_agent_output(session_store)?,
+    })
+}
+
+fn get_agent_workbench_session_state_since_with_store(
+    session_store: &AgentWorkbenchSessionStore,
+    last_seen_seq: u64,
+) -> Result<AgentWorkbenchSessionState, String> {
+    refresh_agent_workbench_session_exit(session_store)?;
+
+    let current_session = session_store
+        .session
+        .lock()
+        .map_err(|_| "Agent Workbench session state is unavailable.".to_string())?;
+
+    Ok(AgentWorkbenchSessionState {
+        session: current_session.clone(),
+        output: snapshot_agent_output_since(session_store, last_seen_seq)?,
     })
 }
 

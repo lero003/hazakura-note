@@ -374,13 +374,16 @@ export async function stopAgentWorkbenchSession(): Promise<AgentWorkbenchSession
   return invoke<AgentWorkbenchSessionState>("stop_agent_workbench_session");
 }
 
-export async function getAgentWorkbenchSessionState(): Promise<AgentWorkbenchSessionState> {
+export async function getAgentWorkbenchSessionState(
+  lastSeenSeq?: number,
+): Promise<AgentWorkbenchSessionState> {
   if (!isTauriRuntime()) {
     return { session: null, output: [] };
   }
 
   return invoke<AgentWorkbenchSessionState>(
     "get_agent_workbench_session_state",
+    lastSeenSeq !== undefined ? { lastSeenSeq } : undefined,
   );
 }
 

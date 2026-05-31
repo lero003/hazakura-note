@@ -397,6 +397,23 @@ pub(crate) fn append_agent_output(
     }
 }
 
+pub(crate) fn snapshot_agent_output_since(
+    session_store: &AgentWorkbenchSessionStore,
+    last_seen_seq: u64,
+) -> Result<Vec<AgentWorkbenchOutputChunk>, String> {
+    session_store
+        .output
+        .lock()
+        .map(|chunks| {
+            chunks
+                .iter()
+                .filter(|chunk| chunk.seq > last_seen_seq)
+                .cloned()
+                .collect()
+        })
+        .map_err(|_| "Agent Workbench output state is unavailable.".to_string())
+}
+
 pub(crate) fn snapshot_agent_output(
     session_store: &AgentWorkbenchSessionStore,
 ) -> Result<Vec<AgentWorkbenchOutputChunk>, String> {

@@ -220,6 +220,7 @@ export default function App() {
   const [agentStopPending, setAgentStopPending] = useState(false);
   const [appRestartPending, setAppRestartPending] = useState(false);
   const [findQuery, setFindQuery] = useState("");
+  const [replaceQuery, setReplaceQuery] = useState("");
   const [findVisible, setFindVisible] = useState(false);
   const [searchOptions, setSearchOptions] = useState<SearchOptions>({
     caseSensitive: false,
@@ -2268,11 +2269,27 @@ ${bodyHtml}
 
   const closeFindAndFocusEditor = useCallback(() => {
     setFindQuery("");
+    setReplaceQuery("");
     setActiveMatchIndex(0);
     setFindVisible(false);
     editorPaneRef.current?.focus();
     setStatus("Find closed");
   }, []);
+
+  const replaceOne = useCallback(() => {
+    const replacement = replaceQuery;
+    if (!replacement) return;
+    const replaced = editorPaneRef.current?.replaceCurrent(replacement);
+    if (replaced) {
+      showNextMatch();
+    }
+  }, [replaceQuery, showNextMatch]);
+
+  const replaceAll = useCallback(() => {
+    const replacement = replaceQuery;
+    if (!replacement) return;
+    editorPaneRef.current?.replaceAll(replacement);
+  }, [replaceQuery]);
 
   const handleFindKeyDown = useCallback(
     (event: ReactKeyboardEvent<HTMLInputElement>) => {
@@ -3648,6 +3665,7 @@ ${bodyHtml}
       </section>
 
       {findVisible ? (
+        <>
         <section className="find-row" aria-label={editorChromeCopy.findInActiveFile}>
           <label className="find-control">
             <span>{editorChromeCopy.find}</span>
@@ -3765,6 +3783,41 @@ ${bodyHtml}
             </svg>
           </button>
         </section>
+        <section className="replace-row" aria-label="Replace in active file">
+          <label className="find-control">
+            <span>{editorChromeCopy.replace}</span>
+            <input
+              type="search"
+              value={replaceQuery}
+              onChange={(event) => setReplaceQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (isImeComposing(event.nativeEvent)) return;
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  replaceOne();
+                }
+              }}
+              placeholder={editorChromeCopy.replacePlaceholder}
+            />
+          </label>
+          <div className="find-actions">
+            <button
+              type="button"
+              onClick={replaceOne}
+              disabled={findMatches.length === 0 || !replaceQuery}
+            >
+              {editorChromeCopy.replaceOne}
+            </button>
+            <button
+              type="button"
+              onClick={replaceAll}
+              disabled={findMatches.length === 0 || !replaceQuery}
+            >
+              {editorChromeCopy.replaceAll}
+            </button>
+          </div>
+        </section>
+        </>
       ) : null}
 
       <div className="message-row">

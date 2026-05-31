@@ -82,6 +82,10 @@ export type EditorChromeCopy = {
   noSearch: string;
   previous: string;
   regex: string;
+  replace: string;
+  replacePlaceholder: string;
+  replaceOne: string;
+  replaceAll: string;
   searchActiveFile: string;
   strong: string;
   strongTitle: string;
@@ -260,6 +264,10 @@ export function getEditorChromeCopy(lang: MenuLanguage): EditorChromeCopy {
         noSearch: "検索なし",
         previous: "前へ",
         regex: "正規表現",
+        replace: "置換",
+        replacePlaceholder: "置換する文字列",
+        replaceOne: "置換",
+        replaceAll: "すべて置換",
         searchActiveFile: "アクティブファイルを検索",
         strong: "太字",
         strongTitle: "太字 (Command+B)",
@@ -289,6 +297,10 @@ export function getEditorChromeCopy(lang: MenuLanguage): EditorChromeCopy {
         noSearch: "No search",
         previous: "Prev",
         regex: "Regex",
+        replace: "Replace",
+        replacePlaceholder: "Replace with",
+        replaceOne: "Replace",
+        replaceAll: "Replace all",
         searchActiveFile: "Search active file",
         strong: "Bold",
         strongTitle: "Bold (Command+B)",
